@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -77,5 +78,19 @@ integrity = replace_once(
     'add transcription security checks',
 )
 write('tests/integrity_test.py', integrity)
+
+mobile_package = json.loads(read('mobile/package.json'))
+mobile_package['dependencies']['expo-asset'] = '12.0.13'
+mobile_package['dependencies'] = dict(sorted(mobile_package['dependencies'].items()))
+write('mobile/package.json', json.dumps(mobile_package, indent=2) + '\n')
+
+preflight = read('mobile/scripts/preflight.mjs')
+preflight = replace_once(
+    preflight,
+    "  'expo-audio': '~1.1.1', 'expo-file-system': '~19.0.23', 'expo-speech': '~14.0.8',",
+    "  'expo-asset': '12.0.13', 'expo-audio': '~1.1.1', 'expo-file-system': '~19.0.23', 'expo-speech': '~14.0.8',",
+    'pin Expo asset peer in mobile release checks',
+)
+write('mobile/scripts/preflight.mjs', preflight)
 
 print('Almost Human 8.4 gate follow-up applied.')
