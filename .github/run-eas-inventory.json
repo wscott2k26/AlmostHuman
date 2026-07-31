@@ -1,7 +1,7 @@
 {
   "operation": "READ_ONLY_EAS_IOS_INVENTORY",
-  "requestedAt": "2026-07-31T17:55:00Z",
-  "attempt": 2,
+  "requestedAt": "2026-07-31T17:58:00Z",
+  "attempt": 3,
   "buildsAuthorized": 0,
   "submissionsAuthorized": 0
 }
