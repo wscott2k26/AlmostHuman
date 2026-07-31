@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "auditVersion": 1,
+  "auditedCommit": "3402f709b25b4ff1925c142ad71ac46debe361cc",
+  "testedRunId": 30649062997,
+  "generatedAt": "2026-07-31T16:56:48Z",
+  "expoOwner": "wscott2k26",
+  "bundleId": "com.stormandme.almosthuman",
+  "webCloudSecurityPasses": 4,
+  "engineCloudTestsPassed": 120,
+  "securityProductChecksPassed": 896,
+  "browserBuildPasses": 4,
+  "mobilePreflightPasses": 4,
+  "mobileChecksPerPass": 75,
+  "mobileChecksPassed": 300,
+  "mobileFailures": 0,
+  "expoDoctorChecksPassed": "18/18",
+  "iosExportVerified": true,
+  "androidExportVerified": true,
+  "liveSupabaseGate": true,
+  "easBuildCommandsRun": 0,
+  "easSubmitCommandsRun": 0
+}
