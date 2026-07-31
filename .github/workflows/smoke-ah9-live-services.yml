@@ -38,8 +38,10 @@ jobs:
           assert trigger['projectRef']=='onvoaskzzxozmhkzyycy'
           assert trigger['easBuildsAuthorized']==0
           assert trigger['testFlightUploadsAuthorized']==0
+          text=Path('.github/workflows/smoke-ah9-live-services.yml').read_text().lower()
+          forbidden=['eas '+'build','eas '+'submit','al'+'tool','notary'+'tool']
+          assert not any(value in text for value in forbidden)
           PY
-          ! grep -nE 'eas[[:space:]]+(build|submit)|altool|notarytool' .github/workflows/smoke-ah9-live-services.yml
 
       - name: Run ephemeral authenticated streaming and neural voice smoke
         shell: bash
