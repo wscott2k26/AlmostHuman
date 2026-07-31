@@ -13,12 +13,36 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: almost-human-9-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  actions-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Record sanitized recent workflow states
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs?branch=feature%2Fconversation-first-9-0&per_page=30" \
+            | jq '{workflow_runs: [.workflow_runs[] | {id, name, event, status, conclusion, head_sha, run_number, run_attempt, created_at, updated_at}]}' \
+            > "$RUNNER_TEMP/actions-inventory.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ah9-actions-inventory
+          path: ${{ runner.temp }}/actions-inventory.json
+          if-no-files-found: error
+          retention-days: 1
+
   source-snapshot:
     runs-on: ubuntu-latest
     timeout-minutes: 5
