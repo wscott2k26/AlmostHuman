@@ -1,10 +1,13 @@
 {
   "status": "passed",
-  "auditVersion": 1,
+  "auditVersion": 2,
   "auditedCommit": "3402f709b25b4ff1925c142ad71ac46debe361cc",
   "testedRunId": 30649062997,
   "generatedAt": "2026-07-31T16:56:48Z",
-  "expoOwner": "wscott2k26",
+  "identityVerifiedAt": "2026-07-31T17:18:31Z",
+  "expoPreflightResultCommit": "4f3421ad780a0034fb557601e32bb717f3dc90c5",
+  "expoOwner": "wscott2k8",
+  "easProjectId": "cd0be7bb-e65a-454e-b255-3b261de060ee",
   "bundleId": "com.stormandme.almosthuman",
   "webCloudSecurityPasses": 4,
   "engineCloudTestsPassed": 120,
@@ -15,9 +18,12 @@
   "mobileChecksPassed": 300,
   "mobileFailures": 0,
   "expoDoctorChecksPassed": "18/18",
+  "rootDependencyLockRecorded": true,
+  "mobileDependencyLockRecorded": true,
   "iosExportVerified": true,
   "androidExportVerified": true,
   "liveSupabaseGate": true,
+  "productionV83Verified": true,
   "easBuildCommandsRun": 0,
   "easSubmitCommandsRun": 0
 }
