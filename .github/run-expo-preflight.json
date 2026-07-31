@@ -1,8 +1,9 @@
 {
   "operation": "NO_BUILD_EXPO_PREFLIGHT",
   "requestedBy": "ChatGPT",
-  "requestedAt": "2026-07-31T17:09:00Z",
-  "expectedOwner": "wscott2k26",
+  "requestedAt": "2026-07-31T17:12:00Z",
+  "attempt": 2,
+  "expectedOwner": "wscott2k8",
   "expectedBundleId": "com.stormandme.almosthuman",
   "easBuildCreditsAuthorized": 0,
   "easSubmissionsAuthorized": 0
