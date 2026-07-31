@@ -1,6 +1,10 @@
 name: Almost Human Expo Preflight — No Build Credit
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/run-expo-preflight.json'
   workflow_dispatch:
 
 permissions:
@@ -27,6 +31,23 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+
+      - name: Validate the zero-credit trigger and workflow boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const trigger = JSON.parse(fs.readFileSync('.github/run-expo-preflight.json', 'utf8'));
+          if (trigger.operation !== 'NO_BUILD_EXPO_PREFLIGHT') throw new Error('Invalid preflight operation.');
+          if (trigger.expectedOwner !== process.env.EXPECTED_OWNER) throw new Error('Trigger owner mismatch.');
+          if (trigger.expectedBundleId !== process.env.EXPECTED_BUNDLE_ID) throw new Error('Trigger bundle mismatch.');
+          if (trigger.easBuildCreditsAuthorized !== 0) throw new Error('This lane authorizes zero build credits.');
+          if (trigger.easSubmissionsAuthorized !== 0) throw new Error('This lane authorizes zero submissions.');
+          NODE
+          test -z "$(grep -RInE '(^|[[:space:]])eas[[:space:]]+build([[:space:]]|$)' .github/workflows/almost-human-expo-preflight.yml || true)"
+          test -z "$(grep -RInE '(^|[[:space:]])eas[[:space:]]+submit([[:space:]]|$)' .github/workflows/almost-human-expo-preflight.yml || true)"
+          echo 'Zero-credit preflight boundary verified.'
 
       - name: Refuse work after a successful iOS build
         shell: bash
@@ -96,7 +117,7 @@ jobs:
           if [[ ! -f package-lock.json ]]; then
             npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           fi
-          npm ci --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
           npm run test:quadruple
           node scripts/build-inline.mjs
 
@@ -108,7 +129,7 @@ jobs:
           if [[ ! -f package-lock.json ]]; then
             npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           fi
-          npm ci --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
           npx expo install --check
           npm run doctor
           npm run typecheck
@@ -152,7 +173,7 @@ jobs:
             echo 'Verified EAS identity and dependency locks already match main.'
           else
             git commit -m 'Record verified Almost Human EAS identity and dependency locks'
-            git pull --rebase origin main
+            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
 
