@@ -1,0 +1,18 @@
+{
+  "status": "FINISHED",
+  "buildId": "61c38061-c2e0-43f5-b8a2-43b0af8cd187",
+  "platform": "IOS",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "3",
+  "artifacts": {
+    "buildUrl": "https://expo.dev/artifacts/eas/258-2wskspA4dNa6KseKZzRR5xt9uyXO3ltt6Vctsac.ipa",
+    "xcodeBuildLogsUrl": "https://storage.googleapis.com/eas-workflows-production/logs/cd0be7bb-e65a-454e-b255-3b261de060ee/61c38061-c2e0-43f5-b8a2-43b0af8cd187/2026-07-31T21%3A00%3A27Z-61c38061-c2e0-43f5-b8a2-43b0af8cd187-xcode.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260731%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260731T210457Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=184f64a5a8477754cf60b730f6000bd6a2c9f665c49a666343dae072052860861a720e01aaf93ec5e2821fc60ecf4927e96670f91ac3f8e29ebc56904a2941eb8482311c919f3f21efa772a328ff15ddf42dd3267d06419206b9936ea82ac5fe185723728ef86e542f85888051a064103ef5c1a9e1ea33373463af842f8b698f26cff4ddf92f94c24bf926889ddbc7d9d4559aa1b33d5855d3fb0eec2c37f7c3f98079270fed32bdcd673ac94ac8257d2c4724c711ad5d39179bdd4b635fb235d7cb5da70069e2197e5688369a6748ce5258cb36892d7cfba2ef5841a6255ea48294e951a23b50b0ed1ef91e90f349054317b4bdc9246629e3a9cbb63d734be6",
+    "applicationArchiveUrl": "https://expo.dev/artifacts/eas/258-2wskspA4dNa6KseKZzRR5xt9uyXO3ltt6Vctsac.ipa"
+  },
+  "buildDetailsPageUrl": null,
+  "createdAt": "2026-07-31T21:00:22.019Z",
+  "githubRunId": "30664873155",
+  "sourceCommit": "a48c0249b5a44d263c35a8215fd1c1341326d3ee",
+  "certifiedSourceCommit": "35b8ca581d06a5e287c2ed2a24d7306d18276a01",
+  "testFlightSubmissionsRun": 0
+}
