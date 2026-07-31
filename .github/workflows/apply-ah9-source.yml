@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo 'd12ab729a424d0b34d720743b94daf4715ae3d9e71f45c8c94ecf269a57ab98c  .github/ah9-update.tar.gz' | sha256sum -c -
+          echo 'dd47430a9600fe218e7510e7d6c191c58aa22e66ed808a67ddca798aee7dd965  .github/ah9-update.tar.gz' | sha256sum -c -
           tar -tzf .github/ah9-update.tar.gz | grep -Ev '(^/|\.\./|^\.git/)' >/dev/null
           tar -xzf .github/ah9-update.tar.gz
           rm .github/ah9-update.tar.gz
