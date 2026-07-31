@@ -1,0 +1,41 @@
+{
+  "stream": {
+    "eventTypes": [
+      "ack",
+      "ack",
+      "delta",
+      "delta",
+      "metadata",
+      "done"
+    ],
+    "firstDeltaMs": 5936,
+    "doneMs": 6403,
+    "providerMode": "openai-stream",
+    "replayConfirmed": true
+  },
+  "status": "PASSED",
+  "health": {
+    "database": true,
+    "aiConfigured": true,
+    "chatStreamConfigured": true,
+    "neuralVoiceConfigured": true,
+    "neuralVoiceProvider": "openai",
+    "elevenLabsConfigured": false,
+    "transcriptionConfigured": true
+  },
+  "voice": {
+    "provider": "openai",
+    "contentType": "audio/mpeg",
+    "audioBytes": 81024,
+    "completeMs": 1745
+  },
+  "jwtBoundary": {
+    "chatStreamWithoutUserToken": 401,
+    "voiceServiceWithoutUserToken": 401
+  },
+  "cleanup": "account_deleted",
+  "storedConversationText": false,
+  "storedAudio": false,
+  "easBuildsRun": 0,
+  "testFlightUploadsRun": 0
+}
