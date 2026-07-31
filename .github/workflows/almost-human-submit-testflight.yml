@@ -1,0 +1,130 @@
+name: Submit Existing Almost Human Build to TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      asc_app_id:
+        description: 'Numeric App Store Connect Apple ID for Almost Human'
+        required: true
+        type: string
+      confirm_submit:
+        description: 'Type SUBMIT_EXISTING (this does not create a new build)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+  issues: write
+
+concurrency:
+  group: almost-human-testflight-submit
+  cancel-in-progress: false
+
+jobs:
+  submit-existing-build:
+    if: ${{ inputs.confirm_submit == 'SUBMIT_EXISTING' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out canonical source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Confirm a successful iOS build exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f STEP7_IOS_BUILD_RECORD.json
+          node -e "const r=require('./STEP7_IOS_BUILD_RECORD.json'); if(!r.buildId) throw new Error('No EAS iOS build ID recorded'); console.log(r.buildId)"
+
+      - name: Validate App Store Connect ID
+        shell: bash
+        env:
+          ASC_APP_ID: ${{ inputs.asc_app_id }}
+        run: |
+          [[ "$ASC_APP_ID" =~ ^[0-9]{8,15}$ ]]
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        shell: bash
+        run: npm install --no-audit --no-fund
+
+      - name: Record App Store Connect identity
+        working-directory: mobile
+        shell: bash
+        env:
+          ASC_APP_ID: ${{ inputs.asc_app_id }}
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const file = 'eas.json';
+          const eas = JSON.parse(fs.readFileSync(file, 'utf8'));
+          eas.submit ||= {};
+          eas.submit.production ||= {};
+          eas.submit.production.ios ||= {};
+          eas.submit.production.ios.ascAppId = process.env.ASC_APP_ID;
+          fs.writeFileSync(file, JSON.stringify(eas, null, 2) + '\n');
+          NODE
+          git diff -- eas.json
+
+      - name: Preserve App Store Connect identity on main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human Release Bot'
+          git config user.email 'loftlatte25@gmail.com'
+          git add mobile/eas.json
+          if git diff --cached --quiet; then
+            echo 'App Store Connect identity already recorded.'
+          else
+            git commit -m 'Record Almost Human App Store Connect identity'
+            git push origin HEAD:main
+          fi
+
+      - name: Submit the existing latest build to TestFlight
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          eas whoami
+          eas submit \
+            --platform ios \
+            --profile production \
+            --latest \
+            --non-interactive \
+            --wait 2>&1 | tee ../testflight-submit.log
+
+      - name: Save submission record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: almost-human-testflight-submission
+          path: testflight-submit.log
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Report exact submission blocker
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Almost Human TestFlight submission needs attention — run $GITHUB_RUN_ID" \
+            --body "No new build was created. The existing iOS build submission stopped here: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
