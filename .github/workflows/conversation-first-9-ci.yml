@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feature/conversation-first-9-0
+    paths-ignore:
+      - '.github/ah9-patch/**'
+      - '.github/workflows/apply-ah9-source.yml'
   pull_request:
     branches:
       - main
