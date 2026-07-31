@@ -1,7 +1,8 @@
 {
   "requestedBy": "ChatGPT",
-  "purpose": "Run the complete Almost Human no-credit web, cloud, backend, security, mobile, iOS-export, and Android-export audit",
-  "requestedAt": "2026-07-31T16:48:00Z",
+  "purpose": "Re-run the complete Almost Human no-credit audit after fixing the Expo SDK 54 expo-font peer dependency",
+  "requestedAt": "2026-07-31T16:56:00Z",
+  "attempt": 2,
   "easBuildCreditsAuthorized": 0,
   "easSubmissionsAuthorized": 0
 }
