@@ -72,7 +72,11 @@
       "typedRoutes": true
     },
     "extra": {
-      "releaseChannel": "haven-8.3"
+      "releaseChannel": "haven-8.3",
+      "router": {},
+      "eas": {
+        "projectId": "cd0be7bb-e65a-454e-b255-3b261de060ee"
+      }
     }
   }
 }
