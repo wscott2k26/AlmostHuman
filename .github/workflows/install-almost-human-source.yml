@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - Almost-Human-8.3-Haven-TestFlight-Source.zip
+      - 'Almost-Human-8.3-Haven-TestFlight-Source*.zip'
       - .github/workflows/install-almost-human-source.yml
   workflow_dispatch:
 
@@ -29,30 +29,42 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Verify exact certified package
+      - name: Locate and verify exact certified package
+        id: package
         shell: bash
         run: |
           set -euo pipefail
-          PACKAGE='Almost-Human-8.3-Haven-TestFlight-Source.zip'
           EXPECTED='bb72d70bdc66d270c04a315a4092aeff27d04927b227cdc04f74221fa62c6225'
-          test -f "$PACKAGE" || {
-            echo "Upload $PACKAGE at the repository root, then run this workflow again."
+          mapfile -t CANDIDATES < <(find . -maxdepth 1 -type f -name 'Almost-Human-8.3-Haven-TestFlight-Source*.zip' -printf '%f\n' | sort)
+          (( ${#CANDIDATES[@]} > 0 )) || {
+            echo 'Upload the certified Almost Human 8.3 ZIP at the repository root, then run this workflow again.'
             exit 1
           }
-          ACTUAL="$(sha256sum "$PACKAGE" | awk '{print $1}')"
-          test "$ACTUAL" = "$EXPECTED" || {
-            echo "Package checksum mismatch: $ACTUAL"
+          PACKAGE=''
+          for CANDIDATE in "${CANDIDATES[@]}"; do
+            ACTUAL="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+            if [[ "$ACTUAL" == "$EXPECTED" ]]; then
+              PACKAGE="$CANDIDATE"
+              break
+            fi
+          done
+          test -n "$PACKAGE" || {
+            echo 'No uploaded ZIP matched the certified SHA-256.'
+            sha256sum "${CANDIDATES[@]}"
             exit 1
           }
           unzip -t "$PACKAGE"
+          echo "package=$PACKAGE" >> "$GITHUB_OUTPUT"
 
       - name: Extract and verify every packaged source file
         shell: bash
+        env:
+          PACKAGE: ${{ steps.package.outputs.package }}
         run: |
           set -euo pipefail
           rm -rf /tmp/almost-human-source
           mkdir -p /tmp/almost-human-source
-          unzip -q Almost-Human-8.3-Haven-TestFlight-Source.zip -d /tmp/almost-human-source
+          unzip -q "$PACKAGE" -d /tmp/almost-human-source
           SOURCE='/tmp/almost-human-source/AlmostHuman'
           test -f "$SOURCE/SOURCE_MANIFEST.sha256"
           test -f "$SOURCE/mobile/app.json"
