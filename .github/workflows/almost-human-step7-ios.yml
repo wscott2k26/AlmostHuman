@@ -1,6 +1,10 @@
 name: Almost Human Step 7 iOS Build
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/run-ios-build.json'
   workflow_dispatch:
     inputs:
       confirm_build:
@@ -19,12 +23,12 @@ concurrency:
 
 env:
   MOBILE_DIR: mobile
-  EXPECTED_OWNER: wscott2k26
+  EXPECTED_OWNER: wscott2k8
   EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
 
 jobs:
   certify-and-build-ios:
-    if: ${{ inputs.confirm_build == 'BUILD_ONCE' }}
+    if: ${{ github.event_name == 'push' || inputs.confirm_build == 'BUILD_ONCE' }}
     runs-on: ubuntu-latest
     timeout-minutes: 150
 
@@ -34,6 +38,28 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+
+      - name: Validate explicit one-build authorization
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_CONFIRM: ${{ inputs.confirm_build }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            node - <<'NODE'
+            const fs = require('fs');
+            const trigger = JSON.parse(fs.readFileSync('.github/run-ios-build.json', 'utf8'));
+            if (trigger.operation !== 'BUILD_ONCE') throw new Error('Invalid build operation.');
+            if (trigger.confirm !== 'BUILD_ONCE') throw new Error('Missing exact build confirmation.');
+            if (trigger.expectedOwner !== process.env.EXPECTED_OWNER) throw new Error('Build owner mismatch.');
+            if (trigger.expectedBundleId !== process.env.EXPECTED_BUNDLE_ID) throw new Error('Build bundle mismatch.');
+            if (trigger.easBuildCreditsAuthorized !== 1) throw new Error('Exactly one build credit must be authorized.');
+            if (trigger.easSubmissionsAuthorized !== 0) throw new Error('This lane cannot submit to TestFlight.');
+            NODE
+          else
+            test "$MANUAL_CONFIRM" = "BUILD_ONCE"
+          fi
 
       - name: Refuse accidental duplicate successful build
         shell: bash
@@ -51,9 +77,15 @@ jobs:
           set -euo pipefail
           test -f package-lock.json || { echo 'Root package-lock.json is missing. Run the no-build preflight first.'; exit 1; }
           test -f mobile/package-lock.json || { echo 'Mobile package-lock.json is missing. Run the no-build preflight first.'; exit 1; }
+          test -f FULL_AUDIT_RESULT.json || { echo 'Full audit record is missing.'; exit 1; }
+          test -f LIVE_SMOKE_RESULT.json || { echo 'Live smoke record is missing.'; exit 1; }
           node - <<'NODE'
           const app = require('./mobile/app.json');
+          const audit = require('./FULL_AUDIT_RESULT.json');
+          const live = require('./LIVE_SMOKE_RESULT.json');
           const expo = app.expo || {};
+          if (audit.status !== 'passed') throw new Error('Full audit is not passed.');
+          if (live.status !== 'passed') throw new Error('Live smoke is not passed.');
           if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
           if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
           if (expo.android?.package !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong Android package: ${expo.android?.package}`);
@@ -85,13 +117,13 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${EXPO_TOKEN:-}" || { echo 'EXPO_TOKEN repository secret is missing.'; exit 1; }
-          ACCOUNT="$(eas whoami | tr -d '\r' | tail -n 1)"
+          ACCOUNT="$(eas whoami | tr -d '\r' | head -n 1 | awk '{print $1}')"
           echo "Expo account: $ACCOUNT"
           test "$ACCOUNT" = "$EXPECTED_OWNER"
 
       - name: Install locked web certification dependencies
         shell: bash
-        run: npm ci --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Run complete web cloud and security gate four times
         shell: bash
@@ -104,7 +136,7 @@ jobs:
       - name: Install locked mobile dependencies
         working-directory: mobile
         shell: bash
-        run: npm ci --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Verify Expo dependency alignment
         working-directory: mobile
@@ -139,9 +171,9 @@ jobs:
           if (!expo.extra?.eas?.projectId) throw new Error('EAS project ID is missing');
           console.log(`Verified EAS project ${expo.extra.eas.projectId}`);
           NODE
-          test -z "$(git status --porcelain)" || {
-            echo 'Build preparation changed tracked files. Refusing to spend a credit from a dirty tree.'
-            git status --short
+          git diff --quiet -- app.json eas.json package-lock.json || {
+            echo 'Critical mobile identity or lock files changed during preparation. Refusing to spend a credit.'
+            git diff -- app.json eas.json package-lock.json
             exit 1
           }
 
@@ -186,7 +218,7 @@ jobs:
           git config user.email 'wscott2k26@users.noreply.github.com'
           git add STEP7_IOS_BUILD_RECORD.json
           git commit -m 'Record successful Almost Human Step 7 iOS build'
-          git pull --rebase origin main
+          git pull --rebase --autostash origin main
           git push origin HEAD:main
 
       - name: Save release records
