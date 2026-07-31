@@ -1,0 +1,7 @@
+node_modules/
+.expo/
+dist-ios/
+*.log
+.DS_Store
+ios-build.json
+submission.json

@@ -1,0 +1,383 @@
+{
+  "generatedAt": "2026-07-31T15:48:41.313Z",
+  "passed": 75,
+  "failed": 0,
+  "mobileBundleSha256": "f1d341b5286d9ccf2c3fd8dc1033c834a9ff5c4fa7439209fafcd1f5ca2d33a9",
+  "checks": [
+    {
+      "name": "required:app/_layout.tsx",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:app/index.tsx",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:src/NativeShell.tsx",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:src/almostHumanHtml.ts",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:assets/almost-human.html",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:assets/icon.png",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:assets/adaptive-icon.png",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:assets/splash.png",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:assets/notification-icon.png",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:app.json",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:eas.json",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:package.json",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "required:tsconfig.json",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "identity:name",
+      "ok": true,
+      "detail": "Almost Human"
+    },
+    {
+      "name": "identity:slug",
+      "ok": true,
+      "detail": "almost-human"
+    },
+    {
+      "name": "identity:owner",
+      "ok": true,
+      "detail": "wscott2k26"
+    },
+    {
+      "name": "identity:ios-bundle",
+      "ok": true,
+      "detail": "com.stormandme.almosthuman"
+    },
+    {
+      "name": "identity:android-package",
+      "ok": true,
+      "detail": "com.stormandme.almosthuman"
+    },
+    {
+      "name": "identity:scheme",
+      "ok": true,
+      "detail": "almost-human"
+    },
+    {
+      "name": "release:version",
+      "ok": true,
+      "detail": "1.0.0"
+    },
+    {
+      "name": "release:build-number",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "release:eas-auto-increment",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "release:no-auto-submit-before-asc-record",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dependency:expo",
+      "ok": true,
+      "detail": "54.0.36"
+    },
+    {
+      "name": "dependency:react",
+      "ok": true,
+      "detail": "19.1.0"
+    },
+    {
+      "name": "dependency:react-native",
+      "ok": true,
+      "detail": "0.81.5"
+    },
+    {
+      "name": "dependency:react-native-webview",
+      "ok": true,
+      "detail": "13.15.0"
+    },
+    {
+      "name": "dependency:expo-haptics",
+      "ok": true,
+      "detail": "15.0.8"
+    },
+    {
+      "name": "dependency:expo-notifications",
+      "ok": true,
+      "detail": "~0.32.17"
+    },
+    {
+      "name": "dependency:expo-blur",
+      "ok": true,
+      "detail": "~15.0.8"
+    },
+    {
+      "name": "dependency:expo-linear-gradient",
+      "ok": true,
+      "detail": "15.0.8"
+    },
+    {
+      "name": "native-shell:WebView",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:ALMOST_HUMAN_HTML",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:injectedJavaScriptBeforeContentLoaded",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:expo-notifications",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:configureDailyMoment",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:A quiet moment in The Haven",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:Haptics",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:Share.share",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:useSafeAreaInsets",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:onContentProcessDidTerminate",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:onRenderProcessGone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:pullToRefreshEnabled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:routeFromUrl",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:almost-human-swart.vercel.app",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:The Haven",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:A quiet Haven reminder",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:native-share",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:notificationsEnabled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:talk-about-haven",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:inspect-haven-item",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:v83-haven-window",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:__AH_NATIVE_BUNDLE__",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-source:nativePost",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-source:nativePost('daily-moment'",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-source:shareAlmostHuman",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-source:navigator.serviceWorker.register('./sw.js?v=8.3')",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "visual-system:V8.3 — THE HAVEN",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "visual-system:v83-top-share",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "visual-system:v83-haven-window",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "bundle:typescript-embedding-readable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "bundle:typescript-matches-html",
+      "ok": true,
+      "detail": "f1d341b5286d9ccf2c3fd8dc1033c834a9ff5c4fa7439209fafcd1f5ca2d33a9 / f1d341b5286d9ccf2c3fd8dc1033c834a9ff5c4fa7439209fafcd1f5ca2d33a9"
+    },
+    {
+      "name": "bundle:min-size",
+      "ok": true,
+      "detail": "335518 bytes"
+    },
+    {
+      "name": "bundle:no-remote-app-script",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "bundle:no-remote-stylesheet",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clean:/\\bTODO\\b/i",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clean:/\\bFIXME\\b/i",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clean:/lorem ipsum/i",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clean:/YOUR[_ -]?(?:TOKEN|PROJECT|APP)/i",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clean:/service_role/i",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clean:/sk-[A-Za-z0-9_-]{16,}/",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "asset:assets/icon.png",
+      "ok": true,
+      "detail": "1024x1024"
+    },
+    {
+      "name": "asset:assets/adaptive-icon.png",
+      "ok": true,
+      "detail": "1024x1024"
+    },
+    {
+      "name": "asset:assets/splash.png",
+      "ok": true,
+      "detail": "1024x1024"
+    },
+    {
+      "name": "asset:assets/notification-icon.png",
+      "ok": true,
+      "detail": "96x96"
+    }
+  ]
+}

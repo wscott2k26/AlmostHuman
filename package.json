@@ -1,0 +1,30 @@
+{
+  "name": "almost-human-premium",
+  "version": "8.3.0",
+  "private": true,
+  "type": "module",
+  "description": "A cinematic AI life-sim companion with digital birth, developmental stages, user-controlled memory, journaling, keepsakes, voice, and secure Supabase services.",
+  "scripts": {
+    "dev": "node scripts/serve.mjs --source app --port 4173",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/serve.mjs --source dist --port 4173",
+    "lint": "node scripts/lint.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:integrity": "python3 tests/integrity_test.py",
+    "test:browser": "node scripts/browser_smoke.mjs",
+    "test:all": "npm run lint && npm run typecheck:edge && npm test && npm run test:integrity && npm run build && npm run test:browser",
+    "test:triple": "npm run test:all && npm run test:all && npm run test:all",
+    "typecheck:edge": "tsc -p tsconfig.edge.json",
+    "deploy:supabase": "bash scripts/deploy_supabase.sh",
+    "verify:live": "node scripts/verify_live.mjs",
+    "release:live": "bash scripts/release_live.sh",
+    "test:windows": "npm run lint && npm run typecheck:edge && npm test && npm run build && npm run test:browser",
+    "test:quadruple": "npm run test:all && npm run test:all && npm run test:all && npm run test:all"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

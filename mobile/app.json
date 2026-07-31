@@ -1,0 +1,78 @@
+{
+  "expo": {
+    "name": "Almost Human",
+    "slug": "almost-human",
+    "description": "Raise an AI from first light through a lifetime of memories, growth, skills, and a living home called The Haven.",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "almost-human",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "backgroundColor": "#0B0B0F",
+    "primaryColor": "#FF9B6A",
+    "owner": "wscott2k26",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.stormandme.almosthuman",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "Almost Human uses the microphone only when you choose to speak to your companion.",
+        "NSPhotoLibraryAddUsageDescription": "Almost Human can save a keepsake image only when you choose to export one."
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "package": "com.stormandme.almosthuman",
+      "versionCode": 1,
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B0B0F"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 260,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0B0F",
+          "dark": {
+            "image": "./assets/splash.png",
+            "backgroundColor": "#0B0B0F"
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF9B6A",
+          "defaultChannel": "gentle-moments"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "releaseChannel": "haven-8.3"
+    }
+  }
+}
