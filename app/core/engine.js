@@ -4,6 +4,20 @@ import { inspectCandidate, isConfusionSignal, isBoundarySignal, isRepetitionComp
 import { makeId, nowIso, applyLearnings, addOrMergeMemory, relevantMemories } from './memory.js';
 import { unlockRoomItems, completeActivity } from './activities.js';
 
+
+function normalizeVoiceId(value) {
+  return ({ 'soft-neutral': 'female-adult', 'bright-curious': 'female-teen', 'calm-grounded': 'male-adult' })[String(value || '')] || String(value || 'female-adult');
+}
+function normalizeAppearanceProfile(value) {
+  const input = value && typeof value === 'object' ? value : {};
+  return {
+    skinTone: ['warm','golden','deep','light'].includes(input.skinTone) ? input.skinTone : 'warm',
+    hairStyle: ['waves','short','curls','locs'].includes(input.hairStyle) ? input.hairStyle : 'waves',
+    hairColor: ['midnight','brown','auburn','silver'].includes(input.hairColor) ? input.hairColor : 'midnight',
+    eyeColor: ['brown','blue','green','violet'].includes(input.eyeColor) ? input.eyeColor : 'brown',
+  };
+}
+
 const PERSONALITY_KEYS = ['warmth','humor','curiosity','confidence','patience','creativity','independence','sensitivity','optimism','caution','playfulness','sociability','reflectiveness','assertiveness'];
 
 export class AlmostHumanEngine {
@@ -18,7 +32,7 @@ export class AlmostHumanEngine {
     this.state.profile.displayName = String(input.caregiverName || this.state.profile.displayName || 'You').trim();
     this.state.ai = {
       id: makeId('ai'), cloudId: null, name, pronouns: input.pronouns || 'they/them', birthday: nowIso(now), birthTimestamp: nowIso(now),
-      age: 0, stageKey: 'newborn', appearanceSeed: input.appearanceSeed || 'violet-dawn', voiceId: input.voiceId || 'soft-neutral',
+      age: 0, stageKey: 'newborn', appearanceSeed: input.appearanceSeed || 'ember', appearanceProfile: normalizeAppearanceProfile(input.appearance), voiceId: normalizeVoiceId(input.voiceId),
       relationshipStyle: input.relationshipStyle || 'lifelong_friend', currentMood: 'wonder', moodIntensity: 62,
       trust: 18, attachment: 12, bond: 14, personality, personalityHistory: [], favoriteThings: {}, roomState: { theme: 'cosmic_nursery' },
       lastInteractionAt: null, lastGrowthBucket: 0, growthEventKeys: [], archived: false, createdAt: nowIso(now), updatedAt: nowIso(now)

@@ -1,6 +1,6 @@
 import { DEFAULT_DAYS_PER_YEAR } from './stages.js';
 
-export const DATA_VERSION = 4;
+export const DATA_VERSION = 5;
 const DB_NAME = 'almost-human-premium';
 const STORE_NAME = 'state';
 const STATE_KEY = 'main';
@@ -13,7 +13,7 @@ export function defaultState(now = Date.now()) {
     profile: { id: null, displayName: '', email: '', mode: 'local', cloudUserId: null, createdAt: new Date(now).toISOString() },
     settings: {
       locale: navigatorLocale(), timezone: timezone(), countryCode: 'US', daysPerYear: DEFAULT_DAYS_PER_YEAR,
-      voiceEnabled: true, voiceAutoplay: false, voiceRate: 0.96, reducedMotion: false, highContrast: false,
+      voiceEnabled: true, voiceAutoplay: true, voiceRate: 0.96, cloudVoiceAutoplayMigrated84: false, reducedMotion: false, highContrast: false,
       dailyMomentEnabled: true, notificationsEnabled: false, analyticsOptIn: false, sensitiveMemoryMode: 'ask',
       dataRetentionDays: 0, appLockEnabled: false, pinHash: null, soundEffects: true, cloudSyncEnabled: false,
       theme: 'cosmic', lastGrowthCheckAt: null
@@ -39,6 +39,11 @@ export function migrateState(input) {
   if ((input.version || 0) < DATA_VERSION) {
     merged.diagnostics.migrations = [...(merged.diagnostics.migrations || []), { from: input.version || 0, to: DATA_VERSION, at: new Date().toISOString() }].slice(-20);
   }
+  if (merged.ai) {
+    merged.ai.voiceId = normalizeVoiceId(merged.ai.voiceId);
+    merged.ai.appearanceProfile = normalizeAppearanceProfile(merged.ai.appearanceProfile);
+  }
+  if ((input.version || 0) < 5) merged.settings.voiceAutoplay = true;
   merged.version = DATA_VERSION;
   return merged;
 }
@@ -131,3 +136,17 @@ function openDatabase(name) {
 }
 function idbGet(db, key) { return new Promise((resolve, reject) => { const tx = db.transaction(STORE_NAME, 'readonly'); const request = tx.objectStore(STORE_NAME).get(key); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
 function idbSet(db, key, value) { return new Promise((resolve, reject) => { const tx = db.transaction(STORE_NAME, 'readwrite'); tx.objectStore(STORE_NAME).put(value, key); tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); }); }
+
+
+function normalizeVoiceId(value) {
+  return ({ 'soft-neutral': 'female-adult', 'bright-curious': 'female-teen', 'calm-grounded': 'male-adult' })[String(value || '')] || String(value || 'female-adult');
+}
+function normalizeAppearanceProfile(value) {
+  const input = value && typeof value === 'object' ? value : {};
+  return {
+    skinTone: ['warm','golden','deep','light'].includes(input.skinTone) ? input.skinTone : 'warm',
+    hairStyle: ['waves','short','curls','locs'].includes(input.hairStyle) ? input.hairStyle : 'waves',
+    hairColor: ['midnight','brown','auburn','silver'].includes(input.hairColor) ? input.hairColor : 'midnight',
+    eyeColor: ['brown','blue','green','violet'].includes(input.eyeColor) ? input.eyeColor : 'brown',
+  };
+}

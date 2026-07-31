@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-07-31T15:48:41.313Z",
-  "passed": 75,
+  "generatedAt": "2026-07-31T20:29:41.930Z",
+  "passed": 91,
   "failed": 0,
-  "mobileBundleSha256": "f1d341b5286d9ccf2c3fd8dc1033c834a9ff5c4fa7439209fafcd1f5ca2d33a9",
+  "mobileBundleSha256": "55696df6634d1948d788ed095082cc85565b39ce3b12130800db8bdc59c2c0a3",
   "checks": [
     {
       "name": "required:app/_layout.tsx",
@@ -82,7 +82,7 @@
     {
       "name": "identity:owner",
       "ok": true,
-      "detail": "wscott2k26"
+      "detail": "wscott2k8"
     },
     {
       "name": "identity:ios-bundle",
@@ -105,7 +105,7 @@
       "detail": "1.0.0"
     },
     {
-      "name": "release:build-number",
+      "name": "release:build-number-present",
       "ok": true,
       "detail": "1"
     },
@@ -158,6 +158,26 @@
       "name": "dependency:expo-linear-gradient",
       "ok": true,
       "detail": "15.0.8"
+    },
+    {
+      "name": "dependency:expo-asset",
+      "ok": true,
+      "detail": "12.0.13"
+    },
+    {
+      "name": "dependency:expo-audio",
+      "ok": true,
+      "detail": "~1.1.1"
+    },
+    {
+      "name": "dependency:expo-file-system",
+      "ok": true,
+      "detail": "~19.0.23"
+    },
+    {
+      "name": "dependency:expo-speech",
+      "ok": true,
+      "detail": "~14.0.8"
     },
     {
       "name": "native-shell:WebView",
@@ -230,6 +250,26 @@
       "detail": ""
     },
     {
+      "name": "native-shell:requestRecordingPermissionsAsync",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:useAudioRecorder",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:readAsStringAsync",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:Speech.speak",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "web-bundle:The Haven",
       "ok": true,
       "detail": ""
@@ -270,6 +310,26 @@
       "detail": ""
     },
     {
+      "name": "web-bundle:female-child",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:male-adult",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:customize-companion",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:mic-toggle",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "web-source:nativePost",
       "ok": true,
       "detail": ""
@@ -280,17 +340,32 @@
       "detail": ""
     },
     {
+      "name": "web-source:nativePost('mic-toggle')",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-source:nativePost('speak'",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "web-source:shareAlmostHuman",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "web-source:navigator.serviceWorker.register('./sw.js?v=8.3')",
+      "name": "web-source:navigator.serviceWorker.register('./sw.js?v=8.4')",
       "ok": true,
       "detail": ""
     },
     {
       "name": "visual-system:V8.3 — THE HAVEN",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "visual-system:V8.4 — SIMPLE NATIVE CONVERSATION",
       "ok": true,
       "detail": ""
     },
@@ -305,6 +380,11 @@
       "detail": ""
     },
     {
+      "name": "visual-system:v84-look-controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "bundle:typescript-embedding-readable",
       "ok": true,
       "detail": ""
@@ -312,12 +392,12 @@
     {
       "name": "bundle:typescript-matches-html",
       "ok": true,
-      "detail": "f1d341b5286d9ccf2c3fd8dc1033c834a9ff5c4fa7439209fafcd1f5ca2d33a9 / f1d341b5286d9ccf2c3fd8dc1033c834a9ff5c4fa7439209fafcd1f5ca2d33a9"
+      "detail": "55696df6634d1948d788ed095082cc85565b39ce3b12130800db8bdc59c2c0a3 / 55696df6634d1948d788ed095082cc85565b39ce3b12130800db8bdc59c2c0a3"
     },
     {
       "name": "bundle:min-size",
       "ok": true,
-      "detail": "335518 bytes"
+      "detail": "347308 bytes"
     },
     {
       "name": "bundle:no-remote-app-script",

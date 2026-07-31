@@ -40,7 +40,7 @@ for relative in ['package.json', 'vercel.json', 'app/manifest.webmanifest']:
 
 package = json.loads(read('package.json'))
 check('product package name', package.get('name') == 'almost-human-premium')
-check('production package version', package.get('version') == '8.3.0')
+check('production package version', package.get('version') == '8.4.0')
 check('triple test script exists', package.get('scripts', {}).get('test:triple', '').count('test:all') == 3)
 check('quadruple test script exists', package.get('scripts', {}).get('test:quadruple', '').count('test:all') == 4)
 check('edge typecheck in full test', 'typecheck:edge' in package.get('scripts', {}).get('test:all', ''))
@@ -71,7 +71,7 @@ check('public Supabase project ref configured', "projectRef: 'onvoaskzzxozmhkzyy
 check('publishable key only', 'sb_publishable_' in config_js and 'sb_secret_' not in config_js)
 check('Supabase preconnect', 'onvoaskzzxozmhkzyycy.supabase.co' in index_html and 'base44.app' not in index_html)
 check('PWA manifest linked', 'manifest.webmanifest' in index_html)
-check('service worker version advanced', 'almost-human-v8-3-haven' in sw)
+check('service worker version advanced', 'almost-human-v8-4-native' in sw)
 check('service worker excludes function APIs', "url.pathname.includes('/functions/')" in sw)
 check('service worker does not cache non-GET', "request.method !== 'GET'" in sw)
 check('privacy local export implemented', 'function exportData()' in app_js)
@@ -94,14 +94,19 @@ check('anti-repeat semantic check', 'semantic_duplicate' in read('app/core/anti-
 check('growth idempotency event keys', 'growthEventKeys' in read('app/core/engine.js'))
 check('request ids used in chat', "makeRequestId('chat')" in app_js)
 check('chat double-submit guard', 'if (ui.thinking) return' in app_js)
-check('optimistic message UI', 'ui.pendingUser' in app_js and 'sending' in app_js)
+check('optimistic message UI', 'ui.pendingUser' in app_js and 'message user pending' in app_js)
 check('digital birth experience', 'Digital birth sequence' in app_js and 'beginBirthSequence' in app_js and '.birth-shell' in styles)
 check('coherent newborn UX copy', 'never meaningless' in app_js.lower() and 'Your voice feels warm' in read('app/core/stages.js'))
 check('premium neural voice preview', 'cloud.voicePreview' in app_js and 'voicePreview' in cloud_js)
+check('six clear voice profiles', all(item in app_js for item in ['female-child','female-teen','female-adult','male-child','male-teen','male-adult']))
+check('real appearance controls', all(item in app_js for item in ['skinTone','hairStyle','hairColor','eyeColor','customize-companion']))
+check('three step onboarding', "const panels = [onboardIdentity, onboardLookAndVoice, onboardAwaken]" in app_js)
+check('native microphone transcription bridge', "nativePost('mic-toggle')" in app_js and 'transcribeAudio' in cloud_js and 'transcriptionService' in config_js)
+check('native speech bridge', "nativePost('speak'" in app_js and 'female-adult' in app_js)
 check('consumer UI hides provider labels', 'provider_mode' not in app_js and 'developmental-local' not in app_js)
 check('companion-first portrait system', 'function beingMarkup' in app_js and '.being-face' in styles and '.presence-hero' in styles)
 check('memory life album', 'A life album' in app_js and '.memory-album' in styles)
-check('meaningful thought phases', 'THOUGHT_PHASES' in app_js and 'Shaping a new thought' in app_js)
+check('no fake typing dots or thought carousel', 'THOUGHT_PHASES' not in app_js and 'typing-dots' not in app_js and 'I am with you.' in app_js)
 check('reduced motion support', '.reduce-motion' in styles)
 check('mobile companion layout', '@media(max-width:820px)' in styles and '.mobile-tabs' in styles)
 check('touch controls have mobile baseline', 'width:41px;height:41px' in styles and 'min-width:190px' in styles)
@@ -219,7 +224,7 @@ check('RPC anonymous execution revoked', 'revoke all on function public.progress
 # Edge Functions, auth, models, safety, privacy, and idempotency.
 function_names = {
     'chat-service', 'activity-service', 'memory-extract', 'memory-control', 'privacy-service',
-    'conversation-reset', 'progress-aging', 'diagnostics-service', 'voice-service', 'letter-service', 'health',
+    'conversation-reset', 'progress-aging', 'diagnostics-service', 'voice-service', 'transcription-service', 'letter-service', 'health',
 }
 function_dirs = {path.parent.name for path in (ROOT / 'supabase/functions').glob('*/index.ts')}
 check('all Edge Functions exist', function_names == function_dirs, f'missing={sorted(function_names-function_dirs)} extra={sorted(function_dirs-function_names)}')
@@ -241,6 +246,7 @@ chat_ts = read('supabase/functions/chat-service/index.ts')
 activity_ts = read('supabase/functions/activity-service/index.ts')
 privacy_ts = read('supabase/functions/privacy-service/index.ts')
 voice_ts = read('supabase/functions/voice-service/index.ts')
+transcription_ts = read('supabase/functions/transcription-service/index.ts')
 letter_ts = read('supabase/functions/letter-service/index.ts')
 
 check('Edge auth verifies token user', 'supabase.auth.getUser(token)' in context_ts)
@@ -267,6 +273,9 @@ check('privacy auth identity deletion', 'auth.admin.deleteUser' in privacy_ts)
 check('voice uses current speech endpoint', "https://api.openai.com/v1/audio/speech" in voice_ts)
 check('voice uses server API key', "Deno.env.get('OPENAI_API_KEY')" in voice_ts)
 check('voice is age aware', 'getStageFromAge' in voice_ts and 'speedByStage' in voice_ts and 'stage.label' in voice_ts)
+check('transcription uses current audio endpoint', "https://api.openai.com/v1/audio/transcriptions" in transcription_ts)
+check('transcription uses server API key', "Deno.env.get('OPENAI_API_KEY')" in transcription_ts)
+check('transcription limits audio size', 'MAX_AUDIO_BYTES' in transcription_ts and '413' in transcription_ts)
 
 
 check('multi-device cloud restore implemented', 'loadLifeHistory()' in cloud_js and 'restoreLifeHistory(state)' in cloud_js and 'mergeRecordSets' in cloud_js)
