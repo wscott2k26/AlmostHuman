@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  EXPECTED_OWNER: wscott2k26
+  EXPECTED_OWNER: wscott2k8
   EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
 
 jobs:
@@ -106,7 +106,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ACCOUNT="$(eas whoami | tr -d '\r' | tail -n 1)"
+          ACCOUNT="$(eas whoami | tr -d '\r' | head -n 1 | awk '{print $1}')"
           echo "Expo account: $ACCOUNT"
           test "$ACCOUNT" = "$EXPECTED_OWNER"
 
