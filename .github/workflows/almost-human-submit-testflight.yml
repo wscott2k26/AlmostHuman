@@ -21,6 +21,10 @@ concurrency:
   group: almost-human-testflight-submit
   cancel-in-progress: false
 
+env:
+  EXPECTED_OWNER: wscott2k26
+  EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
+
 jobs:
   submit-existing-build:
     if: ${{ inputs.confirm_submit == 'SUBMIT_EXISTING' }}
@@ -34,19 +38,41 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Confirm a successful iOS build exists
+      - name: Confirm the exact successful iOS build exists
         shell: bash
         run: |
           set -euo pipefail
-          test -f STEP7_IOS_BUILD_RECORD.json
-          node -e "const r=require('./STEP7_IOS_BUILD_RECORD.json'); if(!r.buildId) throw new Error('No EAS iOS build ID recorded'); console.log(r.buildId)"
+          test -f STEP7_IOS_BUILD_RECORD.json || { echo 'No successful build record exists.'; exit 1; }
+          node - <<'NODE'
+          const r = require('./STEP7_IOS_BUILD_RECORD.json');
+          if (!r.buildId) throw new Error('No EAS iOS build ID recorded');
+          if (String(r.status || '').toLowerCase() !== 'finished') throw new Error(`Recorded build is not finished: ${r.status}`);
+          if (String(r.platform || '').toUpperCase() !== 'IOS') throw new Error(`Recorded build is not iOS: ${r.platform}`);
+          console.log(`Exact recorded build: ${r.buildId}`);
+          NODE
+          test -f mobile/package-lock.json || { echo 'Mobile dependency lock is missing.'; exit 1; }
 
       - name: Validate App Store Connect ID
         shell: bash
         env:
           ASC_APP_ID: ${{ inputs.asc_app_id }}
         run: |
+          set -euo pipefail
           [[ "$ASC_APP_ID" =~ ^[0-9]{8,15}$ ]]
+
+      - name: Verify static app identity
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const app = require('./app.json');
+          const expo = app.expo || {};
+          if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
+          if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
+          if (!expo.extra?.eas?.projectId) throw new Error('EAS project ID is missing');
+          console.log(`Identity verified for project ${expo.extra.eas.projectId}`);
+          NODE
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -57,12 +83,24 @@ jobs:
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
+          packager: npm
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Install mobile dependencies
+      - name: Verify protected Expo token and account
+        shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "${EXPO_TOKEN:-}" || { echo 'EXPO_TOKEN repository secret is missing.'; exit 1; }
+          ACCOUNT="$(eas whoami | tr -d '\r' | tail -n 1)"
+          echo "Expo account: $ACCOUNT"
+          test "$ACCOUNT" = "$EXPECTED_OWNER"
+
+      - name: Install locked mobile dependencies
         working-directory: mobile
         shell: bash
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Record App Store Connect identity
         working-directory: mobile
@@ -70,6 +108,7 @@ jobs:
         env:
           ASC_APP_ID: ${{ inputs.asc_app_id }}
         run: |
+          set -euo pipefail
           node - <<'NODE'
           const fs = require('fs');
           const file = 'eas.json';
@@ -87,25 +126,28 @@ jobs:
         run: |
           set -euo pipefail
           git config user.name 'Almost Human Release Bot'
-          git config user.email 'loftlatte25@gmail.com'
+          git config user.email 'wscott2k26@users.noreply.github.com'
           git add mobile/eas.json
           if git diff --cached --quiet; then
             echo 'App Store Connect identity already recorded.'
           else
             git commit -m 'Record Almost Human App Store Connect identity'
+            git pull --rebase origin main
             git push origin HEAD:main
           fi
 
-      - name: Submit the existing latest build to TestFlight
+      - name: Submit only the exact recorded build to TestFlight
         working-directory: mobile
         shell: bash
         run: |
           set -euo pipefail
-          eas whoami
+          BUILD_ID="$(node -e "process.stdout.write(require('../STEP7_IOS_BUILD_RECORD.json').buildId)")"
+          test -n "$BUILD_ID"
+          echo "Submitting exact EAS build ID: $BUILD_ID"
           eas submit \
             --platform ios \
             --profile production \
-            --latest \
+            --id "$BUILD_ID" \
             --non-interactive \
             --wait 2>&1 | tee ../testflight-submit.log
 
@@ -127,4 +169,4 @@ jobs:
           gh issue create \
             --repo "$GITHUB_REPOSITORY" \
             --title "Almost Human TestFlight submission needs attention — run $GITHUB_RUN_ID" \
-            --body "No new build was created. The existing iOS build submission stopped here: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            --body "No new build was created. The exact recorded iOS build submission stopped here: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
