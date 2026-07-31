@@ -1,0 +1,150 @@
+name: Almost Human Expo Preflight — No Build Credit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+  issues: write
+
+concurrency:
+  group: almost-human-expo-preflight
+  cancel-in-progress: false
+
+env:
+  EXPECTED_OWNER: wscott2k26
+  EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
+
+jobs:
+  verify-and-link-without-building:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out canonical source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify no successful build already exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f STEP7_IOS_BUILD_RECORD.json ]]; then
+            echo 'An iOS build already exists; do not create another.'
+            cat STEP7_IOS_BUILD_RECORD.json
+          fi
+
+      - name: Verify protected Expo credential exists
+        shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "${EXPO_TOKEN:-}" || {
+            echo 'EXPO_TOKEN is not configured for this repository.'
+            exit 1
+          }
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verify Expo account
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACCOUNT="$(eas whoami | tr -d '\r' | tail -n 1)"
+          echo "Expo account: $ACCOUNT"
+          test "$ACCOUNT" = "$EXPECTED_OWNER"
+
+      - name: Install and quadruple-certify web cloud and security source
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund
+          npm run test:quadruple
+          node scripts/build-inline.mjs
+
+      - name: Install and certify native source
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund
+          npx expo install --check
+          npm run doctor
+          npm run typecheck
+          npm run lint
+          npm run preflight:quadruple
+          npx expo export --platform ios --output-dir dist-ios
+          npx expo export --platform android --output-dir dist-android
+
+      - name: Create or link canonical EAS project without building
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          eas init --force --non-interactive
+          eas project:info --non-interactive | tee ../eas-project-info.txt
+          node - <<'NODE'
+          const fs = require('fs');
+          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+          const expo = app.expo || {};
+          if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
+          if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
+          if (!expo.extra?.eas?.projectId) throw new Error('EAS project ID was not written to app.json');
+          console.log(`Verified EAS project ${expo.extra.eas.projectId}`);
+          NODE
+
+      - name: Preserve verified EAS identity and dependency locks
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human Preflight Bot'
+          git config user.email 'loftlatte25@gmail.com'
+          git add mobile/app.json package-lock.json mobile/package-lock.json
+          if git diff --cached --quiet; then
+            echo 'Verified EAS identity and dependency locks already match main.'
+          else
+            git commit -m 'Record verified Almost Human EAS project identity'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      - name: Save no-build preflight records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: almost-human-no-build-preflight
+          path: |
+            eas-project-info.txt
+            mobile/STEP7_PREFLIGHT.json
+            mobile/STEP7_QUADRUPLE_PREFLIGHT.md
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Report exact preflight blocker
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Almost Human no-build preflight needs attention — run $GITHUB_RUN_ID" \
+            --body "No EAS build was started. The preflight stopped here: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
