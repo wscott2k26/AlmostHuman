@@ -28,13 +28,14 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Verify no successful build already exists
+      - name: Refuse work after a successful iOS build
         shell: bash
         run: |
           set -euo pipefail
           if [[ -f STEP7_IOS_BUILD_RECORD.json ]]; then
-            echo 'An iOS build already exists; do not create another.'
+            echo 'A successful iOS build record already exists. Preflight must not relink or mutate the project.'
             cat STEP7_IOS_BUILD_RECORD.json
+            exit 1
           fi
 
       - name: Verify protected Expo credential exists
@@ -48,10 +49,25 @@ jobs:
             exit 1
           }
 
+      - name: Verify static app identity before EAS access
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+          const expo = app.expo || {};
+          if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
+          if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
+          if (expo.android?.package !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong Android package: ${expo.android?.package}`);
+          console.log(`Static identity verified for ${expo.owner}/${expo.slug}`);
+          NODE
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -62,6 +78,7 @@ jobs:
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
+          packager: npm
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Verify Expo account
@@ -72,20 +89,26 @@ jobs:
           echo "Expo account: $ACCOUNT"
           test "$ACCOUNT" = "$EXPECTED_OWNER"
 
-      - name: Install and quadruple-certify web cloud and security source
+      - name: Create root dependency lock and certify source
         shell: bash
         run: |
           set -euo pipefail
-          npm install --no-audit --no-fund
+          if [[ ! -f package-lock.json ]]; then
+            npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          fi
+          npm ci --no-audit --no-fund
           npm run test:quadruple
           node scripts/build-inline.mjs
 
-      - name: Install and certify native source
+      - name: Create mobile dependency lock and certify native source
         working-directory: mobile
         shell: bash
         run: |
           set -euo pipefail
-          npm install --no-audit --no-fund
+          if [[ ! -f package-lock.json ]]; then
+            npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          fi
+          npm ci --no-audit --no-fund
           npx expo install --check
           npm run doctor
           npm run typecheck
@@ -94,12 +117,18 @@ jobs:
           npx expo export --platform ios --output-dir dist-ios
           npx expo export --platform android --output-dir dist-android
 
-      - name: Create or link canonical EAS project without building
+      - name: Create or verify canonical EAS project without building
         working-directory: mobile
         shell: bash
         run: |
           set -euo pipefail
-          eas init --force --non-interactive
+          PROJECT_ID="$(node -e "const a=require('./app.json'); process.stdout.write(a.expo?.extra?.eas?.projectId || '')")"
+          if [[ -z "$PROJECT_ID" ]]; then
+            echo 'No EAS project ID is recorded. Creating/linking the canonical project once.'
+            eas init --force --non-interactive
+          else
+            echo "Existing EAS project ID found: $PROJECT_ID"
+          fi
           eas project:info --non-interactive | tee ../eas-project-info.txt
           node - <<'NODE'
           const fs = require('fs');
@@ -107,6 +136,7 @@ jobs:
           const expo = app.expo || {};
           if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
           if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
+          if (expo.android?.package !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong Android package: ${expo.android?.package}`);
           if (!expo.extra?.eas?.projectId) throw new Error('EAS project ID was not written to app.json');
           console.log(`Verified EAS project ${expo.extra.eas.projectId}`);
           NODE
@@ -116,12 +146,12 @@ jobs:
         run: |
           set -euo pipefail
           git config user.name 'Almost Human Preflight Bot'
-          git config user.email 'loftlatte25@gmail.com'
+          git config user.email 'wscott2k26@users.noreply.github.com'
           git add mobile/app.json package-lock.json mobile/package-lock.json
           if git diff --cached --quiet; then
             echo 'Verified EAS identity and dependency locks already match main.'
           else
-            git commit -m 'Record verified Almost Human EAS project identity'
+            git commit -m 'Record verified Almost Human EAS identity and dependency locks'
             git pull --rebase origin main
             git push origin HEAD:main
           fi
