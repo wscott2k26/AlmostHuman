@@ -34,9 +34,11 @@ jobs:
             echo 'complete=false' >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Apply deterministic repair
+      - name: Apply deterministic repair and gate follow-up
         if: steps.state.outputs.complete != 'true'
-        run: python3 scripts/repair_v84_native_experience.py
+        run: |
+          python3 scripts/repair_v84_native_experience.py
+          python3 scripts/repair_v84_gate_followup.py
 
       - name: Set up Node 20
         if: steps.state.outputs.complete != 'true'
@@ -109,6 +111,8 @@ jobs:
           grep -q "male-adult" app/app.js
           grep -q "customize-companion" app/app.js
           grep -q "onboardLookAndVoice" app/app.js
+          grep -q "One tap. No streak. No judgment." app/app.js
+          grep -q "simple, never meaningless" app/app.js
           ! grep -q "typing-dots" app/app.js
           ! grep -q "THOUGHT_PHASES" app/app.js
 
