@@ -1,6 +1,10 @@
 name: Submit Existing Almost Human Build to TestFlight
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/run-testflight-submit.json'
   workflow_dispatch:
     inputs:
       asc_app_id:
@@ -22,12 +26,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  EXPECTED_OWNER: wscott2k26
+  EXPECTED_OWNER: wscott2k8
   EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
 
 jobs:
   submit-existing-build:
-    if: ${{ inputs.confirm_submit == 'SUBMIT_EXISTING' }}
+    if: ${{ github.event_name == 'push' || inputs.confirm_submit == 'SUBMIT_EXISTING' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -37,6 +41,33 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+
+      - name: Validate explicit existing-build submission authorization
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_ASC_APP_ID: ${{ inputs.asc_app_id }}
+          MANUAL_CONFIRM: ${{ inputs.confirm_submit }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            node - <<'NODE'
+            const fs = require('fs');
+            const trigger = JSON.parse(fs.readFileSync('.github/run-testflight-submit.json', 'utf8'));
+            if (trigger.operation !== 'SUBMIT_EXISTING') throw new Error('Invalid submission operation.');
+            if (trigger.confirm !== 'SUBMIT_EXISTING') throw new Error('Missing exact submission confirmation.');
+            if (trigger.expectedOwner !== process.env.EXPECTED_OWNER) throw new Error('Submission owner mismatch.');
+            if (trigger.expectedBundleId !== process.env.EXPECTED_BUNDLE_ID) throw new Error('Submission bundle mismatch.');
+            if (!/^\d{8,15}$/.test(String(trigger.ascAppId || ''))) throw new Error('Invalid App Store Connect app ID.');
+            if (trigger.easBuildCreditsAuthorized !== 0) throw new Error('Submission lane authorizes zero new builds.');
+            if (trigger.easSubmissionsAuthorized !== 1) throw new Error('Exactly one existing-build submission must be authorized.');
+            fs.appendFileSync(process.env.GITHUB_ENV, `ASC_APP_ID=${trigger.ascAppId}\n`);
+            NODE
+          else
+            test "$MANUAL_CONFIRM" = "SUBMIT_EXISTING"
+            [[ "$MANUAL_ASC_APP_ID" =~ ^[0-9]{8,15}$ ]]
+            echo "ASC_APP_ID=$MANUAL_ASC_APP_ID" >> "$GITHUB_ENV"
+          fi
 
       - name: Confirm the exact successful iOS build exists
         shell: bash
@@ -51,14 +82,6 @@ jobs:
           console.log(`Exact recorded build: ${r.buildId}`);
           NODE
           test -f mobile/package-lock.json || { echo 'Mobile dependency lock is missing.'; exit 1; }
-
-      - name: Validate App Store Connect ID
-        shell: bash
-        env:
-          ASC_APP_ID: ${{ inputs.asc_app_id }}
-        run: |
-          set -euo pipefail
-          [[ "$ASC_APP_ID" =~ ^[0-9]{8,15}$ ]]
 
       - name: Verify static app identity
         working-directory: mobile
@@ -93,20 +116,18 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${EXPO_TOKEN:-}" || { echo 'EXPO_TOKEN repository secret is missing.'; exit 1; }
-          ACCOUNT="$(eas whoami | tr -d '\r' | tail -n 1)"
+          ACCOUNT="$(eas whoami | tr -d '\r' | head -n 1 | awk '{print $1}')"
           echo "Expo account: $ACCOUNT"
           test "$ACCOUNT" = "$EXPECTED_OWNER"
 
       - name: Install locked mobile dependencies
         working-directory: mobile
         shell: bash
-        run: npm ci --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Record App Store Connect identity
         working-directory: mobile
         shell: bash
-        env:
-          ASC_APP_ID: ${{ inputs.asc_app_id }}
         run: |
           set -euo pipefail
           node - <<'NODE'
@@ -132,7 +153,7 @@ jobs:
             echo 'App Store Connect identity already recorded.'
           else
             git commit -m 'Record Almost Human App Store Connect identity'
-            git pull --rebase origin main
+            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
 
