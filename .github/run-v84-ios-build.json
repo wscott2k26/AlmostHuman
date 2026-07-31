@@ -1,0 +1,12 @@
+{
+  "operation": "BUILD_V84_ONCE",
+  "confirm": "BUILD_V84_ONCE",
+  "requestedBy": "ChatGPT",
+  "requestedAt": "2026-07-31T20:56:00Z",
+  "expectedOwner": "wscott2k8",
+  "expectedBundleId": "com.stormandme.almosthuman",
+  "expectedEasProjectId": "cd0be7bb-e65a-454e-b255-3b261de060ee",
+  "certifiedSourceCommit": "35b8ca581d06a5e287c2ed2a24d7306d18276a01",
+  "easBuildCreditsAuthorized": 1,
+  "easSubmissionsAuthorized": 0
+}
