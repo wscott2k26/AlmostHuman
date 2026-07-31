@@ -5,7 +5,7 @@ on:
     branches:
       - feature/conversation-first-9-0
     paths:
-      - '.github/ah9-update.tar.gz'
+      - '.github/ah9-patch/READY'
 
 permissions:
   contents: write
@@ -29,14 +29,18 @@ jobs:
           node-version: '20'
           cache: npm
 
-      - name: Verify and extract reviewed source package
+      - name: Assemble and apply reviewed source patch
         shell: bash
         run: |
           set -euo pipefail
-          echo 'dd47430a9600fe218e7510e7d6c191c58aa22e66ed808a67ddca798aee7dd965  .github/ah9-update.tar.gz' | sha256sum -c -
-          tar -tzf .github/ah9-update.tar.gz | grep -Ev '(^/|\.\./|^\.git/)' >/dev/null
-          tar -xzf .github/ah9-update.tar.gz
-          rm .github/ah9-update.tar.gz
+          test "$(find .github/ah9-patch -maxdepth 1 -name 'part-*' | wc -l)" -eq 9
+          cat .github/ah9-patch/part-* > "$RUNNER_TEMP/ah9.patch.gz.b64"
+          base64 --decode "$RUNNER_TEMP/ah9.patch.gz.b64" > "$RUNNER_TEMP/ah9.patch.gz"
+          echo '264590ef7a57c30da7db50abfb5f41cae826bacf2fe826e7d6631d26286d5e48  '"$RUNNER_TEMP"'/ah9.patch.gz' | sha256sum -c -
+          gzip --decompress --stdout "$RUNNER_TEMP/ah9.patch.gz" > "$RUNNER_TEMP/ah9.patch"
+          git apply --check "$RUNNER_TEMP/ah9.patch"
+          git apply "$RUNNER_TEMP/ah9.patch"
+          rm -rf .github/ah9-patch
 
       - name: Verify root candidate
         shell: bash
