@@ -18,7 +18,7 @@ concurrency:
 
 env:
   CI: '1'
-  EXPECTED_OWNER: wscott2k26
+  EXPECTED_OWNER: wscott2k8
   EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
 
 jobs:
@@ -144,7 +144,7 @@ jobs:
             echo 'Audit result already current.'
           else
             git commit -m 'Record successful Almost Human full no-credit audit'
-            git pull --rebase origin main
+            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
 
