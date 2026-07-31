@@ -1,0 +1,10 @@
+{
+  "operation": "BUILD_ONCE",
+  "confirm": "BUILD_ONCE",
+  "requestedBy": "Willy Will via ChatGPT",
+  "requestedAt": "2026-07-31T17:43:00Z",
+  "expectedOwner": "wscott2k8",
+  "expectedBundleId": "com.stormandme.almosthuman",
+  "easBuildCreditsAuthorized": 1,
+  "easSubmissionsAuthorized": 0
+}
