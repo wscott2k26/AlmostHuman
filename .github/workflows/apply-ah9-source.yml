@@ -1,0 +1,83 @@
+name: Apply Reviewed Almost Human 9.0 Source
+
+on:
+  push:
+    branches:
+      - feature/conversation-first-9-0
+    paths:
+      - '.github/ah9-update.tar.gz'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-reviewed-ah9-source
+  cancel-in-progress: false
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/conversation-first-9-0
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Verify and extract reviewed source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'd12ab729a424d0b34d720743b94daf4715ae3d9e71f45c8c94ecf269a57ab98c  .github/ah9-update.tar.gz' | sha256sum -c -
+          tar -tzf .github/ah9-update.tar.gz | grep -Ev '(^/|\.\./|^\.git/)' >/dev/null
+          tar -xzf .github/ah9-update.tar.gz
+          rm .github/ah9-update.tar.gz
+
+      - name: Verify root candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run lint
+          npm run typecheck:edge
+          npm test
+          npm run test:integrity
+          npm run build
+          node scripts/build-inline.mjs
+          npm run test:browser
+
+      - name: Verify native candidate without EAS
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd mobile
+          npm ci
+          npm run doctor
+          npm run typecheck
+          npm run lint
+          npm run preflight:quadruple
+
+      - name: Prove zero paid or submission commands
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -nE 'eas[[:space:]]+(build|submit)|altool|notarytool' .github/workflows/apply-ah9-source.yml
+          test ! -f .github/run-ios-build-4.json
+          test ! -f .github/run-ios-testflight-build-4.json
+
+      - name: Commit verified source and remove one-time installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/apply-ah9-source.yml
+          git config user.name 'Almost Human 9.0 Source Installer'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: implement conversation-first 9.0 candidate'
+          git pull --rebase origin feature/conversation-first-9-0
+          git push origin HEAD:feature/conversation-first-9-0
