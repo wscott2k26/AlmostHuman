@@ -42,11 +42,14 @@ try {
     fetchText('/'), fetchText('/app.js'), fetchText('/styles.css'), fetchText('/manifest.webmanifest'),
   ]);
   assertIncludes(index, '<title>Almost Human</title>', 'index.html');
-  assertIncludes(app, 'Digital birth sequence', 'app.js');
+  assertIncludes(app, 'v9-welcome', 'app.js');
+  assertIncludes(app, 'createOptimisticTurn', 'app.js');
+  assertIncludes(app, "nativePost('audio-play'", 'app.js');
   assertIncludes(app, 'AlmostHumanEngine', 'app.js');
   assertIncludes(app, 'Continue as Guest', 'app.js');
   assertIncludes(manifest, 'Almost Human', 'manifest');
-  assertIncludes(styles, 'mobile-tabs', 'styles.css');
+  assertIncludes(styles, 'v9-five-tabs', 'styles.css');
+  assertIncludes(styles, 'v9-voice-mode', 'styles.css');
   assertIncludes(styles, 'being-face', 'styles.css');
   console.log('Browser delivery smoke passed.');
 } finally {

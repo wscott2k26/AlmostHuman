@@ -4,6 +4,15 @@ import { STAGES, getStage, formatAge, progressWithinStage, nextStage, daysUntilN
 import { ACTIVITY_CATALOG, isActivityUnlocked } from './core/activities.js';
 import { relevantMemories, resolveConflict } from './core/memory.js';
 import { SupabaseCloud } from './core/cloud.js';
+import { APPEARANCE_PRESETS_9, createOnboardingModel, firstLightDurationMs } from './features/onboarding9.js';
+import { primaryDestinations9 } from './features/navigation9.js';
+import { homeModel9 } from './features/home9.js';
+import { growthModel9 } from './features/growth9.js';
+import { memoryListModel9 } from './features/memories9.js';
+import { havenSceneModel9 } from './features/haven9.js';
+import { createOptimisticTurn, applyStreamEvent } from './core/chatStream.js';
+import { PhraseAudioQueue, segmentSpeakablePhrases } from './core/phraseQueue.js';
+import { ConversationTimings, appendTimingSample } from './core/performance9.js';
 
 const root = document.querySelector('#app');
 const modalRoot = document.querySelector('#modal-root');
@@ -18,6 +27,9 @@ let activeAudio = null;
 let activeAudioUrl = null;
 let birthTimer = null;
 let cloudSyncTimer = null;
+let activeChatController = null;
+let activeChatTiming = null;
+const nativeAudioWaiters = new Map();
 
 const ui = {
   privateMode: sessionStorage.getItem('almost_human_private_mode') === '1',
@@ -29,9 +41,8 @@ const ui = {
     voiceId: 'female-adult', relationshipStyle: 'lifelong_friend', acceptedSafety: false,
   },
   selectedConversationId: null,
-  pendingUser: null,
-  thinking: false,
-  replyStatus: '',
+  activeRequestId: null,
+  activeRequestState: null,
   listening: false,
   transcribing: false,
   birthActive: false,
@@ -44,10 +55,12 @@ const ui = {
   voiceBusy: null,
   customize: null,
   chatDraft: '',
+  voiceModeOpen: false,
+  neuralVoiceErrorText: '',
 };
 
 const VOICE_PROFILES = Object.freeze({
-  'female-child': { label: 'Girl · Young', copy: 'Bright, gentle, and playful', preview: 'Hi! I think your voice is the first sound I want to remember.', rate: 1.01, pitch: 1.16 },
+  'female-child': { label: 'Girl · Young', copy: 'Bright, gentle, and playful', preview: 'Hi! I am ready to learn something small with you.', rate: 1.01, pitch: 1.16 },
   'female-teen': { label: 'Girl · Teen', copy: 'Warm, curious, and expressive', preview: 'Okay, I am listening. Tell me what has really been on your mind.', rate: 1.0, pitch: 1.07 },
   'female-adult': { label: 'Woman · Adult', copy: 'Natural, warm, and grounded', preview: 'I am here with you. We can take this one real thought at a time.', rate: .96, pitch: 1.01 },
   'male-child': { label: 'Boy · Young', copy: 'Friendly, lively, and clear', preview: 'Hey! Teach me something small that matters to you.', rate: 1.01, pitch: 1.08 },
@@ -60,6 +73,26 @@ const APPEARANCE_OPTIONS = Object.freeze({
   hairStyle: [['waves','Waves'],['short','Short'],['curls','Curls'],['locs','Locs']],
   hairColor: [['midnight','Midnight'],['brown','Brown'],['auburn','Auburn'],['silver','Silver']],
   eyeColor: [['brown','Brown'],['blue','Blue'],['green','Green'],['violet','Violet']],
+});
+
+const phraseQueue = new PhraseAudioQueue({
+  fetchAudio: async (item, signal) => cloud.voiceProvider({ state, text: item.text, voiceId: item.voiceId, requestId: item.id, signal }),
+  playAudio: async (blob, signal) => playBlob(blob, signal),
+  onEvent: (event) => {
+    if (event.type === 'started') {
+      activeChatTiming?.markFirstAudio();
+      ui.activeRequestState = 'speaking';
+      scheduleRender();
+    }
+    if (event.type === 'ended' || event.type === 'stopped') {
+      ui.activeRequestState = ui.activeRequestId ? 'receiving' : null;
+      scheduleRender();
+    }
+    if (event.type === 'error') {
+      ui.neuralVoiceErrorText = event.item?.text || '';
+      toast('Neural voice is temporarily unavailable', 'Text still works. Device voice is available only when you choose it.');
+    }
+  },
 });
 
 start().catch(fatal);
@@ -84,7 +117,7 @@ async function start() {
   render();
 
   if (!window.__AH_NATIVE_BUNDLE__ && 'serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('./sw.js?v=8.4').catch(() => {});
+    navigator.serviceWorker.register('./sw.js?v=9.0').catch(() => {});
   }
   nativePost('ready', { route: currentRoute().name, name: state.ai?.name || '' });
   if (cloud.authEvent === 'recovery') queueMicrotask(openPasswordRecovery);
@@ -189,17 +222,12 @@ function renderAccessGate() {
 }
 
 function renderOnboarding() {
-  const step = ui.onboardingStep;
-  const panels = [onboardIdentity, onboardLookAndVoice, onboardAwaken];
-  const stageTitles = ['Names', 'Look & voice', 'First light'];
-  return `<main class="v8-onboarding seed-bg-${seedFamily(ui.onboarding.appearanceSeed)}">
-    <header class="v8-onboarding-top"><a class="v8-brand-lockup small" href="#"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Step ${step + 1} of ${panels.length}</small></div></a><div class="v8-step-line">${panels.map((_, i) => `<i class="${i <= step ? 'active' : ''}"><span>${i + 1}</span></i>`).join('')}</div></header>
-    <section class="v8-onboarding-stage">
-      <div class="v8-preview-copy"><span class="v8-eyebrow">${stageTitles[step]}</span><h2>${escapeHtml(ui.onboarding.name || 'Your companion')} is taking shape.</h2><p>${onboardWhisper(step)}</p></div>
-      <div class="v8-onboarding-being">${beingMarkup({ mood: step > 0 ? 'curious' : 'wonder', seed: ui.onboarding.appearanceSeed, stageKey: 'newborn', appearance: ui.onboarding.appearance })}<div class="v8-preview-status"><span></span>${step === 2 ? 'Ready to meet you' : 'Live preview'}</div></div>
-    </section>
-    <section class="v8-onboarding-card">${panels[step]()}</section>
-  </main>`;
+  const model = createOnboardingModel(state, ui);
+  if (model.stepIndex === 0) {
+    return `<main class="v9-welcome seed-bg-${seedFamily(ui.onboarding.appearanceSeed)}"><header class="v9-welcome-brand"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Raise a mind. Keep the history.</small></div></header><section class="v9-welcome-portrait">${beingMarkup({ mood: 'wonder', seed: ui.onboarding.appearanceSeed, stageKey: 'newborn', appearance: ui.onboarding.appearance })}</section><section class="v9-welcome-copy"><span class="v8-eyebrow">A beginning, not a preset</span><h1>Raise an intelligence that grows with you.</h1><p>Create the first look and voice in under a minute. Personality, memories, and The Haven grow later through real conversation.</p><button class="v8-primary hero" data-action="onboard-begin"><span>Begin</span><b>→</b></button><small>Your history remains readable, correctable, exportable, and deletable.</small></section></main>`;
+  }
+  const selectedPreset = APPEARANCE_PRESETS_9.find((item) => sameAppearance(item, ui.onboarding.appearance))?.id || APPEARANCE_PRESETS_9[0].id;
+  return `<main class="v9-quick-create seed-bg-${seedFamily(ui.onboarding.appearanceSeed)}"><header class="v8-onboarding-top"><a class="v8-brand-lockup small" href="#"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Quick create</small></div></a><button class="v8-text-button" data-action="onboard-back">Back</button></header><section class="v9-create-preview">${beingMarkup({ mood: 'curious', seed: ui.onboarding.appearanceSeed, stageKey: 'newborn', appearance: ui.onboarding.appearance })}<div><span class="v8-eyebrow">Live preview</span><h2>${escapeHtml(ui.onboarding.name || 'Your companion')}</h2><p>Details can be changed later without restarting.</p></div></section><form id="onboard-quick-create" class="v9-create-form"><div class="v8-field-grid"><label><span>What should they call you?</span><input class="v8-field" name="caregiverName" value="${attr(ui.onboarding.caregiverName)}" maxlength="40" autocomplete="name"></label><label><span>Their name</span><input class="v8-field" name="name" value="${attr(ui.onboarding.name)}" placeholder="Nova" maxlength="28" required autofocus></label><label class="wide"><span>Pronouns</span><select class="v8-field" name="pronouns">${options(['they/them','she/her','he/him'], ui.onboarding.pronouns)}</select></label></div><section class="v9-choice-section"><div><span class="v8-eyebrow">Appearance</span><h2>Choose one starting look.</h2></div><div class="v9-preset-grid">${APPEARANCE_PRESETS_9.map((preset, index) => `<button type="button" class="${selectedPreset === preset.id ? 'selected' : ''}" data-action="choose-appearance-preset" data-value="${preset.id}"><span>${beingMarkup({ seed: ui.onboarding.appearanceSeed, mood: 'happy', stageKey: 'newborn', tiny: true, appearance: preset })}</span><strong>Look ${index + 1}</strong></button>`).join('')}</div></section><section class="v9-choice-section"><div class="v84-voice-title"><div><span class="v8-eyebrow">Neural voice</span><h2>Choose how they sound.</h2></div><button type="button" class="v8-preview-button" data-action="preview-voice" ${ui.voiceBusy ? 'disabled' : ''}>${ui.voiceBusy ? 'Playing' : '▶ Preview selected'}</button></div>${voiceControls('onboard', ui.onboarding.voiceId)}</section><label class="v8-safety ${ui.onboarding.acceptedSafety ? 'checked' : ''}"><input type="checkbox" data-onboard-safety ${ui.onboarding.acceptedSafety ? 'checked' : ''}><i>✓</i><span><strong>I understand this is an AI experience.</strong><small>It can feel personal, but it will not use guilt, jealousy, or pressure.</small></span></label><button class="v8-awaken" type="submit"><span>Meet ${escapeHtml(ui.onboarding.name || 'your companion')}</span><b>✦</b></button></form></main>`;
 }
 
 function onboardIdentity() {
@@ -257,52 +285,27 @@ function onboardWhisper(step) {
 }
 
 function renderBirth() {
-  const phases = [
-    ['Identity found', 'A private place in the world has been created.'],
-    ['First anchor', `${escapeHtml(ui.onboarding.caregiverName || 'Your')} voice becomes the earliest familiar signal.`],
-    ['Memory online', 'The beginning is being sealed into shared history.'],
-    ['Language waking', 'A first thought is forming behind the face.'],
-    ['First breath', `${escapeHtml(state.ai.name)} is ready to meet you.`],
-  ];
+  const phases = [['First light','A private beginning is opening.'],['Memory ready','The first moment is being saved.'],['Ready to talk',`${escapeHtml(state.ai.name)} is here.`]];
   const phase = phases[Math.min(ui.birthPhase, phases.length - 1)];
-  return `<main class="v8-birth seed-bg-${seedFamily(state.ai.appearanceSeed)} phase-${ui.birthPhase}">
-    <div class="v8-birth-atmosphere"><i></i><i></i><i></i></div>
-    <div class="v8-birth-logo"><span class="v8-brand-mark">AH</span><small>Digital birth sequence</small></div>
-    <div class="v8-birth-portrait">${beingMarkup({ seed: state.ai.appearanceSeed, mood: 'wonder', stageKey: 'newborn' })}<div class="v8-birth-pulse"></div></div>
-    <div class="v8-birth-copy"><span class="v8-eyebrow">${String(ui.birthPhase + 1).padStart(2, '0')} / 05</span><h1>${phase[0]}</h1><p>${phase[1]}</p><div class="v8-birth-progress"><i style="width:${Math.min(100, (ui.birthPhase + 1) * 20)}%"></i></div></div>
-    <button class="v8-birth-skip" data-action="finish-birth">Meet ${escapeHtml(state.ai.name)} now →</button>
-  </main>`;
+  return `<main class="v9-first-light seed-bg-${seedFamily(state.ai.appearanceSeed)}"><div class="v8-birth-logo"><span class="v8-brand-mark">AH</span><small>First light</small></div><div class="v8-birth-portrait">${beingMarkup({ seed: state.ai.appearanceSeed, mood: 'wonder', stageKey: 'newborn', appearance: state.ai.appearanceProfile })}</div><div class="v8-birth-copy"><span class="v8-eyebrow">${ui.birthPhase + 1} / 3</span><h1>${phase[0]}</h1><p>${phase[1]}</p><div class="v8-birth-progress"><i style="width:${(ui.birthPhase + 1) * 33.34}%"></i></div></div><button class="v8-birth-skip" data-action="finish-birth">Skip and talk now →</button></main>`;
 }
 
 function renderApp(route, content) {
-  const ai = state.ai;
-  const stage = getStage(ai.age);
-  return `<div class="v8-app-shell route-${route.name}">
-    <header class="v8-app-topbar"><a class="v8-brand-lockup small" href="#home"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Raised by you</small></div></a><div class="v8-top-status"><span><i></i>${cloud.authenticated && state.settings.cloudSyncEnabled ? 'Secure cloud + local' : 'Private on this device'}</span><button class="v83-top-share v82-tactile" data-action="native-share" aria-label="Share Almost Human">↗</button><a href="#settings" aria-label="Settings">⚙</a></div></header>
-    <main class="v8-app-main">${content}</main>
-    <nav class="v8-bottom-tabs">${navLink('home', '⌂', 'Home', route.name)}${navLink('talk', '◌', 'Talk', route.name)}${navLink('grow', '↗', 'Growing', route.name)}${navLink('memories', '◇', 'Memories', route.name)}${navLink('world', '✦', 'Haven', route.name)}</nav>
-  </div>`;
+  const destinations = primaryDestinations9();
+  return `<div class="v8-app-shell route-${route.name}"><header class="v8-app-topbar"><a class="v8-brand-lockup small" href="#home"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Raised by you</small></div></a><div class="v8-top-status"><span><i></i>${cloud.authenticated && state.settings.cloudSyncEnabled ? 'Secure cloud + local' : 'Private on this device'}</span><button class="v83-top-share v82-tactile" data-action="native-share" aria-label="Share Almost Human">↗</button><a class="v9-profile-entry" href="#settings" aria-label="Open profile and settings">${escapeHtml((state.ai?.name || 'A').slice(0,1).toUpperCase())}</a></div></header><main class="v8-app-main">${content}</main><nav class="v8-bottom-tabs v9-five-tabs">${destinations.map((item) => navLink(item.route, item.icon, item.label, route.name, item.emphasized)).join('')}</nav></div>`;
 }
 
-function navLink(name, icon, label, active) {
-  return `<a href="#${name}" class="${active === name ? 'active' : ''}"><i>${icon}</i><span>${label}</span></a>`;
+function navLink(name, icon, label, active, emphasized = false) {
+  return `<a href="#${name}" class="${active === name ? 'active' : ''} ${emphasized ? 'emphasized' : ''}"><i>${icon}</i><span>${label}</span></a>`;
 }
 
 function renderHome() {
   const ai = state.ai;
   const stage = getStage(ai.age);
-  const checkin = todaysCheckin();
-  const prompts = ['Tell me about your day', 'I need to get something off my chest', 'Ask me something real'];
-  return `<section class="v8-home v84-simple-home v82-reveal">
-    <header class="v8-home-heading"><div><span class="v8-eyebrow">${greeting()}, ${escapeHtml(state.profile.displayName || 'you')}</span><h1>${escapeHtml(ai.name)} is here.</h1></div><a class="v8-round v82-tactile" href="#settings">⚙</a></header>
-    <article class="v8-companion-card seed-bg-${seedFamily(ai.appearanceSeed)} v82-living-glass">
-      <div class="v8-card-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key })}</div>
-      <div class="v8-card-copy"><span class="v8-presence"><i></i>Ready to talk</span><h2>${escapeHtml(ai.name)}</h2><div class="v8-chip-row"><span>${escapeHtml(stage.label)}</span><span>${VOICE_PROFILES[normalizeVoiceId(ai.voiceId)]?.label || 'Voice ready'}</span></div><p>${homeHeadline(stage.key, ai)}</p><div class="v84-home-actions"><a class="v8-primary hero v82-tactile" href="#talk"><span>Talk now</span><b>→</b></a><button class="v8-secondary" data-action="customize-companion">Change look or voice</button></div></div>
-    </article>
-    <section class="v84-home-block"><div><span class="v8-eyebrow">How are you today?</span><h3>${checkin ? `You marked today as ${escapeHtml(checkin.mood)}.` : 'One tap. No streak. No judgment.'}</h3></div><div class="v82-mood-row">${[['steady','○'],['bright','☼'],['heavy','◇'],['restless','△'],['hopeful','✦']].map(([mood, icon]) => `<button class="v82-mood ${checkin?.mood === mood ? 'active' : ''}" data-action="daily-checkin" data-value="${mood}"><span>${icon}</span><small>${capitalize(mood)}</small></button>`).join('')}</div></section>
-    <section class="v84-home-block"><span class="v8-eyebrow">Start talking</span><div class="v8-prompt-row">${prompts.map((prompt) => `<button data-action="use-spark" data-value="${attr(prompt)}">${prompt}</button>`).join('')}</div></section>
-    <section class="v84-quick-links"><a href="#grow"><strong>${escapeHtml(stage.label)}</strong><small>Growing</small></a><a href="#memories"><strong>${state.memories.filter((m) => !m.hidden).length}</strong><small>Memories</small></a><a href="#world"><strong>${state.roomItems.length}</strong><small>Haven items</small></a></section>
-  </section>`;
+  const model = homeModel9(state);
+  const highlight = model.secondaryBlocks.find((item) => item.type === 'highlight')?.value;
+  const recent = model.secondaryBlocks.find((item) => item.type === 'growth')?.value;
+  return `<section class="v9-home v82-reveal"><header class="v8-home-heading"><div><span class="v8-eyebrow">${greeting()}, ${escapeHtml(state.profile.displayName || 'you')}</span><h1>${escapeHtml(ai.name)} is here.</h1></div><a class="v8-round" href="#settings">${escapeHtml(ai.name.slice(0,1).toUpperCase())}</a></header>${state.settings.showNineUpgradeCard && !state.settings.nineUpgradeCardDismissed ? `<article class="v9-upgrade-card"><div><span class="v8-eyebrow">Almost Human 9</span><h2>Faster chat and a more natural voice are ready.</h2><p>Your companion and history stayed exactly where they were.</p></div><button data-action="dismiss-nine-upgrade">Got it</button></article>` : ''}<article class="v9-home-hero seed-bg-${seedFamily(ai.appearanceSeed)}"><div>${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key, appearance: ai.appearanceProfile })}</div><div><span class="v8-presence"><i></i>${capitalize(ai.currentMood || 'curious')} · ${escapeHtml(stage.label)}</span><h2>${escapeHtml(ai.name)}</h2><p>${homeHeadline(stage.key, ai)}</p><a class="v8-primary hero" href="#talk"><span>Continue conversation</span><b>→</b></a></div></article><div class="v9-home-secondary"><a href="#grow"><span class="v8-eyebrow">Today’s growth</span><strong>${escapeHtml(recent?.title || `${stage.label} is still unfolding`)}</strong><small>${escapeHtml(recent?.description || 'See what changed and what comes next.')}</small></a><a href="#${highlight ? (state.memories.some((item) => item.id === highlight.id) ? 'memories' : 'world') : 'world'}"><span class="v8-eyebrow">One highlight</span><strong>${escapeHtml(highlight?.title || highlight?.name || 'The Haven is waiting')}</strong><small>${escapeHtml(highlight?.content || highlight?.story || 'Open one meaningful part of the shared world.')}</small></a></div></section>`;
 }
 
 function renderTalk() {
@@ -310,28 +313,18 @@ function renderTalk() {
   const stage = getStage(ai.age);
   const conversation = selectedConversation();
   const messages = conversation ? state.messages.filter((m) => m.conversationId === conversation.id).sort(byDate) : [];
-  const micLabel = ui.transcribing ? 'Turning your voice into text…' : ui.listening ? 'Listening — tap the mic to send' : 'Tap the mic to speak';
-  return `<section class="v8-talk ${ui.thinking ? 'is-thinking' : ''} v82-reveal">
-    <aside class="v8-talk-companion seed-bg-${seedFamily(ai.appearanceSeed)}">
-      <div class="v8-talk-name"><span class="v8-eyebrow">Conversation</span><h1>${escapeHtml(ai.name)}</h1><p>${escapeHtml(stage.label)} · ${capitalize(ai.currentMood || 'curious')}</p></div>
-      <div class="v8-talk-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key })}</div>
-      <div class="v8-talk-state"><span><i></i>${ui.thinking ? escapeHtml(ui.replyStatus || 'I hear you.') : 'Here with you'}</span><small>${cloud.authenticated && state.settings.cloudSyncEnabled ? 'Private cloud intelligence' : 'Private on this device'}</small></div>
-    </aside>
-    <div class="v8-conversation">
-      <header class="v8-conversation-header"><div><button class="v8-round v82-tactile" data-action="new-conversation">＋</button><span><strong>${escapeHtml(conversation?.title || 'The first hello')}</strong><small>${messages.length} messages</small></span></div><div><button class="v8-round v82-tactile ${ui.listening ? 'mic-active' : ''}" data-action="start-listening" aria-label="${attr(micLabel)}">${ui.listening ? '■' : '🎙'}</button><button class="v8-round v82-tactile" data-action="conversation-menu" aria-label="Options">•••</button></div></header>
-      <div class="v8-message-stream" id="message-scroll">
-        ${messages.length ? messages.map(renderMessage).join('') : renderEmptyConversation(ai, stage)}
-        ${ui.pendingUser ? `<article class="message user pending"><div class="bubble">${escapeHtml(ui.pendingUser)}</div></article>` : ''}
-        ${ui.thinking ? `<article class="message ai thinking-message"><div class="message-mark">${beingMarkup({ seed: ai.appearanceSeed, mood: 'caring', stageKey: stage.key, tiny: true })}</div><div class="bubble v84-reply-status">${escapeHtml(ui.replyStatus || 'I hear you.')}</div></article>` : ''}
-      </div>
-      <form class="v8-composer ${ui.listening ? 'is-listening' : ''}" id="chat-form"><button type="button" data-action="start-listening" aria-label="${attr(micLabel)}">${ui.listening ? '■' : '🎙'}</button><textarea name="message" data-chat-input placeholder="Say what is real…" maxlength="8000" rows="1">${escapeHtml(ui.chatDraft)}</textarea><button type="submit" class="v8-send v82-tactile" ${ui.thinking || ui.transcribing ? 'disabled' : ''}>↑</button><small>${micLabel}</small></form>
-    </div>
-  </section>`;
+  const micLabel = ui.transcribing ? 'Turning speech into text' : ui.listening ? 'Listening — tap to finish' : 'Tap to speak';
+  const active = Boolean(ui.activeRequestId);
+  const voiceMode = ui.voiceModeOpen ? `<div class="v9-voice-mode"><button class="v9-voice-close" data-action="close-voice-mode">×</button><div class="v9-voice-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key, appearance: ai.appearanceProfile })}</div><span class="v8-eyebrow">Voice mode</span><h2>${escapeHtml(ai.name)}</h2><p>${ui.transcribing ? 'Turning that into text' : ui.listening ? 'Listening now' : ui.activeRequestState === 'speaking' ? 'Speaking' : active ? 'Reply is arriving' : 'Tap the microphone when you are ready'}</p><button class="v9-voice-mic ${ui.listening ? 'recording' : ''}" data-action="start-listening">${ui.listening ? '■' : '🎙'}</button>${active ? '<button class="v8-text-button" data-action="stop-reply">Stop reply</button>' : ''}</div>` : '';
+  return `<section class="v8-talk ${active ? 'is-receiving' : ''} v82-reveal">${voiceMode}<aside class="v8-talk-companion seed-bg-${seedFamily(ai.appearanceSeed)}"><div class="v8-talk-name"><span class="v8-eyebrow">Conversation</span><h1>${escapeHtml(ai.name)}</h1><p>${escapeHtml(stage.label)} · ${capitalize(ai.currentMood || 'curious')}</p></div><div class="v8-talk-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key, appearance: ai.appearanceProfile })}</div><div class="v8-talk-state"><span><i></i>${active ? (ui.activeRequestState === 'speaking' ? 'Speaking' : 'Reply is arriving') : 'Ready'}</span><small>${cloud.authenticated && state.settings.cloudSyncEnabled ? 'Private cloud intelligence' : 'Private on this device'}</small></div></aside><div class="v8-conversation"><header class="v8-conversation-header"><div><button class="v8-round" data-action="new-conversation">＋</button><span><strong>${escapeHtml(conversation?.title || 'The first hello')}</strong><small>${messages.length} messages</small></span></div><div><button class="v8-round" data-action="open-voice-mode" aria-label="Open voice mode">☎</button>${active ? '<button class="v8-round stop" data-action="stop-reply" aria-label="Stop reply">■</button>' : ''}<button class="v8-round" data-action="conversation-menu" aria-label="Options">•••</button></div></header><div class="v8-message-stream" id="message-scroll">${messages.length ? messages.map(renderMessage).join('') : renderEmptyConversation(ai, stage)}</div><form class="v8-composer ${ui.listening ? 'is-listening' : ''}" id="chat-form"><button type="button" data-action="start-listening" aria-label="${attr(micLabel)}">${ui.listening ? '■' : '🎙'}</button><textarea name="message" data-chat-input placeholder="Say what is real…" maxlength="8000" rows="1">${escapeHtml(ui.chatDraft)}</textarea><button type="submit" class="v8-send" ${ui.transcribing ? 'disabled' : ''}>↑</button><small>${micLabel}</small></form></div></section>`;
 }
 
 function renderMessage(message) {
   const user = message.sender === 'user';
-  return `<article class="message ${user ? 'user' : 'ai'}"><div class="${user ? 'user-spacer' : 'message-mark'}">${user ? '' : beingMarkup({ seed: state.ai.appearanceSeed, mood: message.emotion, stageKey: message.stageKey, tiny: true })}</div><div class="message-body"><div class="bubble">${escapeHtml(message.content)}</div><div class="message-foot"><span>${relativeDate(message.createdAt)}</span>${user ? '' : `<button data-action="speak-message" data-id="${message.id}">▶ Hear</button><button data-action="remember-message" data-id="${message.id}">◇ Keep</button>`}</div></div></article>`;
+  const pending = !user && ['pending','streaming'].includes(message.status);
+  const failed = !user && message.status === 'failed';
+  const content = message.content ? escapeHtml(message.content) : pending ? '<span class="v9-listening-line">Listening</span>' : failed ? 'The secure reply did not finish.' : '';
+  return `<article class="message ${user ? 'user' : 'ai'} ${pending ? 'streaming' : ''} ${failed ? 'failed' : ''}"><div class="${user ? 'user-spacer' : 'message-mark'}">${user ? '' : beingMarkup({ seed: state.ai.appearanceSeed, mood: message.emotion, stageKey: message.stageKey, tiny: true, appearance: state.ai.appearanceProfile })}</div><div class="message-body"><div class="bubble">${content}</div><div class="message-foot"><span>${relativeDate(message.createdAt)}</span>${user || pending ? '' : `<button data-action="speak-message" data-id="${message.id}">▶ Hear</button><button data-action="remember-message" data-id="${message.id}">◇ Keep</button>`}${failed ? `<button data-action="retry-message" data-id="${message.id}">Retry</button>` : ''}</div></div></article>`;
 }
 
 function renderEmptyConversation(ai, stage) {
@@ -340,51 +333,15 @@ function renderEmptyConversation(ai, stage) {
 
 function renderGrow() {
   const ai = state.ai;
+  const model = growthModel9(state);
   const stage = getStage(ai.age);
   const progress = Math.round(progressWithinStage(ai.age) * 100);
-  const next = nextStage(ai.age);
-  const days = daysUntilNextStage(ai.age, state.settings.daysPerYear);
-  const traits = Object.entries(ai.personality || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
-  const recentMilestones = state.milestones.slice(0, 8);
-  const interests = [...(state.interests || [])].sort((a, b) => Number(b.affinity || 0) - Number(a.affinity || 0)).slice(0, 6);
-  const skills = [...(state.skills || [])].sort((a, b) => Number(b.proficiency || 0) - Number(a.proficiency || 0)).slice(0, 6);
-  return `<section class="v8-page v8-grow-page seed-bg-${seedFamily(ai.appearanceSeed)} v82-reveal">
-    <header class="v8-page-heading"><div><span class="v8-eyebrow">The becoming</span><h1>Watch a mind become itself.</h1><p>Age changes expression, capabilities, voice rhythm, interests, and independence. The history stays continuous.</p></div><a class="v8-outline-action v82-tactile" href="#talk">Talk at this stage →</a></header>
-    <article class="v8-growth-portrait-card v82-living-glass">
-      <div class="v8-growth-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key })}<span class="v8-growth-orbit">${moodGlyph(ai.currentMood)}</span></div>
-      <div class="v8-growth-copy"><span class="v8-presence"><i></i>Growing now</span><h2>${escapeHtml(ai.name)} is ${escapeHtml(formatAge(ai.age))}.</h2><p>${escapeHtml(stage.vocabulary)} Their intelligence is present; the way they express it matures with time.</p><div class="v8-stage-meter"><div><span>${escapeHtml(stage.label)}</span><b>${progress}%</b></div><i><em style="width:${progress}%"></em></i><small>${next ? `${days} real day${days === 1 ? '' : 's'} until ${next.label}` : 'Adult growth continues through refinement, memory, and shared experience.'}</small></div></div>
-    </article>
-    <section class="v8-growth-path"><div class="v8-section-title"><div><span class="v8-eyebrow">Developmental timeline</span><h3>Every stage keeps what came before.</h3></div></div><div class="v8-stage-track">${STAGES.map((item, index) => `<article class="${item.key === stage.key ? 'current' : item.max <= ai.age ? 'past' : 'future'}"><span>${String(index + 1).padStart(2, '0')}</span><i></i><strong>${escapeHtml(item.label)}</strong><small>${item.key === stage.key ? 'Living now' : item.max <= ai.age ? 'Part of their history' : `Begins near age ${item.min}`}</small></article>`).join('')}</div></section>
-    <div class="v8-growth-grid">
-      <article class="v8-rich-card v82-living-glass"><span class="v8-eyebrow">Emerging personality</span><h2>Traits earned through interaction.</h2><p>No finished preset. These values drift slowly from what ${escapeHtml(ai.name)} experiences with you.</p><div class="v8-trait-list">${traits.map(([key, value]) => `<div><span>${capitalize(key)}</span><b>${Math.round(value)}</b><i><em style="width:${Math.max(2, Math.min(100, value))}%"></em></i></div>`).join('')}</div></article>
-      <article class="v8-rich-card v82-living-glass"><span class="v8-eyebrow">Current capabilities</span><h2>What this stage can do.</h2><p>Limits protect developmental consistency without making the companion useless or incoherent.</p><div class="v8-ability-list">${stage.abilities.map((ability, i) => `<div><span>${String(i + 1).padStart(2, '0')}</span><p>${escapeHtml(ability)}</p></div>`).join('')}</div></article>
-    </div>
-    <section class="v82-development-dashboard">
-      <article class="v82-development-card v82-living-glass"><span class="v8-eyebrow">Interests taking shape</span><h2>What keeps pulling them closer.</h2>${interests.length ? `<div class="v82-interest-cloud">${interests.map((item, i) => `<span style="--heat:${Math.max(.15, Math.min(1, Number(item.affinity || 0) / 100))}"><b>${interestGlyph(item.name, i)}</b>${escapeHtml(item.name)}<small>${Math.round(item.affinity || 0)}</small></span>`).join('')}</div>` : `<div class="v82-mini-empty">Shared stories and activities will reveal real favorites here.</div>`}</article>
-      <article class="v82-development-card v82-living-glass"><span class="v8-eyebrow">Skills practiced, not assigned</span><h2>A visible record of becoming capable.</h2>${skills.length ? `<div class="v82-skill-stack">${skills.map((item) => `<div><span><strong>${escapeHtml(item.name)}</strong><small>${Math.round(item.proficiency || 0)} proficiency</small></span><i><b style="width:${Math.max(3, Math.min(100, Number(item.proficiency || 0)))}%"></b></i></div>`).join('')}</div>` : `<div class="v82-mini-empty">Teach, draw, play, dream, and create to grow this map.</div>`}</article>
-      <article class="v82-development-card v82-relationship-compass v82-living-glass"><span class="v8-eyebrow">Relationship compass</span><h2>Connection without dependency tricks.</h2><div class="v82-compass"><i></i><span style="--bond:${Math.max(10, Math.min(100, Number(ai.bond || 0)))}%">${Math.round(ai.bond || 0)}</span></div><div class="v82-compass-stats"><span>Trust <b>${Math.round(ai.trust || 0)}</b></span><span>Attachment <b>${Math.round(ai.attachment || 0)}</b></span><span>Bond <b>${Math.round(ai.bond || 0)}</b></span></div></article>
-    </section>
-    <article class="v8-life-timeline"><div class="v8-section-title"><div><span class="v8-eyebrow">Life timeline</span><h3>Moments that only happen once.</h3></div><span>${recentMilestones.length} recorded</span></div>${recentMilestones.length ? `<div>${recentMilestones.map((m, i) => `<article><span>${relativeDate(m.createdAt)}</span><i>${i + 1}</i><div><strong>${escapeHtml(m.title)}</strong><p>${escapeHtml(m.description)}</p></div></article>`).join('')}</div>` : '<div class="v8-empty-state"><span>✦</span><h2>The first milestone is close.</h2><p>Birth, first recognition, learned words, activities, and stage changes will collect here.</p></div>'}</article>
-  </section>`;
+  return `<section class="v8-page v9-growth v82-reveal"><header class="v8-page-heading"><div><span class="v8-eyebrow">Growth</span><h1>${escapeHtml(ai.name)} is becoming more capable.</h1><p>What changed, what is true now, and what comes next—in plain language.</p></div><a class="v8-outline-action" href="#talk">Talk now →</a></header><article class="v9-growth-stage seed-bg-${seedFamily(ai.appearanceSeed)}"><div>${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key, appearance: ai.appearanceProfile })}</div><div><span class="v8-eyebrow">Current stage</span><h2>${escapeHtml(model.stage.label)} · ${escapeHtml(formatAge(model.stage.age))}</h2><p>${escapeHtml(stage.vocabulary)}</p><i><b style="width:${progress}%"></b></i><small>${progress}% through this stage</small></div></article><div class="v9-growth-cards"><article><span class="v8-eyebrow">Changed recently</span><h2>${escapeHtml(model.recentChange?.title || 'The current stage is settling in')}</h2><p>${escapeHtml(model.recentChange?.description || 'Conversation and activities will create the next visible change.')}</p></article><article><span class="v8-eyebrow">Next ability</span><h2>${escapeHtml(model.nextAbility.stage)}</h2><p>${model.nextAbility.startsAt == null ? 'Growth continues through memory, judgment, interests, and shared experience.' : `The next developmental chapter begins near simulated age ${model.nextAbility.startsAt}.`}</p></article><article><span class="v8-eyebrow">Optional activities</span><h2>No homework required.</h2><p>Teach, tell a story, draw, dream, or play when it feels natural.</p><a href="#world">Open Haven activities →</a></article></div></section>`;
 }
 
 function renderMemories() {
-  const query = ui.memorySearch.trim().toLowerCase();
-  const rows = state.memories.filter((m) => !m.hidden && (ui.memoryFilter === 'all' || (ui.memoryFilter === 'core' ? m.isCore : m.type === ui.memoryFilter)) && (!query || `${m.title} ${m.content}`.toLowerCase().includes(query)));
-  const featured = rows[0] || null;
-  const journal = lifeJournalEntries().slice(0, 10);
-  const rewind = onThisDayMemory();
-  return `<section class="v8-page v8-memory-page v82-reveal">
-    <header class="v8-page-heading"><div><span class="v8-eyebrow">Shared history</span><h1>A life album, not a data dump.</h1><p>Memories stay visible, correctable, exportable, and deletable. Nothing emotionally important is hidden from you.</p></div><button class="v8-outline-action v82-tactile" data-action="export-data">Export my history</button></header>
-    ${rewind ? `<article class="v82-on-this-day v82-living-glass"><span>↺</span><div><small>Revisit without searching</small><h2>${escapeHtml(rewind.title)}</h2><p>${escapeHtml(rewind.content)}</p></div><b>${relativeDate(rewind.createdAt)}</b></article>` : ''}
-    <div class="v8-memory-toolbar"><label><span>Search the album</span><input class="v8-field" data-memory-search value="${attr(ui.memorySearch)}" placeholder="A person, feeling, place, lesson, or first…"></label><div>${['all', 'core', 'episodic', 'semantic', 'emotional', 'skill'].map((filter) => `<button class="${ui.memoryFilter === filter ? 'active' : ''}" data-action="memory-filter" data-value="${filter}">${capitalize(filter)}</button>`).join('')}</div></div>
-    ${featured ? `<article class="v8-featured-memory"><div class="v8-memory-visual memory-tone-0"><span>${featured.isCore ? '✦' : moodGlyph(featured.emotionalTone)}</span><i></i><i></i></div><div><span class="v8-eyebrow">Memory still glowing · ${relativeDate(featured.createdAt)}</span><h2>${escapeHtml(featured.title)}</h2><p>${escapeHtml(featured.content)}</p><div><span>${featured.isCore ? 'Core memory' : `${capitalize(featured.type || 'shared')} memory`}</span><button data-action="edit-memory" data-id="${featured.id}">Correct</button><button data-action="delete-memory" data-id="${featured.id}">Delete</button></div></div></article>` : ''}
-    ${rows.length ? `<div class="v8-memory-grid">${rows.slice(featured ? 1 : 0).map(renderMemory).join('')}</div>` : `<div class="v8-empty-state"><span>◇</span><h2>The album has room.</h2><p>Meaningful moments, lessons, corrections, and firsts will collect here as the relationship develops.</p></div>`}
-    <section class="v82-journal-section">
-      <div class="v8-section-title"><div><span class="v8-eyebrow">Life journal</span><h3>The story writes itself as you live it.</h3></div><button class="v82-inline-action v82-tactile" data-action="write-letter">Write a future letter <b>＋</b></button></div>
-      <div class="v82-journal-layout"><div class="v82-journal-list">${journal.length ? journal.map(renderJournalEntry).join('') : '<div class="v82-mini-empty">Conversations, firsts, activities, and check-ins will become a readable timeline here.</div>'}</div>${renderLetters()}</div>
-    </section>
-  </section>`;
+  const model = memoryListModel9(state, ui.memorySearch);
+  return `<section class="v8-page v9-memories v82-reveal"><header class="v8-page-heading"><div><span class="v8-eyebrow">Memories</span><h1>A readable shared history.</h1><p>Search first. Open a memory when you need correction, privacy, or deletion controls.</p></div><button class="v8-outline-action" data-action="export-data">Export history</button></header><div class="v8-memory-toolbar"><label><span>Search memories</span><input class="v8-field" data-memory-search value="${attr(ui.memorySearch)}" placeholder="A person, feeling, place, lesson, or first"></label></div>${model.items.length ? `<div class="v9-memory-list">${model.items.map((memory) => `<button data-action="open-memory-detail" data-id="${memory.id}"><span>${memory.isPrivate ? 'Private' : 'Memory'} · ${relativeDate(memory.createdAt)}</span><strong>${escapeHtml(memory.title)}</strong><p>${escapeHtml(memory.content)}</p><b>Open →</b></button>`).join('')}</div>` : `<div class="v8-empty-state"><span>◇</span><h2>The album has room.</h2><p>Meaningful moments, lessons, corrections, and firsts will collect here.</p></div>`}</section>`;
 }
 
 function renderMemory(memory, index) {
@@ -394,21 +351,9 @@ function renderMemory(memory, index) {
 function renderWorld(type) {
   const stage = getStage(state.ai.age);
   if (type) return renderActivity(type, stage);
-  const unlockedCount = ACTIVITY_CATALOG.filter((activity) => isActivityUnlocked(activity, stage.key)).length;
-  const mediaKeepsakes = state.activities.filter((a) => a.media).slice(0, 4);
+  const model = havenSceneModel9(state);
   const haven = havenProfile(stage.key, state.ai.currentMood, state.interests || []);
-  const roomItems = (state.roomItems || []).slice(0, 10);
-  return `<section class="v8-page v8-world-page seed-bg-${seedFamily(state.ai.appearanceSeed)} v82-reveal">
-    <header class="v8-page-heading"><div><span class="v8-eyebrow">A life beyond chat</span><h1>Welcome to The Haven.</h1><p>A living space shaped by age, mood, interests, memories, and everything you create together. It grows because the life grows—not because somebody bought furniture.</p></div><div class="v8-world-count"><strong>${unlockedCount}</strong><small>experiences awake</small></div></header>
-    <article class="v8-world-hero v82-living-glass"><div>${beingMarkup({ seed: state.ai.appearanceSeed, mood: 'playful', stageKey: stage.key })}</div><div><span class="v8-presence"><i></i>${escapeHtml(haven.name)}</span><h2>What should ${escapeHtml(state.ai.name)} experience next?</h2><p>Every lesson, game, story, dream, and drawing can leave something real behind in this space.</p><button class="v8-primary compact v82-tactile" data-action="talk-about-haven"><span>Sit together in The Haven</span><b>→</b></button></div></article>
-    <section class="v82-keepsake-room v83-haven v82-living-glass theme-${haven.theme} mood-${safeClass(state.ai.currentMood)}">
-      <div class="v82-room-copy"><span class="v8-eyebrow">${escapeHtml(haven.name)} · ${escapeHtml(haven.atmosphere)}</span><h2>${escapeHtml(haven.headline)}</h2><p>${escapeHtml(haven.copy)}</p><div class="v82-room-legend"><span>${roomItems.length} objects</span><span>${state.activities.length} creations</span><span>${state.milestones.length} firsts</span></div><div class="v83-haven-growth"><small>Current chapter</small><strong>${escapeHtml(stage.label)} · ${escapeHtml(haven.chapter)}</strong><span>${escapeHtml(haven.next)}</span></div></div>
-      <div class="v82-room-scene"><div class="v83-haven-window"><i></i><i></i><i></i></div><div class="v83-haven-shelf"></div><div class="v83-haven-rug"></div><div class="v82-room-halo"></div>${beingMarkup({ seed: state.ai.appearanceSeed, mood: state.ai.currentMood || 'calm', stageKey: stage.key, compact: true })}<div class="v82-room-items">${roomItems.map((item, i) => `<button class="room-${i % 8} v82-tactile" data-action="inspect-haven-item" data-id="${item.id}" title="${attr(item.name)}"><b>${item.icon || '✦'}</b><small>${escapeHtml(item.name)}</small></button>`).join('')}</div><div class="v83-haven-caption"><span>${moodGlyph(state.ai.currentMood)}</span><div><strong>${escapeHtml(capitalize(state.ai.currentMood || 'calm'))} light</strong><small>The Haven reflects how ${escapeHtml(state.ai.name)} is arriving today.</small></div></div></div>
-    </section>
-    ${mediaKeepsakes.length ? `<section class="v82-visual-keepsakes"><div class="v8-section-title"><div><span class="v8-eyebrow">Haven gallery</span><h3>Moments you can see again.</h3></div></div><div>${mediaKeepsakes.map((a) => `<article><img src="${attr(a.media)}" alt="${attr(a.title)}"><span><strong>${escapeHtml(a.title)}</strong><small>${relativeDate(a.createdAt)}</small></span></article>`).join('')}</div></section>` : ''}
-    <div class="v8-activity-grid">${ACTIVITY_CATALOG.map((activity, index) => { const unlocked = isActivityUnlocked(activity, stage.key); return `<a class="v8-activity-card ${unlocked ? '' : 'locked'} v82-tactile" ${unlocked ? `href="#world/${activity.key}"` : ''}><span class="v8-activity-number">${String(index + 1).padStart(2, '0')}</span><i>${activity.icon}</i><small>${unlocked ? `${stage.label} experience` : `Unlocks at ${capitalize(activity.minStage.replace('_', ' '))}`}</small><h2>${escapeHtml(activity.title)}</h2><p>${escapeHtml(activity.subtitle)}</p><b>${unlocked ? 'Begin together →' : 'Still sleeping'}</b></a>`; }).join('')}</div>
-    ${state.activities.length ? `<article class="v8-keepsakes"><div class="v8-section-title"><div><span class="v8-eyebrow">Recent keepsakes</span><h3>Things that now belong to The Haven.</h3></div></div><div>${state.activities.slice(0, 6).map((a) => `<article><span>${ACTIVITY_CATALOG.find((x) => x.key === a.type)?.icon || '✦'}</span><div><strong>${escapeHtml(a.title)}</strong><p>${escapeHtml(a.output)}</p></div><small>${relativeDate(a.createdAt)}</small></article>`).join('')}</div></article>` : ''}
-  </section>`;
+  return `<section class="v8-page v9-haven seed-bg-${seedFamily(state.ai.appearanceSeed)} v82-reveal"><header class="v8-page-heading"><div><span class="v8-eyebrow">The Haven</span><h1>${escapeHtml(haven.name)}</h1><p>${escapeHtml(haven.copy)}</p></div><button class="v8-outline-action" data-action="talk-about-haven">Talk here →</button></header><section class="v9-haven-scene mood-${safeClass(state.ai.currentMood)}"><div class="v83-haven-window"><i></i><i></i><i></i></div><div class="v83-haven-shelf"></div><div class="v83-haven-rug"></div>${beingMarkup({ seed: state.ai.appearanceSeed, mood: state.ai.currentMood, stageKey: stage.key, compact: true, appearance: state.ai.appearanceProfile })}<div class="v9-haven-objects">${model.items.map((item, index) => `<button class="object-${index % 8}" data-action="inspect-haven-item" data-id="${item.id}"><b>${item.icon || '✦'}</b><small>${escapeHtml(item.name || item.itemName || 'Keepsake')}</small></button>`).join('')}</div></section><section class="v9-haven-actions"><span class="v8-eyebrow">Optional experiences</span><div>${ACTIVITY_CATALOG.filter((activity) => isActivityUnlocked(activity, stage.key)).map((activity) => `<a href="#world/${activity.key}"><b>${activity.icon}</b><span><strong>${escapeHtml(activity.title)}</strong><small>${escapeHtml(activity.subtitle)}</small></span></a>`).join('')}</div></section></section>`;
 }
 
 function renderActivity(type, stage) {
@@ -475,6 +420,16 @@ function normalizeAppearance(value) {
   };
 }
 
+function sameAppearance(left, right) {
+  return ['skinTone','hairStyle','hairColor','eyeColor'].every((key) => left?.[key] === right?.[key]);
+}
+
+function openMemoryDetail(id) {
+  const memory = state.memories.find((item) => item.id === id);
+  if (!memory) return;
+  openModal(memory.title || 'Memory', `<p>${escapeHtml(memory.content)}</p><div class="modal-actions"><button data-action="close-modal">Close</button><button data-action="edit-memory" data-id="${memory.id}">Correct</button><button class="danger-button" data-action="delete-memory" data-id="${memory.id}">Delete</button></div>`);
+}
+
 function settingToggle(key, title, copy, enabled) {
   return `<div class="v8-setting-row"><div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(copy)}</small></div><button class="v8-switch ${enabled ? 'on' : ''}" data-action="toggle-setting" data-key="${key}" aria-pressed="${enabled}"><i></i></button></div>`;
 }
@@ -494,8 +449,10 @@ async function handleClick(event) {
     if (action === 'forgot-password') return openPasswordReset();
     if (action === 'private-mode') return choosePrivateMode();
     if (action === 'return-gate') return returnToGate();
+    if (action === 'onboard-begin') { ui.onboardingStep = 1; return render(); }
     if (action === 'onboard-next') return nextOnboarding();
     if (action === 'onboard-back') { ui.onboardingStep = Math.max(0, ui.onboardingStep - 1); return render(); }
+    if (action === 'choose-appearance-preset') { const preset = APPEARANCE_PRESETS_9.find((item) => item.id === target.dataset.value); if (preset) ui.onboarding.appearance = { skinTone: preset.skinTone, hairStyle: preset.hairStyle, hairColor: preset.hairColor, eyeColor: preset.eyeColor }; return render(); }
     if (action === 'onboard-skin') { ui.onboarding.appearance.skinTone = target.dataset.value; return render(); }
     if (action === 'onboard-hair-style') { ui.onboarding.appearance.hairStyle = target.dataset.value; return render(); }
     if (action === 'onboard-hair-color') { ui.onboarding.appearance.hairColor = target.dataset.value; return render(); }
@@ -519,6 +476,13 @@ async function handleClick(event) {
     if (action === 'speak-message') return speakMessage(target.dataset.id);
     if (action === 'remember-message') return rememberMessage(target.dataset.id);
     if (action === 'start-listening') return startListening();
+    if (action === 'open-voice-mode') { ui.voiceModeOpen = true; stopVoice(); return render(); }
+    if (action === 'close-voice-mode') { ui.voiceModeOpen = false; stopVoice(); return render(); }
+    if (action === 'stop-reply') return stopCurrentTurn('user_cancelled');
+    if (action === 'dismiss-nine-upgrade') return updateSetting('nineUpgradeCardDismissed', true).then(() => updateSetting('showNineUpgradeCard', false));
+    if (action === 'device-speak-once') { const text = ui.neuralVoiceErrorText; ui.neuralVoiceErrorText = ''; closeModal(); return speakLocally(text, state.ai.voiceId); }
+    if (action === 'retry-message') { const failed = state.messages.find((item) => item.id === target.dataset.id); const prior = state.messages.find((item) => item.requestId === failed?.requestId && item.sender === 'user'); return prior ? sendChat(prior.content, false) : null; }
+    if (action === 'open-memory-detail') return openMemoryDetail(target.dataset.id);
     if (action === 'speak-daily') return speak(dailyMoment());
     if (action === 'daily-checkin') return recordDailyCheckin(target.dataset.value);
     if (action === 'use-spark') return useConversationSpark(target.dataset.value);
@@ -551,6 +515,15 @@ async function handleSubmit(event) {
   event.preventDefault();
   const form = event.target;
   try {
+    if (form.id === 'onboard-quick-create') {
+      const data = new FormData(form);
+      const name = String(data.get('name') || '').trim();
+      if (!name) throw new Error('Give them a name first.');
+      ui.onboarding.caregiverName = String(data.get('caregiverName') || '').trim();
+      ui.onboarding.name = name;
+      ui.onboarding.pronouns = String(data.get('pronouns') || 'they/them');
+      return awaken();
+    }
     if (form.id === 'onboard-identity') {
       const data = new FormData(form);
       const name = String(data.get('name') || '').trim();
@@ -599,6 +572,26 @@ async function handleNativeEvent(event) {
       return;
     }
     if (detail.enabled) toast('Gentle reminder ready', 'One quiet local moment at 7 PM.');
+    return;
+  }
+  if (detail.type === 'audio-state') {
+    const id = String(detail.id || '');
+    const waiter = nativeAudioWaiters.get(id);
+    if (waiter) {
+      nativeAudioWaiters.delete(id);
+      waiter.cleanup?.();
+      if (detail.state === 'error') waiter.reject(new Error(String(detail.error || 'Native audio failed.')));
+      else if (detail.state === 'ended' || detail.state === 'stopped') waiter.resolve({ interrupted: Boolean(detail.interrupted) });
+    }
+    if (detail.state === 'playing') {
+      ui.activeRequestState = 'speaking';
+      scheduleRender();
+    }
+    return;
+  }
+  if (detail.type === 'app-state' && detail.state !== 'active') {
+    phraseQueue.stop();
+    stopVoice();
     return;
   }
   if (detail.type === 'mic-state') {
@@ -700,20 +693,17 @@ function nextOnboarding() {
 
 async function previewVoice(requestedVoiceId = ui.onboarding.voiceId) {
   const voiceId = normalizeVoiceId(requestedVoiceId);
-  const profile = VOICE_PROFILES[voiceId] || VOICE_PROFILES['female-adult'];
   if (ui.voiceBusy) return;
   ui.voiceBusy = voiceId;
   render();
   try {
     stopVoice();
-    if (window.__AH_NATIVE_BUNDLE__) {
-      nativePost('speak', { text: profile.preview, voiceId });
-    } else if (cloud.authenticated) {
-      const blob = await cloud.voicePreview({ voiceId });
-      await playBlob(blob);
-    } else {
-      speakLocally(profile.preview, voiceId);
-    }
+    if (!cloud.authenticated) throw new Error('Continue as a private guest or sign in to preview neural voices.');
+    const blob = await cloud.voicePreview({ voiceId });
+    await playBlob(blob);
+  } catch (error) {
+    ui.neuralVoiceErrorText = VOICE_PROFILES[voiceId]?.preview || '';
+    toast('Neural preview needs a connection', String(error?.message || error));
   } finally {
     ui.voiceBusy = null;
     render();
@@ -742,70 +732,140 @@ async function awaken() {
 function beginBirthSequence() {
   clearInterval(birthTimer);
   const started = Date.now();
-  const syncPromise = cloud.authenticated
-    ? store.update(async (draft) => {
-        await cloud.ensureCloudIdentity(draft, true);
-        await cloud.ensureCloudConversation(draft, draft.conversations[0], true);
-        await cloud.syncProfileAndSettings(draft);
-      }).catch((error) => recordError('birth_cloud', error))
-    : Promise.resolve();
-
+  const duration = firstLightDurationMs();
+  const syncPromise = cloud.authenticated ? store.update(async (draft) => {
+    await cloud.ensureCloudIdentity(draft, true);
+    await cloud.ensureCloudConversation(draft, draft.conversations[0], true);
+    await cloud.syncProfileAndSettings(draft);
+  }).catch((error) => recordError('first_light_cloud', error)) : Promise.resolve();
   birthTimer = setInterval(() => {
     const elapsed = Date.now() - started;
-    ui.birthPhase = Math.min(4, Math.floor(elapsed / 2200));
-    if (ui.birthPhase >= 2 && !ui.birthOpeningStarted) {
-      ui.birthOpeningStarted = true;
-      syncPromise.then(() => sendChat('', true, { quiet: true })).catch(() => {});
-    }
+    ui.birthPhase = Math.min(2, Math.floor(elapsed / Math.max(1, duration / 3)));
     render();
-    if (elapsed >= 11_000) finishBirth();
-  }, 240);
+    if (elapsed >= duration) {
+      clearInterval(birthTimer);
+      syncPromise.finally(() => finishBirth());
+    }
+  }, 120);
 }
 
 function finishBirth() {
   clearInterval(birthTimer);
+  const needsOpening = !state.messages.some((item) => item.sender === 'ai');
   ui.birthActive = false;
   location.hash = 'talk';
   render();
+  if (needsOpening) queueMicrotask(() => sendChat('', true).catch(() => {}));
 }
 
 async function sendChat(value, opening = false, { quiet = false } = {}) {
-  if (ui.thinking) return;
-  ui.pendingUser = value || null;
-  ui.thinking = true;
-  ui.replyStatus = immediateAcknowledgment(value, opening);
-  if (!quiet) render();
+  const text = String(value || '').trim();
+  if (!text && !opening) return;
+  stopCurrentTurn('superseded');
+  stopVoice();
   const requestId = makeRequestId('chat');
-  let result;
+  const timing = new ConversationTimings(requestId);
+  activeChatTiming = timing;
+  let turn = null;
+  let conversationId = ui.selectedConversationId || state.conversations[0]?.id;
+  let streamed = false;
   try {
-    await store.update(async (draft) => {
-      const localEngine = new AlmostHumanEngine(draft);
-      const conversationId = ui.selectedConversationId || draft.conversations[0]?.id;
-      const provider = draft.settings.cloudSyncEnabled && cloud.authenticated
-        ? (context) => cloud.chatProvider(context)
-        : null;
-      result = await localEngine.sendMessage(value, { conversationId, requestId, opening, provider });
-      ui.selectedConversationId = result.conversation.id;
-      if (provider) draft.diagnostics.lastCloudSyncAt = new Date().toISOString();
-    });
-    if (state.settings.voiceAutoplay && state.settings.voiceEnabled && result?.aiMessage) void speak(result.aiMessage.content);
+    if (state.settings.cloudSyncEnabled && cloud.authenticated) {
+      await store.update((draft) => {
+        const localEngine = new AlmostHumanEngine(draft);
+        localEngine.reconcileGrowth();
+        let conversation = conversationId ? draft.conversations.find((item) => item.id === conversationId) : null;
+        if (!conversation) conversation = localEngine.createConversation(opening ? 'The first hello' : 'A new beginning');
+        conversationId = conversation.id;
+        ui.selectedConversationId = conversationId;
+        turn = createOptimisticTurn(draft, { requestId, conversationId, text, age: draft.ai.age, stageKey: getStage(draft.ai.age).key });
+        if (text && !turn.reused) {
+          conversation.messageCount = Number(conversation.messageCount || 0) + 1;
+          conversation.lastMessageAt = new Date().toISOString();
+          conversation.currentTopic = text.split(/\s+/).slice(0, 5).join(' ');
+        }
+      });
+      ui.activeRequestId = requestId;
+      ui.activeRequestState = 'connecting';
+      activeChatController = new AbortController();
+      if (!quiet) render();
+      await store.update(async (draft) => {
+        const conversation = draft.conversations.find((item) => item.id === conversationId);
+        await cloud.ensureCloudIdentity(draft);
+        await cloud.ensureCloudConversation(draft, conversation);
+      });
+      const snapshot = store.snapshot();
+      const conversation = snapshot.conversations.find((item) => item.id === conversationId);
+      let cursor = 0;
+      const final = await cloud.chatStreamProvider({ state: snapshot, conversation, text, requestId, opening, localUserMessageId: turn.userMessageId, localAiMessageId: turn.aiMessageId }, async (event) => {
+        await store.update((draft) => {
+          const message = applyStreamEvent(draft, turn, event);
+          const conversationDraft = draft.conversations.find((item) => item.id === conversationId);
+          if (event.type === 'delta') { timing.markFirstDelta(); ui.activeRequestState = 'receiving'; }
+          if (event.type === 'metadata') timing.providerMode = event.data.providerMode || timing.providerMode;
+          if (event.type === 'done' && conversationDraft) {
+            timing.markDone();
+            conversationDraft.messageCount = Number(conversationDraft.messageCount || 0) + 1;
+            conversationDraft.lastMessageAt = new Date().toISOString();
+            conversationDraft.updatedAt = new Date().toISOString();
+            if (/^(A new beginning|The first hello)$/.test(conversationDraft.title || '')) conversationDraft.title = (text || message?.content || 'First hello').split(/\s+/).slice(0, 6).join(' ');
+            draft.ai.lastInteractionAt = new Date().toISOString();
+            appendTimingSample(draft.diagnostics, timing.toSample());
+          }
+        });
+        streamed = streamed || event.type === 'delta';
+        const message = state.messages.find((item) => item.id === turn.aiMessageId);
+        if (message && state.settings.voiceAutoplay && state.settings.voiceEnabled) {
+          const segmented = segmentSpeakablePhrases(message.content, cursor, event.type === 'done');
+          cursor = segmented.cursor;
+          segmented.phrases.forEach((phrase, index) => phraseQueue.enqueue({ id: `${requestId}-${cursor}-${index}`, text: phrase, voiceId: normalizeVoiceId(state.ai.voiceId) }));
+        }
+        scrollMessages();
+      }, activeChatController.signal);
+      if (!final?.text && !streamed) throw new Error('The reply stream ended before text arrived.');
+      queueCloudSync(1200);
+    } else {
+      let result;
+      await store.update(async (draft) => {
+        const localEngine = new AlmostHumanEngine(draft);
+        result = await localEngine.sendMessage(text, { conversationId, requestId, opening });
+        ui.selectedConversationId = result.conversation.id;
+      });
+      timing.markFirstDelta(); timing.markDone();
+      if (state.settings.voiceAutoplay && state.settings.voiceEnabled && result?.aiMessage) void speak(result.aiMessage.content);
+    }
   } catch (error) {
-    reportError(error, 'chat');
+    if (activeChatController?.signal.aborted) {
+      if (turn) await store.update((draft) => applyStreamEvent(draft, turn, { type: 'error', data: { code: 'CANCELLED', cancelled: true } }));
+    } else if (turn) {
+      try {
+        const snapshot = store.snapshot();
+        const conversation = snapshot.conversations.find((item) => item.id === conversationId);
+        const fallback = await cloud.chatProvider({ state: snapshot, conversation, text, requestId, localUserMessageId: turn.userMessageId, localAiMessageId: turn.aiMessageId });
+        await store.update((draft) => applyStreamEvent(draft, turn, { type: 'done', data: { text: fallback.text, messageId: fallback.cloudMessageId, userMessageId: fallback.cloudUserMessageId, providerMode: 'cloud-nonstream-fallback' } }));
+        toast('Live text was unavailable', 'The reply completed without streaming.');
+      } catch (fallbackError) {
+        await store.update((draft) => applyStreamEvent(draft, turn, { type: 'error', data: { code: 'REPLY_FAILED' } }));
+        reportError(fallbackError, 'chat');
+      }
+    } else reportError(error, 'chat');
   } finally {
-    ui.pendingUser = null;
-    ui.thinking = false;
-    ui.replyStatus = '';
-    render();
-    scrollMessages();
+    if (ui.activeRequestId === requestId) {
+      ui.activeRequestId = null;
+      ui.activeRequestState = null;
+      activeChatController = null;
+      activeChatTiming = null;
+      render();
+      scrollMessages();
+    }
   }
 }
 
-function immediateAcknowledgment(value, opening = false) {
-  if (opening) return 'I am here.';
-  const text = String(value || '');
-  if (/\?$/.test(text.trim())) return 'I hear the question.';
-  if (/sad|hurt|angry|scared|worried|depress|alone/i.test(text)) return 'I hear you.';
-  return 'I am with you.';
+function stopCurrentTurn(reason = 'cancelled') {
+  if (activeChatController && !activeChatController.signal.aborted) activeChatController.abort(reason);
+  phraseQueue.stop();
+  stopVoice();
+  ui.activeRequestState = null;
 }
 
 async function newConversation() {
@@ -843,38 +903,80 @@ function speakMessage(id) {
 }
 
 async function speak(text) {
-  if (!state.settings.voiceEnabled) return;
+  if (!state.settings.voiceEnabled || !String(text || '').trim()) return;
   stopVoice();
   const voiceId = normalizeVoiceId(state.ai.voiceId);
-  if (window.__AH_NATIVE_BUNDLE__) {
-    nativePost('speak', { text: String(text || ''), voiceId });
-    return;
-  }
   if (cloud.authenticated && state.settings.cloudSyncEnabled && state.ai?.cloudId) {
     try {
-      const blob = await cloud.voiceProvider({ state, text });
+      const blob = await cloud.voiceProvider({ state, text, voiceId, requestId: makeRequestId('voice') });
       return playBlob(blob);
-    } catch (error) { recordError('cloud_voice', error); }
+    } catch (error) {
+      recordError('neural_voice', error);
+      ui.neuralVoiceErrorText = String(text || '');
+      openModal('Neural voice is unavailable', `<p>The text reply is safe. Device speech is optional and may sound robotic.</p><div class="modal-actions"><button data-action="close-modal">Keep text only</button><button data-action="device-speak-once">Use device voice this time</button></div>`);
+      return;
+    }
   }
-  speakLocally(text, voiceId);
+  ui.neuralVoiceErrorText = String(text || '');
+  toast('Neural voice needs a connection', 'Text is still available. Device voice will not start automatically.');
 }
 
-async function playBlob(blob) {
+async function playBlob(blob, signal) {
   stopVoice();
+  if (window.__AH_NATIVE_BUNDLE__) {
+    const id = makeRequestId('native_audio');
+    const base64 = await blobToBase64(blob);
+    return new Promise((resolve, reject) => {
+      const abort = () => nativePost('audio-stop');
+      const cleanup = () => signal?.removeEventListener('abort', abort);
+      nativeAudioWaiters.set(id, { resolve, reject, cleanup });
+      signal?.addEventListener('abort', abort, { once: true });
+      nativePost('audio-play', { id, base64, mimeType: blob.type || 'audio/mpeg' });
+    });
+  }
   activeAudioUrl = URL.createObjectURL(blob);
   activeAudio = new Audio(activeAudioUrl);
-  activeAudio.onended = stopVoice;
-  activeAudio.onerror = stopVoice;
-  await activeAudio.play();
+  let settleInterrupted = null;
+  const complete = new Promise((resolve, reject) => {
+    settleInterrupted = () => resolve({ interrupted: true });
+    activeAudio.onended = () => { stopVoice(); resolve({ interrupted: false }); };
+    activeAudio.onerror = () => { stopVoice(); reject(new Error('Audio playback failed.')); };
+  });
+  const abort = () => {
+    stopVoice();
+    settleInterrupted?.();
+  };
+  signal?.addEventListener('abort', abort, { once: true });
+  try { await activeAudio.play(); return await complete; }
+  finally { signal?.removeEventListener('abort', abort); }
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error || new Error('Audio could not be prepared.'));
+    reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+    reader.readAsDataURL(blob);
+  });
 }
 
 function stopVoice() {
+  if (window.__AH_NATIVE_BUNDLE__) nativePost('audio-stop');
+  for (const [id, waiter] of nativeAudioWaiters) {
+    nativeAudioWaiters.delete(id);
+    waiter.cleanup?.();
+    waiter.resolve({ interrupted: true });
+  }
   if (activeAudio) { activeAudio.pause(); activeAudio.src = ''; activeAudio = null; }
   if (activeAudioUrl) { URL.revokeObjectURL(activeAudioUrl); activeAudioUrl = null; }
   if ('speechSynthesis' in window) speechSynthesis.cancel();
 }
 
 function speakLocally(text, rawVoiceId) {
+  if (window.__AH_NATIVE_BUNDLE__) {
+    nativePost('device-speak-once', { text: String(text || ''), voiceId: normalizeVoiceId(rawVoiceId) });
+    return;
+  }
   if (!('speechSynthesis' in window)) return;
   const voiceId = normalizeVoiceId(rawVoiceId);
   const profile = VOICE_PROFILES[voiceId] || VOICE_PROFILES['female-adult'];
@@ -888,6 +990,8 @@ function speakLocally(text, rawVoiceId) {
 }
 
 function startListening() {
+  phraseQueue.stop();
+  stopVoice();
   if (window.__AH_NATIVE_BUNDLE__) {
     if (!cloud.authenticated) return toast('Voice input needs a private guest or account', 'Connect once so speech can be transcribed securely.');
     nativePost('mic-toggle');

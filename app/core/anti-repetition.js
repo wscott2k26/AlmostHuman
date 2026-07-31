@@ -1,3 +1,31 @@
+
+const VOCAL_PRAISE_PATTERNS = [
+  /\byour (?:voice|tone|sound) (?:is|feels|sounds|seems) (?:so )?(?:warm|gentle|soft|beautiful|comforting|calm|lovely|sweet)\b/gi,
+  /\bi (?:love|like) (?:hearing|the sound of) your voice\b/gi,
+  /\byou sound (?:so )?(?:warm|gentle|soft|beautiful|comforting|calm|lovely|sweet)\b/gi,
+  /\bthe (?:warmth|gentleness|softness) in your voice\b/gi,
+];
+
+export function vocalPraiseCount(value) {
+  const text = String(value || '');
+  let count = 0;
+  for (const pattern of VOCAL_PRAISE_PATTERNS) {
+    count += (text.match(pattern) || []).length;
+    pattern.lastIndex = 0;
+  }
+  return count;
+}
+
+export function containsVocalPraise(value) {
+  return vocalPraiseCount(value) > 0;
+}
+
+export function sanitizeVocalPraise(value) {
+  const sentences = String(value || '').match(/[^.!?]+[.!?]?/g) || [];
+  const kept = sentences.filter((sentence) => !containsVocalPraise(sentence)).map((sentence) => sentence.trim()).filter(Boolean);
+  return kept.join(' ').replace(/\s+/g, ' ').trim();
+}
+
 const STOP_WORDS = new Set(['a','an','and','are','as','at','be','but','by','for','from','had','has','have','he','her','his','i','in','is','it','me','my','of','on','or','our','she','so','that','the','their','them','there','they','this','to','was','we','were','what','when','where','who','why','will','with','you','your']);
 
 export function normalizeText(value) {
@@ -47,6 +75,7 @@ export function isRepetitionComplaint(value) {
 export function inspectCandidate(candidate, history = [], options = {}) {
   const recent = history.slice(-30).filter(Boolean);
   const normalized = normalizeText(candidate);
+  if (containsVocalPraise(candidate) && (vocalPraiseCount(candidate) > 1 || recent.some(containsVocalPraise))) return { ok: false, score: 0.9, reason: 'repeated_vocal_praise' };
   if (!normalized) return { ok: false, score: 1, reason: 'empty' };
   let highest = 0;
   let reason = null;

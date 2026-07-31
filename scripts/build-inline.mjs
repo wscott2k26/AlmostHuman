@@ -12,6 +12,16 @@ const moduleFiles = [
   'app/core/store.js',
   'app/core/cloud.js',
   'app/core/engine.js',
+  'app/core/chatStream.js',
+  'app/core/phraseQueue.js',
+  'app/core/performance9.js',
+  'app/core/voiceMode9.js',
+  'app/features/onboarding9.js',
+  'app/features/navigation9.js',
+  'app/features/home9.js',
+  'app/features/growth9.js',
+  'app/features/memories9.js',
+  'app/features/haven9.js',
   'app/app.js',
 ];
 
@@ -26,9 +36,9 @@ function transformModule(id, source) {
     const resolved = canonicalImport(id, specifier);
     return `const { ${names.trim()} } = __require('${resolved}');`;
   });
-  source = source.replace(/export\s+(const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/g, (_match, kind, name) => {
+  source = source.replace(/export\s+(async\s+)?(const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/g, (_match, asyncPrefix = '', kind, name) => {
     exports.add(name);
-    return `${kind} ${name}`;
+    return `${asyncPrefix}${kind} ${name}`;
   });
   if (/\bexport\s+default\b/.test(source)) throw new Error(`Default export is not supported in ${id}`);
   if (/^\s*(?:import|export)\s/m.test(source.replace(/\/\/.*$/gm, ''))) {

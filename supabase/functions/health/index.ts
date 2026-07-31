@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { serve } from '../_shared/cors.ts';
+import { neuralVoiceConfiguration } from '../_shared/neuralVoice.ts';
 
 serve(async (_req) => {
   const url = Deno.env.get('SUPABASE_URL') || '';
@@ -13,6 +14,7 @@ serve(async (_req) => {
     database = !error;
     schema = error ? 'missing_or_unreachable' : 'ready';
   }
+  const voice = neuralVoiceConfiguration();
   return Response.json({
     ok: true,
     product: 'Almost Human',
@@ -21,7 +23,12 @@ serve(async (_req) => {
     database_configured: Boolean(url && publishable),
     schema,
     ai_configured: Boolean(Deno.env.get('OPENAI_API_KEY')),
-    voice_configured: Boolean(Deno.env.get('OPENAI_API_KEY')),
+    voice_configured: voice.configured,
+    neural_voice_configured: voice.configured,
+    neural_voice_provider: voice.provider,
+    elevenlabs_configured: voice.elevenConfigured,
+    chat_stream_configured: Boolean(Deno.env.get('OPENAI_API_KEY')),
+    transcription_configured: Boolean(Deno.env.get('OPENAI_API_KEY')),
     account_deletion_configured: Boolean(secret),
     checked_at: new Date().toISOString(),
   });

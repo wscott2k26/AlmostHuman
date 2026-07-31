@@ -3,6 +3,8 @@ import {
   AudioModule,
   RecordingPresets,
   setAudioModeAsync,
+  useAudioPlayer,
+  useAudioPlayerStatus,
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
@@ -29,6 +31,8 @@ import type { WebViewMessageEvent, WebViewNavigation } from 'react-native-webvie
 import { WebView } from 'react-native-webview';
 
 import { ALMOST_HUMAN_HTML } from './almostHumanHtml';
+import { neuralAudioSource } from './NeuralAudioPlayer';
+import { isNativeVoiceBridgeMessage } from './voiceBridge';
 
 const LIVE_ORIGIN = 'https://almost-human-swart.vercel.app/';
 const HAVEN_NOTIFICATION_KIND = 'almost-human-haven-moment';
@@ -45,6 +49,9 @@ type BridgeMessage = {
   route?: string;
   message?: string;
   voiceId?: string;
+  id?: string;
+  base64?: string;
+  mimeType?: string;
 };
 
 const VOICE_STYLE: Record<string, { rate: number; pitch: number; names: string[] }> = {
@@ -81,7 +88,9 @@ const BRIDGE_SCRIPT = String.raw`
     share: function (payload) { post(Object.assign({ type: 'share' }, payload || {})); },
     dailyMoment: function (payload) { post(Object.assign({ type: 'daily-moment' }, payload || {})); },
     microphone: function () { post({ type: 'mic-toggle' }); },
-    speak: function (payload) { post(Object.assign({ type: 'speak' }, payload || {})); },
+    audioPlay: function (payload) { post(Object.assign({ type: 'audio-play' }, payload || {})); },
+    audioStop: function () { post({ type: 'audio-stop' }); },
+    deviceSpeakOnce: function (payload) { post(Object.assign({ type: 'device-speak-once' }, payload || {})); },
     openRoute: function (route) { location.hash = '#' + String(route || 'home').replace(/^#/, ''); }
   };
   try {
@@ -165,7 +174,7 @@ function normalizedVoiceId(raw?: string) {
   return LEGACY_VOICE_IDS[value] || value;
 }
 
-async function speakNative(text: string, rawVoiceId?: string) {
+async function speakDeviceOnce(text: string, rawVoiceId?: string) {
   const value = String(text || '').trim();
   if (!value) return;
   const voiceId = normalizedVoiceId(rawVoiceId);
@@ -194,8 +203,11 @@ export function NativeShell() {
   const webRef = useRef<WebView>(null);
   const recordingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stopRecordingRef = useRef<() => Promise<void>>(async () => undefined);
-  const recorder = useAudioRecorder(RecordingPresets.LOW_QUALITY);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 150);
+  const neuralPlayer = useAudioPlayer(null, { updateInterval: 100, downloadFirst: true });
+  const neuralPlayerStatus = useAudioPlayerStatus(neuralPlayer);
+  const activeAudioId = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [fatalMessage, setFatalMessage] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
@@ -243,7 +255,12 @@ export function NativeShell() {
     if (recordingBusy || recorderState.isRecording) return;
     setRecordingBusy(true);
     try {
+      neuralPlayer.pause();
       await Speech.stop();
+      if (activeAudioId.current) {
+        injectNativeEvent('audio-state', { id: activeAudioId.current, state: 'stopped', interrupted: true });
+        activeAudioId.current = null;
+      }
       const permission = await AudioModule.requestRecordingPermissionsAsync();
       if (!permission.granted) {
         injectNativeEvent('mic-state', {
@@ -270,7 +287,7 @@ export function NativeShell() {
     } finally {
       setRecordingBusy(false);
     }
-  }, [injectNativeEvent, recorder, recorderState.isRecording, recordingBusy]);
+  }, [injectNativeEvent, neuralPlayer, recorder, recorderState.isRecording, recordingBusy]);
 
   useEffect(() => {
     const routeInitial = async () => {
@@ -296,15 +313,34 @@ export function NativeShell() {
       injectRoute(nextRoute);
     });
     const appStateSubscription = AppState.addEventListener('change', (nextState) => {
+      injectNativeEvent('app-state', { state: nextState });
       if (nextState === 'active') webRef.current?.injectJavaScript('window.dispatchEvent(new Event("focus")); true;');
+      if (nextState !== 'active') {
+        neuralPlayer.pause();
+        Speech.stop().catch(() => undefined);
+        if (activeAudioId.current) {
+          injectNativeEvent('audio-state', { id: activeAudioId.current, state: 'stopped', interrupted: true });
+          activeAudioId.current = null;
+        }
+      }
     });
     return () => {
       notificationSubscription.remove();
       appStateSubscription.remove();
       if (recordingTimer.current) clearTimeout(recordingTimer.current);
+      neuralPlayer.pause();
       Speech.stop().catch(() => undefined);
     };
-  }, [injectRoute]);
+  }, [injectNativeEvent, injectRoute, neuralPlayer]);
+
+  useEffect(() => {
+    const id = activeAudioId.current;
+    if (!id) return;
+    if (neuralPlayerStatus.didJustFinish) {
+      activeAudioId.current = null;
+      injectNativeEvent('audio-state', { id, state: 'ended' });
+    }
+  }, [injectNativeEvent, neuralPlayerStatus.didJustFinish]);
 
   const handleHaptic = useCallback(async (strength: BridgeMessage['strength']) => {
     if (strength === 'success') return Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -349,14 +385,40 @@ export function NativeShell() {
       if (!result.permission) await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
     }
-    if (message.type === 'speak') {
-      try {
-        await speakNative(message.text || '', message.voiceId);
-        injectNativeEvent('speech-state', { speaking: true });
-      } catch (error) {
-        injectNativeEvent('speech-state', { speaking: false, error: String(error) });
+    if (isNativeVoiceBridgeMessage(message)) {
+      if (message.type === 'audio-stop') {
+        neuralPlayer.pause();
+        const id = activeAudioId.current;
+        activeAudioId.current = null;
+        if (id) injectNativeEvent('audio-state', { id, state: 'stopped', interrupted: true });
+        return;
       }
-      return;
+      if (message.type === 'audio-play') {
+        try {
+          await Speech.stop();
+          neuralPlayer.pause();
+          const source = neuralAudioSource({ id: message.id || '', url: message.url, base64: message.base64, mimeType: message.mimeType });
+          activeAudioId.current = String(message.id);
+          await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false, interruptionMode: 'doNotMix' });
+          neuralPlayer.replace(source);
+          neuralPlayer.play();
+          injectNativeEvent('audio-state', { id: activeAudioId.current, state: 'playing' });
+        } catch (error) {
+          const id = activeAudioId.current || message.id || null;
+          activeAudioId.current = null;
+          injectNativeEvent('audio-state', { id, state: 'error', error: String(error) });
+        }
+        return;
+      }
+      if (message.type === 'device-speak-once') {
+        try {
+          await speakDeviceOnce(message.text || '', message.voiceId);
+          injectNativeEvent('speech-state', { speaking: true, fallback: true });
+        } catch (error) {
+          injectNativeEvent('speech-state', { speaking: false, fallback: true, error: String(error) });
+        }
+        return;
+      }
     }
     if (message.type === 'mic-toggle') {
       if (recorderState.isRecording) await stopNativeRecording();
@@ -366,7 +428,7 @@ export function NativeShell() {
     if (message.type === 'web-error' && message.message) {
       console.warn('[Almost Human web]', message.message);
     }
-  }, [handleHaptic, injectNativeEvent, recorderState.isRecording, startNativeRecording, stopNativeRecording]);
+  }, [handleHaptic, injectNativeEvent, neuralPlayer, recorderState.isRecording, startNativeRecording, stopNativeRecording]);
 
   const reload = useCallback(() => {
     setFatalMessage(null);

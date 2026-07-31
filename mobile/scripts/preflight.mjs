@@ -55,19 +55,26 @@ for (const marker of [
   'configureDailyMoment', 'A quiet moment in The Haven', 'Haptics', 'Share.share',
   'useSafeAreaInsets', 'onContentProcessDidTerminate', 'onRenderProcessGone',
   'pullToRefreshEnabled', 'routeFromUrl', 'almost-human-swart.vercel.app',
-  'requestRecordingPermissionsAsync', 'useAudioRecorder', 'readAsStringAsync', 'Speech.speak',
+  'requestRecordingPermissionsAsync', 'useAudioRecorder', 'readAsStringAsync', 'useAudioPlayer',
+  'neuralAudioSource', "message.type === 'audio-play'", "message.type === 'audio-stop'",
+  "message.type === 'device-speak-once'", 'Speech.speak', 'RecordingPresets.HIGH_QUALITY',
 ]) expect(`native-shell:${marker}`, shell.includes(marker));
 
 for (const marker of [
   'The Haven', 'A quiet Haven reminder', 'native-share', 'notificationsEnabled',
   'talk-about-haven', 'inspect-haven-item', 'v83-haven-window', '__AH_NATIVE_BUNDLE__',
-  'female-child', 'male-adult', 'customize-companion', 'mic-toggle',
+  'female-child', 'male-adult', 'customize-companion', 'mic-toggle', 'v9-voice-mode', 'v9-listening-line',
 ]) expect(`web-bundle:${marker}`, html.includes(marker));
 
-for (const marker of ['nativePost', "nativePost('daily-moment'", "nativePost('mic-toggle')", "nativePost('speak'", 'shareAlmostHuman', "navigator.serviceWorker.register('./sw.js?v=8.4')"]) {
+for (const marker of ['nativePost', "nativePost('daily-moment'", "nativePost('mic-toggle')", "nativePost('audio-play'", "nativePost('device-speak-once'", 'shareAlmostHuman', "navigator.serviceWorker.register('./sw.js?v=9.0')"]) {
   expect(`web-source:${marker}`, webApp.includes(marker));
 }
-for (const marker of ['V8.3 — THE HAVEN', 'V8.4 — SIMPLE NATIVE CONVERSATION', 'v83-top-share', 'v83-haven-window', 'v84-look-controls']) {
+expect('web-source:no-silent-native-device-speech', !webApp.includes("nativePost('speak'"));
+expect('native-shell:no-old-speak-message', !shell.includes("message.type === 'speak'"));
+expect('native-shell:device-speech-explicit-only', shell.includes("message.type === 'device-speak-once'") && shell.includes('speakDeviceOnce'));
+expect('native-shell:neural-audio-first', shell.includes("message.type === 'audio-play'") && shell.includes('neuralPlayer.replace'));
+
+for (const marker of ['V8.3 — THE HAVEN', 'V8.4 — SIMPLE NATIVE CONVERSATION', 'ALMOST HUMAN 9.0 — CONVERSATION-FIRST', 'v83-top-share', 'v83-haven-window', 'v84-look-controls', 'v9-voice-mode']) {
   expect(`visual-system:${marker}`, webCss.includes(marker));
 }
 

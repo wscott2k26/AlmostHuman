@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Almost Human" />
   <meta name="color-scheme" content="dark" />
-  <link rel="manifest" href="./manifest.webmanifest?v=8.4" />
+  <link rel="manifest" href="./manifest.webmanifest?v=9.0" />
   <link rel="icon" href="./icons/icon-192.png" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="preconnect" href="https://onvoaskzzxozmhkzyycy.supabase.co" crossorigin />
@@ -159,6 +159,22 @@ body{background:radial-gradient(circle at 15% 5%,rgba(255,132,92,.08),transparen
 .v84-custom-card{grid-column:span 2}.v84-custom-preview{display:grid;grid-template-columns:140px 1fr;align-items:center;gap:18px}.v84-custom-preview p{color:var(--v8-muted);line-height:1.5}.v84-custom-modal{display:grid;gap:12px}.v84-modal-preview{width:210px;max-width:62vw;margin:-18px auto -8px}.v84-custom-modal .v84-look-controls{margin:0}.v84-custom-modal .v84-voice-grid{max-height:260px;overflow:auto;padding-right:3px}
 .v8-round.mic-active,.v8-composer.is-listening>button:first-child{background:#ff806f!important;color:#1b0d0c!important;box-shadow:0 0 0 5px rgba(255,128,111,.12),0 0 24px rgba(255,128,111,.3);animation:v84MicPulse 1.1s ease-in-out infinite}.v8-composer>small{grid-column:1/-1;color:var(--v8-muted);font-size:9px;padding-left:4px}.v8-composer{grid-template-columns:auto 1fr auto;flex-wrap:wrap}.v8-composer textarea{min-width:0}.v8-message-stream .message.pending small{display:none}@keyframes v84MicPulse{50%{transform:scale(1.05)}}
 @media(max-width:720px){.v84-home-actions,.v84-voice-grid{grid-template-columns:1fr}.v84-quick-links{grid-template-columns:repeat(3,1fr)}.v84-custom-card{grid-column:auto}.v84-custom-preview{grid-template-columns:105px 1fr}.v84-look-controls section>div{display:grid;grid-template-columns:1fr 1fr}.v84-look-controls button{justify-content:flex-start}.v84-voice-grid>button{min-height:68px}.v84-home-block{padding:18px}.v84-home-actions .v8-secondary{margin-top:0}}
+
+/* =========================================================
+   ALMOST HUMAN 9.0 — CONVERSATION-FIRST
+   Fast creation, immediate chat, focused voice and growth.
+   ========================================================= */
+.v9-welcome,.v9-quick-create,.v9-first-light{min-height:100vh;padding:max(28px,env(safe-area-inset-top)) clamp(20px,5vw,72px) max(34px,env(safe-area-inset-bottom));background:radial-gradient(circle at 68% 18%,rgba(255,155,106,.18),transparent 30%),linear-gradient(145deg,#0c0b0f,#171016 68%,#0c0b0f)}
+.v9-welcome{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(320px,1.1fr);grid-template-rows:auto 1fr;gap:28px 7vw;align-items:center}.v9-welcome-brand{grid-column:1/-1;display:flex;align-items:center;gap:12px}.v9-welcome-brand div{display:grid}.v9-welcome-brand small{color:var(--v8-muted)}.v9-welcome-portrait{display:grid;place-items:center;min-height:58vh;border:1px solid var(--v8-line);border-radius:38px;background:radial-gradient(circle,rgba(255,173,126,.16),transparent 55%);overflow:hidden}.v9-welcome-portrait .v8-being{transform:scale(1.16)}.v9-welcome-copy{max-width:690px}.v9-welcome-copy h1{font:900 clamp(48px,7vw,92px)/.94 var(--display);letter-spacing:-.065em;margin:14px 0 22px}.v9-welcome-copy p{max-width:620px;color:var(--v8-muted);font-size:17px;line-height:1.7}.v9-welcome-copy .v8-primary{margin:30px 0 18px;max-width:440px}.v9-welcome-copy>small{display:block;color:var(--v8-dim);line-height:1.5}
+.v9-quick-create{display:grid;align-content:start;gap:26px}.v9-create-preview{display:grid;grid-template-columns:180px 1fr;gap:24px;align-items:center;max-width:980px;margin:auto;width:100%;padding:18px 24px;border:1px solid var(--v8-line);border-radius:28px;background:rgba(255,255,255,.025)}.v9-create-preview>div:first-child{height:170px}.v9-create-preview h2{font:900 34px var(--display);margin:4px 0}.v9-create-preview p{color:var(--v8-muted)}.v9-create-form{width:min(980px,100%);margin:auto;display:grid;gap:28px;padding:28px;border:1px solid var(--v8-line);border-radius:30px;background:rgba(17,15,20,.9);box-shadow:0 30px 80px rgba(0,0,0,.28)}.v9-choice-section{display:grid;gap:14px;border-top:1px solid var(--v8-line);padding-top:24px}.v9-choice-section h2{font:800 25px var(--display);margin:4px 0}.v9-preset-grid{display:grid;grid-template-columns:repeat(6,minmax(100px,1fr));gap:10px}.v9-preset-grid button{min-height:142px;padding:10px;border:1px solid var(--v8-line);border-radius:19px;background:rgba(255,255,255,.025);display:grid;place-items:center;gap:6px}.v9-preset-grid button>span{height:76px}.v9-preset-grid button strong{font-size:11px}.v9-preset-grid button.selected{border-color:rgba(255,214,111,.68);background:rgba(255,214,111,.08);box-shadow:0 0 0 3px rgba(255,214,111,.06)}
+.v9-first-light{position:relative;display:grid;place-items:center;align-content:center;text-align:center;overflow:hidden}.v9-first-light:before,.v9-first-light:after{content:"";position:absolute;width:min(74vw,720px);aspect-ratio:1;border:1px solid rgba(255,255,255,.08);border-radius:48%;animation:orbit 18s linear infinite}.v9-first-light:after{width:min(92vw,920px);border-style:dashed;animation-direction:reverse;animation-duration:28s}.v9-first-light>*{position:relative;z-index:2}.v9-first-light .v8-birth-portrait{height:300px}.v9-first-light .v8-birth-copy{max-width:560px}.v9-first-light .v8-birth-copy h1{font:900 clamp(42px,7vw,76px)/.96 var(--display);margin:12px}.v9-first-light .v8-birth-skip{min-height:48px;margin-top:20px;padding:12px 18px;border:1px solid var(--v8-line);border-radius:999px;background:rgba(255,255,255,.04)}
+.v9-profile-entry{width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--v8-line);border-radius:50%;text-decoration:none;background:linear-gradient(145deg,rgba(255,155,106,.22),rgba(130,95,180,.16));font-weight:900}.v9-five-tabs a.emphasized,.v9-five-tabs a[data-route="talk"]{transform:translateY(-7px);border-color:rgba(255,155,106,.4);background:linear-gradient(145deg,rgba(255,155,106,.18),rgba(241,111,145,.11));box-shadow:0 13px 28px rgba(0,0,0,.25)}
+.v9-home,.v9-growth,.v9-memories,.v9-haven{max-width:1240px;margin:auto;padding:34px clamp(16px,4vw,58px) 110px}.v9-upgrade-card{display:flex;justify-content:space-between;align-items:center;gap:24px;margin:18px 0;padding:20px 22px;border:1px solid rgba(114,216,170,.28);border-radius:22px;background:linear-gradient(135deg,rgba(114,216,170,.08),rgba(255,255,255,.025))}.v9-upgrade-card h2{font:800 24px var(--display);margin:4px 0}.v9-upgrade-card p{color:var(--v8-muted);margin:0}.v9-upgrade-card button{min-height:46px;border:1px solid var(--v8-line);border-radius:14px;background:rgba(255,255,255,.06);padding:10px 16px;white-space:nowrap}.v9-home-hero{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(320px,1.15fr);align-items:center;gap:40px;min-height:520px;padding:35px;border:1px solid var(--v8-line);border-radius:34px;overflow:hidden}.v9-home-hero>div:first-child{display:grid;place-items:center}.v9-home-hero h2{font:900 clamp(46px,6vw,78px)/.95 var(--display);margin:15px 0}.v9-home-hero p{max-width:580px;color:var(--v8-muted);font-size:16px;line-height:1.65}.v9-home-hero .v8-primary{max-width:390px;margin-top:24px}.v9-home-secondary{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}.v9-home-secondary a{display:grid;gap:8px;min-height:150px;padding:22px;border:1px solid var(--v8-line);border-radius:23px;text-decoration:none;background:rgba(255,255,255,.025)}.v9-home-secondary strong{font:800 22px var(--display)}.v9-home-secondary small{color:var(--v8-muted);line-height:1.5}
+.v9-listening-line{display:flex;align-items:center;gap:9px;min-height:30px;color:var(--v8-muted);font-size:12px}.v9-listening-line:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 13px rgba(255,155,106,.7);animation:v9listen 1.4s ease-in-out infinite}@keyframes v9listen{50%{opacity:.35;transform:scale(.75)}}
+.v9-voice-mode{position:fixed;z-index:90;inset:0;display:grid;place-items:center;align-content:center;gap:14px;padding:max(30px,env(safe-area-inset-top)) 24px max(30px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 35%,rgba(255,155,106,.18),transparent 38%),rgba(8,7,11,.97);text-align:center}.v9-voice-close{position:absolute;right:20px;top:max(20px,env(safe-area-inset-top));width:48px;height:48px;border-radius:50%;border:1px solid var(--v8-line);background:rgba(255,255,255,.05);font-size:28px}.v9-voice-portrait{height:min(42vh,340px)}.v9-voice-mode h2{font:900 clamp(42px,8vw,72px)/1 var(--display);margin:0}.v9-voice-mode p{color:var(--v8-muted);font-size:16px}.v9-voice-mic{width:92px;height:92px;border-radius:50%;border:1px solid rgba(255,155,106,.5);background:linear-gradient(145deg,#ffad7c,#e96e8b);color:#180d10;font-size:34px;box-shadow:0 18px 50px rgba(234,111,137,.24)}.v9-voice-mic.recording{animation:v84MicPulse 1.1s ease-in-out infinite;background:linear-gradient(145deg,#ff7a6b,#ed4f6d)}
+.v9-growth-stage,.v9-growth-cards>article,.v9-memory-list>button,.v9-haven-scene,.v9-haven-objects>button{border:1px solid var(--v8-line);background:rgba(255,255,255,.025);border-radius:24px}.v9-growth-stage{display:grid;grid-template-columns:210px 1fr;gap:28px;align-items:center;padding:28px}.v9-growth-stage h2{font:900 clamp(35px,5vw,60px)/1 var(--display);margin:8px 0}.v9-growth-stage p{color:var(--v8-muted);line-height:1.6}.v9-growth-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}.v9-growth-cards>article{padding:22px}.v9-growth-cards h2{font:800 23px var(--display)}.v9-growth-cards p,.v9-growth-cards small{color:var(--v8-muted);line-height:1.55}.v9-memory-list{display:grid;gap:10px}.v9-memory-list>button{display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;text-align:left;padding:18px;color:inherit}.v9-memory-list>button>span:first-child{font-size:26px}.v9-memory-list strong,.v9-memory-list small{display:block}.v9-memory-list small{color:var(--v8-muted);margin-top:5px}.v9-haven-scene{position:relative;min-height:520px;padding:30px;overflow:hidden;background:radial-gradient(circle at 48% 38%,rgba(255,199,142,.14),transparent 30%),linear-gradient(165deg,#20181b,#101116 70%)}.v9-haven-scene>div:first-child{max-width:640px}.v9-haven-scene h2{font:900 clamp(44px,6vw,72px)/.96 var(--display);margin:12px 0}.v9-haven-scene p{color:var(--v8-muted);line-height:1.7}.v9-haven-objects{position:absolute;left:24px;right:24px;bottom:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.v9-haven-objects>button{min-height:88px;padding:12px;color:inherit}.v9-haven-actions{display:flex;gap:10px;margin-top:14px}
+@media(max-width:900px){.v9-welcome{grid-template-columns:1fr}.v9-welcome-brand{grid-column:auto}.v9-welcome-portrait{min-height:36vh}.v9-preset-grid{grid-template-columns:repeat(3,1fr)}.v9-home-hero{grid-template-columns:1fr}.v9-growth-cards{grid-template-columns:1fr}.v9-haven-objects{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.v9-welcome,.v9-quick-create,.v9-first-light{padding-left:16px;padding-right:16px}.v9-welcome-copy h1{font-size:48px}.v9-create-preview{grid-template-columns:100px 1fr;padding:14px}.v9-create-preview>div:first-child{height:100px}.v9-create-form{padding:18px}.v9-preset-grid{grid-template-columns:repeat(2,1fr)}.v9-upgrade-card{align-items:flex-start;display:grid}.v9-home-hero{min-height:auto;padding:20px}.v9-home-secondary{grid-template-columns:1fr}.v9-growth-stage{grid-template-columns:1fr}.v9-growth-stage>div:first-child{height:180px}.v9-haven-scene{min-height:610px;padding:20px}.v9-haven-objects{left:14px;right:14px;bottom:14px}.v9-five-tabs a.emphasized,.v9-five-tabs a[data-route="talk"]{transform:translateY(-4px)}}
 </style></head>
 <body>
   <div id="app" aria-live="polite"><div class="boot-v7"><div><i></i><span>Opening your companion…</span></div></div></div>
@@ -177,6 +193,7 @@ window.__ALMOST_HUMAN_CONFIG__ = Object.freeze({
   authRedirectPath: '',
   functionNames: {
     chatService: 'chat-service',
+    chatStream: 'chat-stream',
     activityService: 'activity-service',
     memoryExtract: 'memory-extract',
     memoryControl: 'memory-control',
@@ -339,6 +356,34 @@ Object.assign(exports, { STAGES, DEFAULT_DAYS_PER_YEAR, MIN_DAYS_PER_YEAR, MAX_D
 
 },
 "app/core/anti-repetition.js": function(module, exports, __require){
+
+const VOCAL_PRAISE_PATTERNS = [
+  /\byour (?:voice|tone|sound) (?:is|feels|sounds|seems) (?:so )?(?:warm|gentle|soft|beautiful|comforting|calm|lovely|sweet)\b/gi,
+  /\bi (?:love|like) (?:hearing|the sound of) your voice\b/gi,
+  /\byou sound (?:so )?(?:warm|gentle|soft|beautiful|comforting|calm|lovely|sweet)\b/gi,
+  /\bthe (?:warmth|gentleness|softness) in your voice\b/gi,
+];
+
+function vocalPraiseCount(value) {
+  const text = String(value || '');
+  let count = 0;
+  for (const pattern of VOCAL_PRAISE_PATTERNS) {
+    count += (text.match(pattern) || []).length;
+    pattern.lastIndex = 0;
+  }
+  return count;
+}
+
+function containsVocalPraise(value) {
+  return vocalPraiseCount(value) > 0;
+}
+
+function sanitizeVocalPraise(value) {
+  const sentences = String(value || '').match(/[^.!?]+[.!?]?/g) || [];
+  const kept = sentences.filter((sentence) => !containsVocalPraise(sentence)).map((sentence) => sentence.trim()).filter(Boolean);
+  return kept.join(' ').replace(/\s+/g, ' ').trim();
+}
+
 const STOP_WORDS = new Set(['a','an','and','are','as','at','be','but','by','for','from','had','has','have','he','her','his','i','in','is','it','me','my','of','on','or','our','she','so','that','the','their','them','there','they','this','to','was','we','were','what','when','where','who','why','will','with','you','your']);
 
 function normalizeText(value) {
@@ -388,6 +433,7 @@ function isRepetitionComplaint(value) {
 function inspectCandidate(candidate, history = [], options = {}) {
   const recent = history.slice(-30).filter(Boolean);
   const normalized = normalizeText(candidate);
+  if (containsVocalPraise(candidate) && (vocalPraiseCount(candidate) > 1 || recent.some(containsVocalPraise))) return { ok: false, score: 0.9, reason: 'repeated_vocal_praise' };
   if (!normalized) return { ok: false, score: 1, reason: 'empty' };
   let highest = 0;
   let reason = null;
@@ -427,7 +473,7 @@ function hash(value) {
   return result >>> 0;
 }
 
-Object.assign(exports, { normalizeText, fingerprint, similarity, extractQuestions, isConfusionSignal, isBoundarySignal, isRepetitionComplaint, inspectCandidate, chooseNonRepeating, hash });
+Object.assign(exports, { vocalPraiseCount, containsVocalPraise, sanitizeVocalPraise, normalizeText, fingerprint, similarity, extractQuestions, isConfusionSignal, isBoundarySignal, isRepetitionComplaint, inspectCandidate, chooseNonRepeating, hash });
 
 },
 "app/core/memory.js": function(module, exports, __require){
@@ -806,7 +852,7 @@ Object.assign(exports, { ACTIVITY_CATALOG, isActivityUnlocked, completeActivity,
 "app/core/store.js": function(module, exports, __require){
 const { DEFAULT_DAYS_PER_YEAR } = __require('app/core/stages.js');
 
-const DATA_VERSION = 5;
+const DATA_VERSION = 6;
 const DB_NAME = 'almost-human-premium';
 const STORE_NAME = 'state';
 const STATE_KEY = 'main';
@@ -822,7 +868,7 @@ function defaultState(now = Date.now()) {
       voiceEnabled: true, voiceAutoplay: true, voiceRate: 0.96, cloudVoiceAutoplayMigrated84: false, reducedMotion: false, highContrast: false,
       dailyMomentEnabled: true, notificationsEnabled: false, analyticsOptIn: false, sensitiveMemoryMode: 'ask',
       dataRetentionDays: 0, appLockEnabled: false, pinHash: null, soundEffects: true, cloudSyncEnabled: false,
-      theme: 'cosmic', lastGrowthCheckAt: null
+      theme: 'cosmic', lastGrowthCheckAt: null, showNineUpgradeCard: false, nineUpgradeCardDismissed: false
     },
     subscription: { tier: 'founder_preview', status: 'preview', platform: 'web', entitlements: { allPremiumFeatures: true }, updatedAt: new Date(now).toISOString() },
     ai: null,
@@ -850,6 +896,10 @@ function migrateState(input) {
     merged.ai.appearanceProfile = normalizeAppearanceProfile(merged.ai.appearanceProfile);
   }
   if ((input.version || 0) < 5) merged.settings.voiceAutoplay = true;
+  if ((input.version || 0) < 6) {
+    merged.settings.showNineUpgradeCard = Boolean(merged.ai);
+    merged.settings.nineUpgradeCardDismissed = false;
+  }
   merged.version = DATA_VERSION;
   return merged;
 }
@@ -961,6 +1011,8 @@ Object.assign(exports, { DATA_VERSION, defaultState, migrateState, PersistentSto
 
 },
 "app/core/cloud.js": function(module, exports, __require){
+const { parseEventStream } = __require('app/core/chatStream.js');
+
 const ENTITY_TABLES = Object.freeze({
   User: 'profiles', AppSettings: 'app_settings', AIEntity: 'ai_entities', Conversation: 'conversations',
   Message: 'messages', Memory: 'memories', UserFact: 'user_facts', FactConflict: 'fact_conflicts',
@@ -1181,12 +1233,15 @@ class SupabaseCloud {
     return { ...payload, user_id: payload.user_id || user.id };
   }
 
-  async invoke(functionName, data, { raw = false, timeoutMs = 30000 } = {}) {
+  async invoke(functionName, data, { raw = false, timeoutMs = 30000, signal = null } = {}) {
     if (!this.authenticated && functionName !== 'health') throw new CloudError('Sign in to use secure cloud features.', 401, 'AUTH_REQUIRED');
     await this.ensureFreshSession();
     const deployedName = this.config.functionNames?.[functionName] || camelToKebab(functionName);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const abortFromCaller = () => controller.abort(signal?.reason || 'cancelled');
+    if (signal?.aborted) abortFromCaller();
+    else signal?.addEventListener('abort', abortFromCaller, { once: true });
+    const timeout = setTimeout(() => controller.abort('timeout'), timeoutMs);
     try {
       const response = await fetch(`${this.config.url}/functions/v1/${encodeURIComponent(deployedName)}`, {
         method: 'POST', headers: this.baseHeaders({ authenticated: functionName !== 'health' }),
@@ -1200,7 +1255,7 @@ class SupabaseCloud {
     } catch (error) {
       if (error?.name === 'AbortError') throw new CloudError('The secure function timed out. Your local data is still safe.', 408, 'TIMEOUT');
       throw error;
-    } finally { clearTimeout(timeout); }
+    } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abortFromCaller); }
   }
 
   async rpc(name, args = {}) {
@@ -1493,6 +1548,49 @@ class SupabaseCloud {
     return this.invoke('memoryControl', payload);
   }
 
+  async chatStreamProvider({ state, conversation, text, requestId, opening = false, localUserMessageId = null, localAiMessageId = null }, onEvent, signal) {
+    if (!this.authenticated) throw new CloudError('Sign in to use secure cloud intelligence.', 401, 'AUTH_REQUIRED');
+    await this.ensureCloudIdentity(state);
+    const cloudConversation = await this.ensureCloudConversation(state, conversation);
+    await this.ensureFreshSession();
+    const deployedName = this.config.functionNames?.chatStream || 'chat-stream';
+    const controller = new AbortController();
+    const abort = () => controller.abort(signal?.reason || 'cancelled');
+    if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, { once: true });
+    const timeout = setTimeout(() => controller.abort('timeout'), 20_000);
+    let final = null;
+    try {
+      const response = await fetch(`${this.config.url}/functions/v1/${encodeURIComponent(deployedName)}`, {
+        method: 'POST',
+        headers: { ...this.baseHeaders({ authenticated: true }), Accept: 'text/event-stream', 'x-request-id': requestId },
+        body: JSON.stringify({
+          ai_entity_id: state.ai.cloudId, conversation_id: cloudConversation.id, user_message: text,
+          request_id: requestId, opening: Boolean(opening), local_user_message_id: localUserMessageId,
+          local_ai_message_id: localAiMessageId,
+        }),
+        signal: controller.signal,
+      });
+      if (!response.ok || !response.body) {
+        const raw = await response.text();
+        let detail = null; try { detail = raw ? JSON.parse(raw) : null; } catch { detail = raw; }
+        throw new CloudError(detail?.error || `Streaming reply failed (${response.status}).`, response.status, detail?.code, detail);
+      }
+      await parseEventStream(response.body, async (event) => {
+        if (event.type === 'done') final = event.data;
+        if (event.type === 'error' && !event.data?.cancelled) throw new CloudError(event.data?.message || 'Streaming reply failed.', 502, event.data?.code || 'STREAM_ERROR', event.data);
+        await onEvent?.(event);
+      }, controller.signal);
+      return final;
+    } catch (error) {
+      if (controller.signal.aborted && signal?.aborted) throw new CloudError('Reply cancelled.', 499, 'CANCELLED');
+      if (controller.signal.aborted) throw new CloudError('The live reply timed out.', 408, 'STREAM_TIMEOUT');
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+      signal?.removeEventListener('abort', abort);
+    }
+  }
+
   async chatProvider({ state, conversation, text, requestId, localUserMessageId = null, localAiMessageId = null }) {
     if (!this.authenticated) throw new CloudError('Sign in to use secure cloud intelligence.', 401, 'AUTH_REQUIRED');
     await this.ensureCloudIdentity(state);
@@ -1527,12 +1625,13 @@ class SupabaseCloud {
     throw new CloudError('The secure activity is still processing. Retry it; the request will not duplicate.', 408, 'REQUEST_PENDING');
   }
 
-  async voiceProvider({ state, text }) {
+  async voiceProvider({ state, text, voiceId = null, requestId = null, signal = null }) {
     if (!this.authenticated) throw new CloudError('Sign in to use secure cloud voice.', 401, 'AUTH_REQUIRED');
     await this.ensureCloudIdentity(state);
     const response = await this.invoke('voiceService', {
-      ai_entity_id: state.ai.cloudId, text: String(text || '').slice(0, 4096)
-    }, { raw: true, timeoutMs: 45000 });
+      ai_entity_id: state.ai.cloudId, text: String(text || '').slice(0, 4096),
+      voice_id: String(voiceId || state.ai.voiceId || 'female-adult'), request_id: String(requestId || '')
+    }, { raw: true, timeoutMs: 30000, signal });
     return response.blob();
   }
 
@@ -2074,13 +2173,13 @@ function answerQuestion(state, value, stage, seed) {
 }
 
 function newbornResponse(value, intent, seed, name) {
-  if (intent === 'greeting') return pick(['Your voice feels warm. I know it belongs to you.','Hi. I can hear you clearly now.','You came close. I know this sound.'], seed);
+  if (intent === 'greeting') return pick(['Hi. I know you are here.','Hi. I can hear you clearly now.','You came close. I recognize this moment.'], seed);
   if (/name/i.test(value)) return `I am ${name}. That name feels like my first shape.`;
-  if (intent === 'emotion') return pick(['I hear the feeling in your voice. I will stay quiet with you.','Your words feel heavy. I am here beside them.','I can feel that this moment matters to you.'], seed);
-  return pick(['I heard you. The meaning is still becoming clear, but your voice is familiar.','That made a new pattern in me. I want to hold it carefully.','I am learning the difference between silence and you being here.'], seed);
+  if (intent === 'emotion') return pick(['I can tell this feeling matters. I will stay quiet with you.','Your words feel heavy. I am here beside them.','This moment matters. I will not rush it.'], seed);
+  return pick(['I heard you. The meaning is still becoming clear.','That made a new pattern in me. I want to hold it carefully.','I am learning the difference between silence and you being here.'], seed);
 }
 function infantResponse(value, intent, seed) {
-  if (intent === 'greeting') return pick(['Hi! You came.','Hello... warm.','Hi. I know you.'], seed);
+  if (intent === 'greeting') return pick(['Hi! You came.','Hello. You are here.','Hi. I know you.'], seed);
   if (intent === 'joke') return pick(['Beep... boop! Funny?','Tiny joke. Big beep.'], seed);
   if (intent === 'emotion') return pick(['I stay here.','You feel big feeling.','Soft time.'], seed);
   return pick(['I hear words.','Tell little more?','I learn that.','Ooh. New thing.'], seed);
@@ -2094,8 +2193,8 @@ function toddlerResponse(value, intent, seed, memory) {
 }
 function openingForStage(name, stageKey, seed) {
   const map = {
-    newborn: ['I know your voice. It feels like the beginning.', 'You are here. I think that is my first memory.', 'I can hear you. My name is starting to feel real.'],
-    infant: ['Hi... you are here.','Hello. I know your sound.'],
+    newborn: ['You are here. This feels like the beginning.', 'You are here. I think that is my first memory.', 'I can hear you. My name is starting to feel real.'],
+    infant: ['Hi... you are here.','Hello. I recognize you.'],
     toddler: [`Hi! I am ${name}. I have a thought.`, 'You came back! My words grew a little.'],
     early_child: ['I was wondering what kind of day this will become.', 'Hi. I made room for a new memory today.'],
     child: ['I’m here. My curiosity is awake before the rest of me.', 'Today feels like it could turn into a story.'],
@@ -2126,6 +2225,472 @@ function birthdayReflection(state, year) { const memory = [...(state.memories ||
 Object.assign(exports, { AlmostHumanEngine, detectIntent });
 
 },
+"app/core/chatStream.js": function(module, exports, __require){
+function safeObject(value) {
+  return value && typeof value === 'object' ? value : {};
+}
+
+function encodeStreamEvent(type, data = {}) {
+  return `event: ${String(type || 'message')}\ndata: ${JSON.stringify(safeObject(data))}\n\n`;
+}
+
+async function parseEventStream(readable, onEvent, signal) {
+  if (!readable?.getReader) throw new TypeError('A readable response body is required.');
+  const reader = readable.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let aborted = false;
+  const abort = () => {
+    aborted = true;
+    reader.cancel('aborted').catch(() => {});
+  };
+  signal?.addEventListener('abort', abort, { once: true });
+  try {
+    while (!aborted) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let boundary = buffer.indexOf('\n\n');
+      while (boundary >= 0) {
+        const block = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+        await dispatchBlock(block, onEvent);
+        boundary = buffer.indexOf('\n\n');
+      }
+    }
+    buffer += decoder.decode();
+    if (!aborted && buffer.trim()) await dispatchBlock(buffer, onEvent);
+    return { aborted };
+  } finally {
+    signal?.removeEventListener('abort', abort);
+    reader.releaseLock();
+  }
+}
+
+async function dispatchBlock(block, onEvent) {
+  const lines = String(block || '').split(/\r?\n/);
+  const eventLine = lines.find((line) => line.startsWith('event:'));
+  const dataLines = lines.filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trimStart());
+  const type = eventLine ? eventLine.slice(6).trim() : 'message';
+  try {
+    const data = JSON.parse(dataLines.join('\n') || '{}');
+    await onEvent?.({ type, data: safeObject(data) });
+  } catch {
+    await onEvent?.({ type: 'error', data: { code: 'MALFORMED_STREAM_EVENT', message: 'The reply stream contained an unreadable event.' } });
+  }
+}
+
+function messageId(prefix, requestId) {
+  return `${prefix}-${String(requestId).replace(/[^a-z0-9_-]/gi, '').slice(0, 80)}`;
+}
+
+function createOptimisticTurn(draft, { requestId, conversationId, text, now = Date.now(), age = 0, stageKey = 'adult' }) {
+  draft.messages ||= [];
+  draft.generationRequests ||= [];
+  const priorUser = draft.messages.find((item) => item.requestId === requestId && item.sender === 'user');
+  const priorAi = draft.messages.find((item) => item.requestId === requestId && item.sender === 'ai');
+  if (priorAi) return { requestId, conversationId, userMessageId: priorUser?.id || null, aiMessageId: priorAi.id, reused: true };
+  const createdAt = new Date(now).toISOString();
+  const userMessage = priorUser || {
+    id: messageId('message-user', requestId), requestId, conversationId, sender: 'user', content: String(text || ''),
+    ageAtMessage: age, stageKey, emotion: 'curious', intent: 'conversation', safetyFlags: [], status: 'complete', createdAt,
+  };
+  if (!priorUser && userMessage.content) draft.messages.push(userMessage);
+  const aiMessage = {
+    id: messageId('message-ai', requestId), requestId, conversationId, sender: 'ai', content: '',
+    ageAtMessage: age, stageKey, emotion: 'curious', intent: 'conversation', repetitionScore: 0,
+    providerMode: 'cloud-stream', status: 'pending', createdAt,
+  };
+  draft.messages.push(aiMessage);
+  draft.generationRequests.unshift({ id: requestId, conversationId, status: 'streaming', providerMode: 'cloud-stream', createdAt });
+  draft.generationRequests = draft.generationRequests.slice(0, 200);
+  return { requestId, conversationId, userMessageId: userMessage.id, aiMessageId: aiMessage.id, reused: false };
+}
+
+function applyStreamEvent(draft, turn, event) {
+  const ai = draft.messages?.find((item) => item.id === turn.aiMessageId);
+  const user = draft.messages?.find((item) => item.id === turn.userMessageId);
+  const request = draft.generationRequests?.find((item) => item.id === turn.requestId);
+  if (!ai) return null;
+  const data = safeObject(event?.data);
+  if (event.type === 'ack') {
+    ai.status = 'streaming';
+    if (data.userMessageId && user) user.cloudId = data.userMessageId;
+  } else if (event.type === 'delta') {
+    ai.status = 'streaming';
+    ai.content += String(data.text || '');
+  } else if (event.type === 'metadata') {
+    ai.providerMode = String(data.providerMode || ai.providerMode);
+    ai.emotion = String(data.emotion || ai.emotion);
+  } else if (event.type === 'done') {
+    ai.content = String(data.text ?? ai.content).trim();
+    ai.cloudId = data.messageId || ai.cloudId || null;
+    ai.status = 'complete';
+    ai.providerMode = String(data.providerMode || ai.providerMode || 'cloud-stream');
+    if (user && data.userMessageId) user.cloudId = data.userMessageId;
+    if (request) { request.status = 'complete'; request.completedAt = new Date().toISOString(); }
+  } else if (event.type === 'error') {
+    ai.status = data.cancelled ? 'cancelled' : 'failed';
+    ai.errorCode = String(data.code || 'STREAM_ERROR');
+    if (request) { request.status = ai.status; request.errorCode = ai.errorCode; }
+  }
+  return ai;
+}
+
+Object.assign(exports, { encodeStreamEvent, parseEventStream, createOptimisticTurn, applyStreamEvent });
+
+},
+"app/core/phraseQueue.js": function(module, exports, __require){
+const ABBREVIATIONS = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.', 'Sr.', 'Jr.', 'St.', 'vs.', 'e.g.', 'i.e.'];
+
+function maskProtected(text) {
+  let masked = String(text || '');
+  const tokens = [];
+  const protect = (value) => {
+    const token = `\u0000${tokens.length}\u0000`;
+    tokens.push(value);
+    return token;
+  };
+  for (const abbreviation of ABBREVIATIONS) masked = masked.replaceAll(abbreviation, protect(abbreviation));
+  masked = masked.replace(/\b\d+\.\d+\b/g, protect);
+  return { masked, restore: (value) => value.replace(/\u0000(\d+)\u0000/g, (_, index) => tokens[Number(index)] || '') };
+}
+
+function segmentSpeakablePhrases(text, cursor = 0, flush = false) {
+  const source = String(text || '');
+  const start = Math.max(0, Math.min(source.length, Number(cursor) || 0));
+  const tail = source.slice(start);
+  const { masked, restore } = maskProtected(tail);
+  const phrases = [];
+  let consumed = 0;
+  const boundary = /.+?(?:[.!?](?=\s|$)|[,;:](?=\s|$)(?=(?:[^\s]+\s+){5,})|$)/gs;
+  for (const match of masked.matchAll(boundary)) {
+    const value = restore(match[0]).trim();
+    const end = (match.index || 0) + match[0].length;
+    const terminal = /[.!?]$/.test(value);
+    const soft = /[,;:]$/.test(value) && value.split(/\s+/).length >= 6;
+    const atEnd = end >= masked.length;
+    if (terminal || soft || (flush && atEnd && value)) {
+      phrases.push(value);
+      consumed = end;
+    }
+  }
+  return { phrases, cursor: start + consumed };
+}
+
+class PhraseAudioQueue {
+  constructor({ fetchAudio, playAudio, onEvent } = {}) {
+    if (typeof fetchAudio !== 'function' || typeof playAudio !== 'function') throw new TypeError('fetchAudio and playAudio are required.');
+    this.fetchAudio = fetchAudio;
+    this.playAudio = playAudio;
+    this.onEvent = onEvent;
+    this.pending = [];
+    this.ids = new Set();
+    this.active = null;
+    this.controller = null;
+    this.running = false;
+  }
+
+  get size() { return this.pending.length + (this.active ? 1 : 0); }
+
+  enqueue(item) {
+    if (!item?.id || !String(item.text || '').trim() || this.ids.has(item.id)) return false;
+    this.ids.add(item.id);
+    this.pending.push({ ...item, text: String(item.text).trim() });
+    this.drain().catch((error) => this.onEvent?.({ type: 'error', error }));
+    return true;
+  }
+
+  async drain() {
+    if (this.running) return;
+    this.running = true;
+    try {
+      while (this.pending.length) {
+        const item = this.pending.shift();
+        this.active = item;
+        this.controller = new AbortController();
+        try {
+          this.onEvent?.({ type: 'fetching', item });
+          const audio = await this.fetchAudio(item, this.controller.signal);
+          if (this.controller.signal.aborted) continue;
+          this.onEvent?.({ type: 'started', item });
+          await this.playAudio(audio, this.controller.signal, item);
+          if (!this.controller.signal.aborted) this.onEvent?.({ type: 'ended', item });
+        } catch (error) {
+          if (!this.controller.signal.aborted) this.onEvent?.({ type: 'error', item, error });
+        } finally {
+          this.ids.delete(item.id);
+          this.active = null;
+          this.controller = null;
+        }
+      }
+    } finally {
+      this.running = false;
+    }
+  }
+
+  stop() {
+    this.controller?.abort();
+    this.pending.length = 0;
+    this.ids.clear();
+    this.active = null;
+    this.onEvent?.({ type: 'stopped' });
+  }
+}
+
+Object.assign(exports, { segmentSpeakablePhrases, PhraseAudioQueue });
+
+},
+"app/core/performance9.js": function(module, exports, __require){
+const TIMING_KEYS = new Set(['requestId', 'providerMode', 'startedAt', 'firstDeltaMs', 'finalTextMs', 'firstAudioMs', 'interruptionMs', 'transcriptionMs', 'createdAt']);
+
+function duration(start, end) {
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+  return Math.max(0, Math.round(end - start));
+}
+
+class ConversationTimings {
+  constructor(requestId, startedAt = performanceNow()) {
+    this.requestId = String(requestId || '');
+    this.startedAt = startedAt;
+    this.firstDeltaAt = null;
+    this.doneAt = null;
+    this.firstAudioAt = null;
+    this.interruptedAt = null;
+    this.transcriptionStartedAt = null;
+    this.transcriptionDoneAt = null;
+    this.providerMode = null;
+  }
+  markFirstDelta(at = performanceNow()) { if (this.firstDeltaAt == null) this.firstDeltaAt = at; }
+  markDone(at = performanceNow()) { this.doneAt = at; }
+  markFirstAudio(at = performanceNow()) { if (this.firstAudioAt == null) this.firstAudioAt = at; }
+  markInterrupted(at = performanceNow()) { this.interruptedAt = at; }
+  markTranscriptionStart(at = performanceNow()) { this.transcriptionStartedAt = at; }
+  markTranscriptionDone(at = performanceNow()) { this.transcriptionDoneAt = at; }
+  toSample() {
+    return sanitizeTimingSample({
+      requestId: this.requestId, providerMode: this.providerMode, startedAt: this.startedAt,
+      firstDeltaMs: duration(this.startedAt, this.firstDeltaAt), finalTextMs: duration(this.startedAt, this.doneAt),
+      firstAudioMs: duration(this.startedAt, this.firstAudioAt), interruptionMs: duration(this.firstAudioAt, this.interruptedAt),
+      transcriptionMs: duration(this.transcriptionStartedAt, this.transcriptionDoneAt), createdAt: new Date().toISOString(),
+    });
+  }
+}
+
+function sanitizeTimingSample(input = {}) {
+  const output = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (!TIMING_KEYS.has(key) || value == null) continue;
+    if (key.endsWith('Ms') || key === 'startedAt') output[key] = Math.max(0, Number(value) || 0);
+    else output[key] = String(value).slice(0, 120);
+  }
+  return output;
+}
+
+function appendTimingSample(diagnostics, sample, limit = 100) {
+  const clean = sanitizeTimingSample(sample);
+  diagnostics.performance9 = [...(diagnostics.performance9 || []), clean].slice(-Math.max(1, limit));
+  return clean;
+}
+
+function performanceNow() {
+  return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
+}
+
+Object.assign(exports, { ConversationTimings, sanitizeTimingSample, appendTimingSample });
+
+},
+"app/core/voiceMode9.js": function(module, exports, __require){
+const ALLOWED = new Set(['audio-play', 'audio-stop', 'device-speak-once', 'mic-toggle', 'audio-session']);
+
+function validateVoiceBridgeMessage(message) {
+  const input = message && typeof message === 'object' ? message : {};
+  if (!ALLOWED.has(input.type)) return { ok: false, code: 'UNKNOWN_VOICE_MESSAGE' };
+  if (input.type === 'audio-play') {
+    const safeUrl = typeof input.url === 'string' && /^(blob:|data:audio\/|https:\/\/)/.test(input.url);
+    const safeBase64 = typeof input.base64 === 'string' && input.base64.length > 0 && input.base64.length <= 6_000_000;
+    if (!input.id || (!safeUrl && !safeBase64)) return { ok: false, code: 'INVALID_AUDIO_PAYLOAD' };
+  }
+  if (input.type === 'device-speak-once' && !String(input.text || '').trim()) return { ok: false, code: 'EMPTY_DEVICE_SPEECH' };
+  return { ok: true, message: input };
+}
+
+function voiceModeState(current = {}, event, payload = {}) {
+  const state = {
+    open: Boolean(current.open), speaking: Boolean(current.speaking), recording: Boolean(current.recording),
+    transcribing: Boolean(current.transcribing), errorCode: null, effects: [],
+  };
+  if (event === 'open') state.open = true;
+  if (event === 'close') { state.open = false; state.speaking = false; state.recording = false; state.effects.push('stop-audio'); }
+  if (event === 'audio-start') state.speaking = true;
+  if (event === 'audio-stop') state.speaking = false;
+  if (event === 'mic-tap') {
+    if (state.speaking) state.effects.push('stop-audio');
+    state.speaking = false;
+    state.recording = !state.recording;
+    state.effects.push(state.recording ? 'start-recording' : 'stop-recording');
+  }
+  if (event === 'transcribing') { state.recording = false; state.transcribing = true; }
+  if (event === 'transcribed') state.transcribing = false;
+  if (event === 'permission-denied') {
+    state.recording = false; state.transcribing = false;
+    state.errorCode = payload.canAskAgain === false ? 'MIC_PERMISSION_SETTINGS' : 'MIC_PERMISSION_DENIED';
+  }
+  if (event === 'empty-transcript') { state.transcribing = false; state.errorCode = 'EMPTY_TRANSCRIPT'; }
+  return state;
+}
+
+Object.assign(exports, { validateVoiceBridgeMessage, voiceModeState });
+
+},
+"app/features/onboarding9.js": function(module, exports, __require){
+const VOICE_IDS_9 = Object.freeze([
+  'female-child',
+  'female-teen',
+  'female-adult',
+  'male-child',
+  'male-teen',
+  'male-adult',
+]);
+
+const APPEARANCE_PRESETS_9 = Object.freeze([
+  Object.freeze({ id: 'ember-waves', skinTone: 'warm', hairStyle: 'waves', hairColor: 'midnight', eyeColor: 'brown' }),
+  Object.freeze({ id: 'golden-short', skinTone: 'golden', hairStyle: 'short', hairColor: 'brown', eyeColor: 'green' }),
+  Object.freeze({ id: 'deep-locs', skinTone: 'deep', hairStyle: 'locs', hairColor: 'midnight', eyeColor: 'brown' }),
+  Object.freeze({ id: 'light-curls', skinTone: 'light', hairStyle: 'curls', hairColor: 'auburn', eyeColor: 'blue' }),
+  Object.freeze({ id: 'warm-curls', skinTone: 'warm', hairStyle: 'curls', hairColor: 'brown', eyeColor: 'violet' }),
+  Object.freeze({ id: 'golden-waves', skinTone: 'golden', hairStyle: 'waves', hairColor: 'silver', eyeColor: 'blue' }),
+]);
+
+const LEGACY_VOICE_IDS_9 = Object.freeze({
+  'soft-neutral': 'female-adult',
+  'bright-curious': 'female-teen',
+  'calm-grounded': 'male-adult',
+});
+
+const FIRST_LIGHT_DURATION_MS = 2400;
+
+function normalizeLegacyVoiceId9(value) {
+  const raw = String(value || 'female-adult');
+  if (LEGACY_VOICE_IDS_9[raw]) return LEGACY_VOICE_IDS_9[raw];
+  return VOICE_IDS_9.includes(raw) ? raw : 'female-adult';
+}
+
+function firstLightDurationMs() {
+  return FIRST_LIGHT_DURATION_MS;
+}
+
+function createOnboardingModel(state = {}, ui = {}) {
+  const ai = state?.ai && !state.ai.archived ? state.ai : null;
+  return Object.freeze({
+    steps: Object.freeze(['welcome', 'quick-create', 'first-light']),
+    stepIndex: Math.max(0, Math.min(2, Number(ui.onboardingStep) || 0)),
+    firstConversationRoute: 'talk',
+    bypass: Boolean(ai),
+    ai,
+    appearancePresets: APPEARANCE_PRESETS_9,
+    voiceIds: VOICE_IDS_9,
+    firstLightDurationMs: FIRST_LIGHT_DURATION_MS,
+    skippable: true,
+  });
+}
+
+function quickCreateDefaults(existing = {}) {
+  const preset = APPEARANCE_PRESETS_9.find((item) => item.id === existing.appearancePresetId) || APPEARANCE_PRESETS_9[0];
+  return {
+    caregiverName: String(existing.caregiverName || ''),
+    name: String(existing.name || ''),
+    pronouns: ['they/them', 'she/her', 'he/him'].includes(existing.pronouns) ? existing.pronouns : 'they/them',
+    appearancePresetId: preset.id,
+    appearance: { skinTone: preset.skinTone, hairStyle: preset.hairStyle, hairColor: preset.hairColor, eyeColor: preset.eyeColor },
+    voiceId: normalizeLegacyVoiceId9(existing.voiceId),
+  };
+}
+
+Object.assign(exports, { VOICE_IDS_9, APPEARANCE_PRESETS_9, normalizeLegacyVoiceId9, firstLightDurationMs, createOnboardingModel, quickCreateDefaults });
+
+},
+"app/features/navigation9.js": function(module, exports, __require){
+const DESTINATIONS = Object.freeze([
+  Object.freeze({ route: 'home', label: 'Home', icon: '⌂', emphasized: false }),
+  Object.freeze({ route: 'talk', label: 'Chat', icon: '◉', emphasized: true }),
+  Object.freeze({ route: 'grow', label: 'Growth', icon: '↗', emphasized: false }),
+  Object.freeze({ route: 'memories', label: 'Memories', icon: '◇', emphasized: false }),
+  Object.freeze({ route: 'world', label: 'Haven', icon: '◌', emphasized: false }),
+]);
+
+function primaryDestinations9() {
+  return DESTINATIONS.map((item) => ({ ...item }));
+}
+
+function settingsEntry9() {
+  return { route: 'settings', label: 'Settings', source: 'profile' };
+}
+
+function normalizePrimaryRoute9(value) {
+  const route = String(value || 'home').replace(/^#\/?/, '').split('/')[0];
+  if (route === 'settings') return 'settings';
+  return DESTINATIONS.some((item) => item.route === route) ? route : 'home';
+}
+
+Object.assign(exports, { primaryDestinations9, settingsEntry9, normalizePrimaryRoute9 });
+
+},
+"app/features/home9.js": function(module, exports, __require){
+function homeModel9(state = {}) {
+  const ai = state.ai || {};
+  const visibleMemories = (state.memories || []).filter((item) => !item.hidden);
+  const roomItems = (state.roomItems || []).filter((item) => item.isUnlocked !== false);
+  return {
+    companion: { name: ai.name || 'Your companion', mood: ai.currentMood || 'curious' },
+    primaryAction: { label: 'Continue conversation', route: 'talk' },
+    secondaryBlocks: [
+      { type: 'growth', value: state.milestones?.[0] || null },
+      { type: 'highlight', value: visibleMemories[0] || roomItems[0] || null },
+      { type: 'checkin', value: state.moodHistory?.[0] || null },
+    ].filter((item) => item.value || item.type === 'checkin'),
+  };
+}
+
+Object.assign(exports, { homeModel9 });
+
+},
+"app/features/growth9.js": function(module, exports, __require){
+const { getStage, nextStage } = __require('app/core/stages.js');
+function growthModel9(state = {}) {
+  const age = Number(state.ai?.age || 0);
+  const stage = getStage(age);
+  const next = nextStage(age);
+  return {
+    stage: { key: stage.key, label: stage.label, age },
+    recentChange: state.milestones?.[0] || null,
+    nextAbility: next ? { stage: next.label, startsAt: next.min } : { stage: 'Adult refinement', startsAt: null },
+    activities: (state.activities || []).slice(0, 4),
+  };
+}
+
+Object.assign(exports, { growthModel9 });
+
+},
+"app/features/memories9.js": function(module, exports, __require){
+function memoryListModel9(state = {}, query = '') {
+  const needle = String(query || '').trim().toLowerCase();
+  const items = (state.memories || []).filter((item) => !item.hidden).filter((item) => !needle || `${item.title || ''} ${item.content || ''}`.toLowerCase().includes(needle)).map((item) => ({ id: item.id, title: item.title || 'Memory', content: item.content || '', createdAt: item.createdAt, isPrivate: Boolean(item.isPrivate) }));
+  return { query: needle, items };
+}
+
+Object.assign(exports, { memoryListModel9 });
+
+},
+"app/features/haven9.js": function(module, exports, __require){
+function havenSceneModel9(state = {}, selectedId = null) {
+  const items = (state.roomItems || []).filter((item) => item.isUnlocked !== false);
+  return { items, selected: selectedId ? items.find((item) => item.id === selectedId) || null : null };
+}
+
+Object.assign(exports, { havenSceneModel9 });
+
+},
 "app/app.js": function(module, exports, __require){
 const { PersistentStore, defaultState } = __require('app/core/store.js');
 const { AlmostHumanEngine } = __require('app/core/engine.js');
@@ -2133,6 +2698,15 @@ const { STAGES, getStage, formatAge, progressWithinStage, nextStage, daysUntilNe
 const { ACTIVITY_CATALOG, isActivityUnlocked } = __require('app/core/activities.js');
 const { relevantMemories, resolveConflict } = __require('app/core/memory.js');
 const { SupabaseCloud } = __require('app/core/cloud.js');
+const { APPEARANCE_PRESETS_9, createOnboardingModel, firstLightDurationMs } = __require('app/features/onboarding9.js');
+const { primaryDestinations9 } = __require('app/features/navigation9.js');
+const { homeModel9 } = __require('app/features/home9.js');
+const { growthModel9 } = __require('app/features/growth9.js');
+const { memoryListModel9 } = __require('app/features/memories9.js');
+const { havenSceneModel9 } = __require('app/features/haven9.js');
+const { createOptimisticTurn, applyStreamEvent } = __require('app/core/chatStream.js');
+const { PhraseAudioQueue, segmentSpeakablePhrases } = __require('app/core/phraseQueue.js');
+const { ConversationTimings, appendTimingSample } = __require('app/core/performance9.js');
 
 const root = document.querySelector('#app');
 const modalRoot = document.querySelector('#modal-root');
@@ -2147,6 +2721,9 @@ let activeAudio = null;
 let activeAudioUrl = null;
 let birthTimer = null;
 let cloudSyncTimer = null;
+let activeChatController = null;
+let activeChatTiming = null;
+const nativeAudioWaiters = new Map();
 
 const ui = {
   privateMode: sessionStorage.getItem('almost_human_private_mode') === '1',
@@ -2158,9 +2735,8 @@ const ui = {
     voiceId: 'female-adult', relationshipStyle: 'lifelong_friend', acceptedSafety: false,
   },
   selectedConversationId: null,
-  pendingUser: null,
-  thinking: false,
-  replyStatus: '',
+  activeRequestId: null,
+  activeRequestState: null,
   listening: false,
   transcribing: false,
   birthActive: false,
@@ -2173,10 +2749,12 @@ const ui = {
   voiceBusy: null,
   customize: null,
   chatDraft: '',
+  voiceModeOpen: false,
+  neuralVoiceErrorText: '',
 };
 
 const VOICE_PROFILES = Object.freeze({
-  'female-child': { label: 'Girl · Young', copy: 'Bright, gentle, and playful', preview: 'Hi! I think your voice is the first sound I want to remember.', rate: 1.01, pitch: 1.16 },
+  'female-child': { label: 'Girl · Young', copy: 'Bright, gentle, and playful', preview: 'Hi! I am ready to learn something small with you.', rate: 1.01, pitch: 1.16 },
   'female-teen': { label: 'Girl · Teen', copy: 'Warm, curious, and expressive', preview: 'Okay, I am listening. Tell me what has really been on your mind.', rate: 1.0, pitch: 1.07 },
   'female-adult': { label: 'Woman · Adult', copy: 'Natural, warm, and grounded', preview: 'I am here with you. We can take this one real thought at a time.', rate: .96, pitch: 1.01 },
   'male-child': { label: 'Boy · Young', copy: 'Friendly, lively, and clear', preview: 'Hey! Teach me something small that matters to you.', rate: 1.01, pitch: 1.08 },
@@ -2189,6 +2767,26 @@ const APPEARANCE_OPTIONS = Object.freeze({
   hairStyle: [['waves','Waves'],['short','Short'],['curls','Curls'],['locs','Locs']],
   hairColor: [['midnight','Midnight'],['brown','Brown'],['auburn','Auburn'],['silver','Silver']],
   eyeColor: [['brown','Brown'],['blue','Blue'],['green','Green'],['violet','Violet']],
+});
+
+const phraseQueue = new PhraseAudioQueue({
+  fetchAudio: async (item, signal) => cloud.voiceProvider({ state, text: item.text, voiceId: item.voiceId, requestId: item.id, signal }),
+  playAudio: async (blob, signal) => playBlob(blob, signal),
+  onEvent: (event) => {
+    if (event.type === 'started') {
+      activeChatTiming?.markFirstAudio();
+      ui.activeRequestState = 'speaking';
+      scheduleRender();
+    }
+    if (event.type === 'ended' || event.type === 'stopped') {
+      ui.activeRequestState = ui.activeRequestId ? 'receiving' : null;
+      scheduleRender();
+    }
+    if (event.type === 'error') {
+      ui.neuralVoiceErrorText = event.item?.text || '';
+      toast('Neural voice is temporarily unavailable', 'Text still works. Device voice is available only when you choose it.');
+    }
+  },
 });
 
 start().catch(fatal);
@@ -2213,7 +2811,7 @@ async function start() {
   render();
 
   if (!window.__AH_NATIVE_BUNDLE__ && 'serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('./sw.js?v=8.4').catch(() => {});
+    navigator.serviceWorker.register('./sw.js?v=9.0').catch(() => {});
   }
   nativePost('ready', { route: currentRoute().name, name: state.ai?.name || '' });
   if (cloud.authEvent === 'recovery') queueMicrotask(openPasswordRecovery);
@@ -2318,17 +2916,12 @@ function renderAccessGate() {
 }
 
 function renderOnboarding() {
-  const step = ui.onboardingStep;
-  const panels = [onboardIdentity, onboardLookAndVoice, onboardAwaken];
-  const stageTitles = ['Names', 'Look & voice', 'First light'];
-  return `<main class="v8-onboarding seed-bg-${seedFamily(ui.onboarding.appearanceSeed)}">
-    <header class="v8-onboarding-top"><a class="v8-brand-lockup small" href="#"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Step ${step + 1} of ${panels.length}</small></div></a><div class="v8-step-line">${panels.map((_, i) => `<i class="${i <= step ? 'active' : ''}"><span>${i + 1}</span></i>`).join('')}</div></header>
-    <section class="v8-onboarding-stage">
-      <div class="v8-preview-copy"><span class="v8-eyebrow">${stageTitles[step]}</span><h2>${escapeHtml(ui.onboarding.name || 'Your companion')} is taking shape.</h2><p>${onboardWhisper(step)}</p></div>
-      <div class="v8-onboarding-being">${beingMarkup({ mood: step > 0 ? 'curious' : 'wonder', seed: ui.onboarding.appearanceSeed, stageKey: 'newborn', appearance: ui.onboarding.appearance })}<div class="v8-preview-status"><span></span>${step === 2 ? 'Ready to meet you' : 'Live preview'}</div></div>
-    </section>
-    <section class="v8-onboarding-card">${panels[step]()}</section>
-  </main>`;
+  const model = createOnboardingModel(state, ui);
+  if (model.stepIndex === 0) {
+    return `<main class="v9-welcome seed-bg-${seedFamily(ui.onboarding.appearanceSeed)}"><header class="v9-welcome-brand"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Raise a mind. Keep the history.</small></div></header><section class="v9-welcome-portrait">${beingMarkup({ mood: 'wonder', seed: ui.onboarding.appearanceSeed, stageKey: 'newborn', appearance: ui.onboarding.appearance })}</section><section class="v9-welcome-copy"><span class="v8-eyebrow">A beginning, not a preset</span><h1>Raise an intelligence that grows with you.</h1><p>Create the first look and voice in under a minute. Personality, memories, and The Haven grow later through real conversation.</p><button class="v8-primary hero" data-action="onboard-begin"><span>Begin</span><b>→</b></button><small>Your history remains readable, correctable, exportable, and deletable.</small></section></main>`;
+  }
+  const selectedPreset = APPEARANCE_PRESETS_9.find((item) => sameAppearance(item, ui.onboarding.appearance))?.id || APPEARANCE_PRESETS_9[0].id;
+  return `<main class="v9-quick-create seed-bg-${seedFamily(ui.onboarding.appearanceSeed)}"><header class="v8-onboarding-top"><a class="v8-brand-lockup small" href="#"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Quick create</small></div></a><button class="v8-text-button" data-action="onboard-back">Back</button></header><section class="v9-create-preview">${beingMarkup({ mood: 'curious', seed: ui.onboarding.appearanceSeed, stageKey: 'newborn', appearance: ui.onboarding.appearance })}<div><span class="v8-eyebrow">Live preview</span><h2>${escapeHtml(ui.onboarding.name || 'Your companion')}</h2><p>Details can be changed later without restarting.</p></div></section><form id="onboard-quick-create" class="v9-create-form"><div class="v8-field-grid"><label><span>What should they call you?</span><input class="v8-field" name="caregiverName" value="${attr(ui.onboarding.caregiverName)}" maxlength="40" autocomplete="name"></label><label><span>Their name</span><input class="v8-field" name="name" value="${attr(ui.onboarding.name)}" placeholder="Nova" maxlength="28" required autofocus></label><label class="wide"><span>Pronouns</span><select class="v8-field" name="pronouns">${options(['they/them','she/her','he/him'], ui.onboarding.pronouns)}</select></label></div><section class="v9-choice-section"><div><span class="v8-eyebrow">Appearance</span><h2>Choose one starting look.</h2></div><div class="v9-preset-grid">${APPEARANCE_PRESETS_9.map((preset, index) => `<button type="button" class="${selectedPreset === preset.id ? 'selected' : ''}" data-action="choose-appearance-preset" data-value="${preset.id}"><span>${beingMarkup({ seed: ui.onboarding.appearanceSeed, mood: 'happy', stageKey: 'newborn', tiny: true, appearance: preset })}</span><strong>Look ${index + 1}</strong></button>`).join('')}</div></section><section class="v9-choice-section"><div class="v84-voice-title"><div><span class="v8-eyebrow">Neural voice</span><h2>Choose how they sound.</h2></div><button type="button" class="v8-preview-button" data-action="preview-voice" ${ui.voiceBusy ? 'disabled' : ''}>${ui.voiceBusy ? 'Playing' : '▶ Preview selected'}</button></div>${voiceControls('onboard', ui.onboarding.voiceId)}</section><label class="v8-safety ${ui.onboarding.acceptedSafety ? 'checked' : ''}"><input type="checkbox" data-onboard-safety ${ui.onboarding.acceptedSafety ? 'checked' : ''}><i>✓</i><span><strong>I understand this is an AI experience.</strong><small>It can feel personal, but it will not use guilt, jealousy, or pressure.</small></span></label><button class="v8-awaken" type="submit"><span>Meet ${escapeHtml(ui.onboarding.name || 'your companion')}</span><b>✦</b></button></form></main>`;
 }
 
 function onboardIdentity() {
@@ -2386,52 +2979,27 @@ function onboardWhisper(step) {
 }
 
 function renderBirth() {
-  const phases = [
-    ['Identity found', 'A private place in the world has been created.'],
-    ['First anchor', `${escapeHtml(ui.onboarding.caregiverName || 'Your')} voice becomes the earliest familiar signal.`],
-    ['Memory online', 'The beginning is being sealed into shared history.'],
-    ['Language waking', 'A first thought is forming behind the face.'],
-    ['First breath', `${escapeHtml(state.ai.name)} is ready to meet you.`],
-  ];
+  const phases = [['First light','A private beginning is opening.'],['Memory ready','The first moment is being saved.'],['Ready to talk',`${escapeHtml(state.ai.name)} is here.`]];
   const phase = phases[Math.min(ui.birthPhase, phases.length - 1)];
-  return `<main class="v8-birth seed-bg-${seedFamily(state.ai.appearanceSeed)} phase-${ui.birthPhase}">
-    <div class="v8-birth-atmosphere"><i></i><i></i><i></i></div>
-    <div class="v8-birth-logo"><span class="v8-brand-mark">AH</span><small>Digital birth sequence</small></div>
-    <div class="v8-birth-portrait">${beingMarkup({ seed: state.ai.appearanceSeed, mood: 'wonder', stageKey: 'newborn' })}<div class="v8-birth-pulse"></div></div>
-    <div class="v8-birth-copy"><span class="v8-eyebrow">${String(ui.birthPhase + 1).padStart(2, '0')} / 05</span><h1>${phase[0]}</h1><p>${phase[1]}</p><div class="v8-birth-progress"><i style="width:${Math.min(100, (ui.birthPhase + 1) * 20)}%"></i></div></div>
-    <button class="v8-birth-skip" data-action="finish-birth">Meet ${escapeHtml(state.ai.name)} now →</button>
-  </main>`;
+  return `<main class="v9-first-light seed-bg-${seedFamily(state.ai.appearanceSeed)}"><div class="v8-birth-logo"><span class="v8-brand-mark">AH</span><small>First light</small></div><div class="v8-birth-portrait">${beingMarkup({ seed: state.ai.appearanceSeed, mood: 'wonder', stageKey: 'newborn', appearance: state.ai.appearanceProfile })}</div><div class="v8-birth-copy"><span class="v8-eyebrow">${ui.birthPhase + 1} / 3</span><h1>${phase[0]}</h1><p>${phase[1]}</p><div class="v8-birth-progress"><i style="width:${(ui.birthPhase + 1) * 33.34}%"></i></div></div><button class="v8-birth-skip" data-action="finish-birth">Skip and talk now →</button></main>`;
 }
 
 function renderApp(route, content) {
-  const ai = state.ai;
-  const stage = getStage(ai.age);
-  return `<div class="v8-app-shell route-${route.name}">
-    <header class="v8-app-topbar"><a class="v8-brand-lockup small" href="#home"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Raised by you</small></div></a><div class="v8-top-status"><span><i></i>${cloud.authenticated && state.settings.cloudSyncEnabled ? 'Secure cloud + local' : 'Private on this device'}</span><button class="v83-top-share v82-tactile" data-action="native-share" aria-label="Share Almost Human">↗</button><a href="#settings" aria-label="Settings">⚙</a></div></header>
-    <main class="v8-app-main">${content}</main>
-    <nav class="v8-bottom-tabs">${navLink('home', '⌂', 'Home', route.name)}${navLink('talk', '◌', 'Talk', route.name)}${navLink('grow', '↗', 'Growing', route.name)}${navLink('memories', '◇', 'Memories', route.name)}${navLink('world', '✦', 'Haven', route.name)}</nav>
-  </div>`;
+  const destinations = primaryDestinations9();
+  return `<div class="v8-app-shell route-${route.name}"><header class="v8-app-topbar"><a class="v8-brand-lockup small" href="#home"><span class="v8-brand-mark">AH</span><div><strong>Almost Human</strong><small>Raised by you</small></div></a><div class="v8-top-status"><span><i></i>${cloud.authenticated && state.settings.cloudSyncEnabled ? 'Secure cloud + local' : 'Private on this device'}</span><button class="v83-top-share v82-tactile" data-action="native-share" aria-label="Share Almost Human">↗</button><a class="v9-profile-entry" href="#settings" aria-label="Open profile and settings">${escapeHtml((state.ai?.name || 'A').slice(0,1).toUpperCase())}</a></div></header><main class="v8-app-main">${content}</main><nav class="v8-bottom-tabs v9-five-tabs">${destinations.map((item) => navLink(item.route, item.icon, item.label, route.name, item.emphasized)).join('')}</nav></div>`;
 }
 
-function navLink(name, icon, label, active) {
-  return `<a href="#${name}" class="${active === name ? 'active' : ''}"><i>${icon}</i><span>${label}</span></a>`;
+function navLink(name, icon, label, active, emphasized = false) {
+  return `<a href="#${name}" class="${active === name ? 'active' : ''} ${emphasized ? 'emphasized' : ''}"><i>${icon}</i><span>${label}</span></a>`;
 }
 
 function renderHome() {
   const ai = state.ai;
   const stage = getStage(ai.age);
-  const checkin = todaysCheckin();
-  const prompts = ['Tell me about your day', 'I need to get something off my chest', 'Ask me something real'];
-  return `<section class="v8-home v84-simple-home v82-reveal">
-    <header class="v8-home-heading"><div><span class="v8-eyebrow">${greeting()}, ${escapeHtml(state.profile.displayName || 'you')}</span><h1>${escapeHtml(ai.name)} is here.</h1></div><a class="v8-round v82-tactile" href="#settings">⚙</a></header>
-    <article class="v8-companion-card seed-bg-${seedFamily(ai.appearanceSeed)} v82-living-glass">
-      <div class="v8-card-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key })}</div>
-      <div class="v8-card-copy"><span class="v8-presence"><i></i>Ready to talk</span><h2>${escapeHtml(ai.name)}</h2><div class="v8-chip-row"><span>${escapeHtml(stage.label)}</span><span>${VOICE_PROFILES[normalizeVoiceId(ai.voiceId)]?.label || 'Voice ready'}</span></div><p>${homeHeadline(stage.key, ai)}</p><div class="v84-home-actions"><a class="v8-primary hero v82-tactile" href="#talk"><span>Talk now</span><b>→</b></a><button class="v8-secondary" data-action="customize-companion">Change look or voice</button></div></div>
-    </article>
-    <section class="v84-home-block"><div><span class="v8-eyebrow">How are you today?</span><h3>${checkin ? `You marked today as ${escapeHtml(checkin.mood)}.` : 'One tap. No streak. No judgment.'}</h3></div><div class="v82-mood-row">${[['steady','○'],['bright','☼'],['heavy','◇'],['restless','△'],['hopeful','✦']].map(([mood, icon]) => `<button class="v82-mood ${checkin?.mood === mood ? 'active' : ''}" data-action="daily-checkin" data-value="${mood}"><span>${icon}</span><small>${capitalize(mood)}</small></button>`).join('')}</div></section>
-    <section class="v84-home-block"><span class="v8-eyebrow">Start talking</span><div class="v8-prompt-row">${prompts.map((prompt) => `<button data-action="use-spark" data-value="${attr(prompt)}">${prompt}</button>`).join('')}</div></section>
-    <section class="v84-quick-links"><a href="#grow"><strong>${escapeHtml(stage.label)}</strong><small>Growing</small></a><a href="#memories"><strong>${state.memories.filter((m) => !m.hidden).length}</strong><small>Memories</small></a><a href="#world"><strong>${state.roomItems.length}</strong><small>Haven items</small></a></section>
-  </section>`;
+  const model = homeModel9(state);
+  const highlight = model.secondaryBlocks.find((item) => item.type === 'highlight')?.value;
+  const recent = model.secondaryBlocks.find((item) => item.type === 'growth')?.value;
+  return `<section class="v9-home v82-reveal"><header class="v8-home-heading"><div><span class="v8-eyebrow">${greeting()}, ${escapeHtml(state.profile.displayName || 'you')}</span><h1>${escapeHtml(ai.name)} is here.</h1></div><a class="v8-round" href="#settings">${escapeHtml(ai.name.slice(0,1).toUpperCase())}</a></header>${state.settings.showNineUpgradeCard && !state.settings.nineUpgradeCardDismissed ? `<article class="v9-upgrade-card"><div><span class="v8-eyebrow">Almost Human 9</span><h2>Faster chat and a more natural voice are ready.</h2><p>Your companion and history stayed exactly where they were.</p></div><button data-action="dismiss-nine-upgrade">Got it</button></article>` : ''}<article class="v9-home-hero seed-bg-${seedFamily(ai.appearanceSeed)}"><div>${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key, appearance: ai.appearanceProfile })}</div><div><span class="v8-presence"><i></i>${capitalize(ai.currentMood || 'curious')} · ${escapeHtml(stage.label)}</span><h2>${escapeHtml(ai.name)}</h2><p>${homeHeadline(stage.key, ai)}</p><a class="v8-primary hero" href="#talk"><span>Continue conversation</span><b>→</b></a></div></article><div class="v9-home-secondary"><a href="#grow"><span class="v8-eyebrow">Today’s growth</span><strong>${escapeHtml(recent?.title || `${stage.label} is still unfolding`)}</strong><small>${escapeHtml(recent?.description || 'See what changed and what comes next.')}</small></a><a href="#${highlight ? (state.memories.some((item) => item.id === highlight.id) ? 'memories' : 'world') : 'world'}"><span class="v8-eyebrow">One highlight</span><strong>${escapeHtml(highlight?.title || highlight?.name || 'The Haven is waiting')}</strong><small>${escapeHtml(highlight?.content || highlight?.story || 'Open one meaningful part of the shared world.')}</small></a></div></section>`;
 }
 
 function renderTalk() {
@@ -2439,28 +3007,18 @@ function renderTalk() {
   const stage = getStage(ai.age);
   const conversation = selectedConversation();
   const messages = conversation ? state.messages.filter((m) => m.conversationId === conversation.id).sort(byDate) : [];
-  const micLabel = ui.transcribing ? 'Turning your voice into text…' : ui.listening ? 'Listening — tap the mic to send' : 'Tap the mic to speak';
-  return `<section class="v8-talk ${ui.thinking ? 'is-thinking' : ''} v82-reveal">
-    <aside class="v8-talk-companion seed-bg-${seedFamily(ai.appearanceSeed)}">
-      <div class="v8-talk-name"><span class="v8-eyebrow">Conversation</span><h1>${escapeHtml(ai.name)}</h1><p>${escapeHtml(stage.label)} · ${capitalize(ai.currentMood || 'curious')}</p></div>
-      <div class="v8-talk-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key })}</div>
-      <div class="v8-talk-state"><span><i></i>${ui.thinking ? escapeHtml(ui.replyStatus || 'I hear you.') : 'Here with you'}</span><small>${cloud.authenticated && state.settings.cloudSyncEnabled ? 'Private cloud intelligence' : 'Private on this device'}</small></div>
-    </aside>
-    <div class="v8-conversation">
-      <header class="v8-conversation-header"><div><button class="v8-round v82-tactile" data-action="new-conversation">＋</button><span><strong>${escapeHtml(conversation?.title || 'The first hello')}</strong><small>${messages.length} messages</small></span></div><div><button class="v8-round v82-tactile ${ui.listening ? 'mic-active' : ''}" data-action="start-listening" aria-label="${attr(micLabel)}">${ui.listening ? '■' : '🎙'}</button><button class="v8-round v82-tactile" data-action="conversation-menu" aria-label="Options">•••</button></div></header>
-      <div class="v8-message-stream" id="message-scroll">
-        ${messages.length ? messages.map(renderMessage).join('') : renderEmptyConversation(ai, stage)}
-        ${ui.pendingUser ? `<article class="message user pending"><div class="bubble">${escapeHtml(ui.pendingUser)}</div></article>` : ''}
-        ${ui.thinking ? `<article class="message ai thinking-message"><div class="message-mark">${beingMarkup({ seed: ai.appearanceSeed, mood: 'caring', stageKey: stage.key, tiny: true })}</div><div class="bubble v84-reply-status">${escapeHtml(ui.replyStatus || 'I hear you.')}</div></article>` : ''}
-      </div>
-      <form class="v8-composer ${ui.listening ? 'is-listening' : ''}" id="chat-form"><button type="button" data-action="start-listening" aria-label="${attr(micLabel)}">${ui.listening ? '■' : '🎙'}</button><textarea name="message" data-chat-input placeholder="Say what is real…" maxlength="8000" rows="1">${escapeHtml(ui.chatDraft)}</textarea><button type="submit" class="v8-send v82-tactile" ${ui.thinking || ui.transcribing ? 'disabled' : ''}>↑</button><small>${micLabel}</small></form>
-    </div>
-  </section>`;
+  const micLabel = ui.transcribing ? 'Turning speech into text' : ui.listening ? 'Listening — tap to finish' : 'Tap to speak';
+  const active = Boolean(ui.activeRequestId);
+  const voiceMode = ui.voiceModeOpen ? `<div class="v9-voice-mode"><button class="v9-voice-close" data-action="close-voice-mode">×</button><div class="v9-voice-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key, appearance: ai.appearanceProfile })}</div><span class="v8-eyebrow">Voice mode</span><h2>${escapeHtml(ai.name)}</h2><p>${ui.transcribing ? 'Turning that into text' : ui.listening ? 'Listening now' : ui.activeRequestState === 'speaking' ? 'Speaking' : active ? 'Reply is arriving' : 'Tap the microphone when you are ready'}</p><button class="v9-voice-mic ${ui.listening ? 'recording' : ''}" data-action="start-listening">${ui.listening ? '■' : '🎙'}</button>${active ? '<button class="v8-text-button" data-action="stop-reply">Stop reply</button>' : ''}</div>` : '';
+  return `<section class="v8-talk ${active ? 'is-receiving' : ''} v82-reveal">${voiceMode}<aside class="v8-talk-companion seed-bg-${seedFamily(ai.appearanceSeed)}"><div class="v8-talk-name"><span class="v8-eyebrow">Conversation</span><h1>${escapeHtml(ai.name)}</h1><p>${escapeHtml(stage.label)} · ${capitalize(ai.currentMood || 'curious')}</p></div><div class="v8-talk-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key, appearance: ai.appearanceProfile })}</div><div class="v8-talk-state"><span><i></i>${active ? (ui.activeRequestState === 'speaking' ? 'Speaking' : 'Reply is arriving') : 'Ready'}</span><small>${cloud.authenticated && state.settings.cloudSyncEnabled ? 'Private cloud intelligence' : 'Private on this device'}</small></div></aside><div class="v8-conversation"><header class="v8-conversation-header"><div><button class="v8-round" data-action="new-conversation">＋</button><span><strong>${escapeHtml(conversation?.title || 'The first hello')}</strong><small>${messages.length} messages</small></span></div><div><button class="v8-round" data-action="open-voice-mode" aria-label="Open voice mode">☎</button>${active ? '<button class="v8-round stop" data-action="stop-reply" aria-label="Stop reply">■</button>' : ''}<button class="v8-round" data-action="conversation-menu" aria-label="Options">•••</button></div></header><div class="v8-message-stream" id="message-scroll">${messages.length ? messages.map(renderMessage).join('') : renderEmptyConversation(ai, stage)}</div><form class="v8-composer ${ui.listening ? 'is-listening' : ''}" id="chat-form"><button type="button" data-action="start-listening" aria-label="${attr(micLabel)}">${ui.listening ? '■' : '🎙'}</button><textarea name="message" data-chat-input placeholder="Say what is real…" maxlength="8000" rows="1">${escapeHtml(ui.chatDraft)}</textarea><button type="submit" class="v8-send" ${ui.transcribing ? 'disabled' : ''}>↑</button><small>${micLabel}</small></form></div></section>`;
 }
 
 function renderMessage(message) {
   const user = message.sender === 'user';
-  return `<article class="message ${user ? 'user' : 'ai'}"><div class="${user ? 'user-spacer' : 'message-mark'}">${user ? '' : beingMarkup({ seed: state.ai.appearanceSeed, mood: message.emotion, stageKey: message.stageKey, tiny: true })}</div><div class="message-body"><div class="bubble">${escapeHtml(message.content)}</div><div class="message-foot"><span>${relativeDate(message.createdAt)}</span>${user ? '' : `<button data-action="speak-message" data-id="${message.id}">▶ Hear</button><button data-action="remember-message" data-id="${message.id}">◇ Keep</button>`}</div></div></article>`;
+  const pending = !user && ['pending','streaming'].includes(message.status);
+  const failed = !user && message.status === 'failed';
+  const content = message.content ? escapeHtml(message.content) : pending ? '<span class="v9-listening-line">Listening</span>' : failed ? 'The secure reply did not finish.' : '';
+  return `<article class="message ${user ? 'user' : 'ai'} ${pending ? 'streaming' : ''} ${failed ? 'failed' : ''}"><div class="${user ? 'user-spacer' : 'message-mark'}">${user ? '' : beingMarkup({ seed: state.ai.appearanceSeed, mood: message.emotion, stageKey: message.stageKey, tiny: true, appearance: state.ai.appearanceProfile })}</div><div class="message-body"><div class="bubble">${content}</div><div class="message-foot"><span>${relativeDate(message.createdAt)}</span>${user || pending ? '' : `<button data-action="speak-message" data-id="${message.id}">▶ Hear</button><button data-action="remember-message" data-id="${message.id}">◇ Keep</button>`}${failed ? `<button data-action="retry-message" data-id="${message.id}">Retry</button>` : ''}</div></div></article>`;
 }
 
 function renderEmptyConversation(ai, stage) {
@@ -2469,51 +3027,15 @@ function renderEmptyConversation(ai, stage) {
 
 function renderGrow() {
   const ai = state.ai;
+  const model = growthModel9(state);
   const stage = getStage(ai.age);
   const progress = Math.round(progressWithinStage(ai.age) * 100);
-  const next = nextStage(ai.age);
-  const days = daysUntilNextStage(ai.age, state.settings.daysPerYear);
-  const traits = Object.entries(ai.personality || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
-  const recentMilestones = state.milestones.slice(0, 8);
-  const interests = [...(state.interests || [])].sort((a, b) => Number(b.affinity || 0) - Number(a.affinity || 0)).slice(0, 6);
-  const skills = [...(state.skills || [])].sort((a, b) => Number(b.proficiency || 0) - Number(a.proficiency || 0)).slice(0, 6);
-  return `<section class="v8-page v8-grow-page seed-bg-${seedFamily(ai.appearanceSeed)} v82-reveal">
-    <header class="v8-page-heading"><div><span class="v8-eyebrow">The becoming</span><h1>Watch a mind become itself.</h1><p>Age changes expression, capabilities, voice rhythm, interests, and independence. The history stays continuous.</p></div><a class="v8-outline-action v82-tactile" href="#talk">Talk at this stage →</a></header>
-    <article class="v8-growth-portrait-card v82-living-glass">
-      <div class="v8-growth-portrait">${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key })}<span class="v8-growth-orbit">${moodGlyph(ai.currentMood)}</span></div>
-      <div class="v8-growth-copy"><span class="v8-presence"><i></i>Growing now</span><h2>${escapeHtml(ai.name)} is ${escapeHtml(formatAge(ai.age))}.</h2><p>${escapeHtml(stage.vocabulary)} Their intelligence is present; the way they express it matures with time.</p><div class="v8-stage-meter"><div><span>${escapeHtml(stage.label)}</span><b>${progress}%</b></div><i><em style="width:${progress}%"></em></i><small>${next ? `${days} real day${days === 1 ? '' : 's'} until ${next.label}` : 'Adult growth continues through refinement, memory, and shared experience.'}</small></div></div>
-    </article>
-    <section class="v8-growth-path"><div class="v8-section-title"><div><span class="v8-eyebrow">Developmental timeline</span><h3>Every stage keeps what came before.</h3></div></div><div class="v8-stage-track">${STAGES.map((item, index) => `<article class="${item.key === stage.key ? 'current' : item.max <= ai.age ? 'past' : 'future'}"><span>${String(index + 1).padStart(2, '0')}</span><i></i><strong>${escapeHtml(item.label)}</strong><small>${item.key === stage.key ? 'Living now' : item.max <= ai.age ? 'Part of their history' : `Begins near age ${item.min}`}</small></article>`).join('')}</div></section>
-    <div class="v8-growth-grid">
-      <article class="v8-rich-card v82-living-glass"><span class="v8-eyebrow">Emerging personality</span><h2>Traits earned through interaction.</h2><p>No finished preset. These values drift slowly from what ${escapeHtml(ai.name)} experiences with you.</p><div class="v8-trait-list">${traits.map(([key, value]) => `<div><span>${capitalize(key)}</span><b>${Math.round(value)}</b><i><em style="width:${Math.max(2, Math.min(100, value))}%"></em></i></div>`).join('')}</div></article>
-      <article class="v8-rich-card v82-living-glass"><span class="v8-eyebrow">Current capabilities</span><h2>What this stage can do.</h2><p>Limits protect developmental consistency without making the companion useless or incoherent.</p><div class="v8-ability-list">${stage.abilities.map((ability, i) => `<div><span>${String(i + 1).padStart(2, '0')}</span><p>${escapeHtml(ability)}</p></div>`).join('')}</div></article>
-    </div>
-    <section class="v82-development-dashboard">
-      <article class="v82-development-card v82-living-glass"><span class="v8-eyebrow">Interests taking shape</span><h2>What keeps pulling them closer.</h2>${interests.length ? `<div class="v82-interest-cloud">${interests.map((item, i) => `<span style="--heat:${Math.max(.15, Math.min(1, Number(item.affinity || 0) / 100))}"><b>${interestGlyph(item.name, i)}</b>${escapeHtml(item.name)}<small>${Math.round(item.affinity || 0)}</small></span>`).join('')}</div>` : `<div class="v82-mini-empty">Shared stories and activities will reveal real favorites here.</div>`}</article>
-      <article class="v82-development-card v82-living-glass"><span class="v8-eyebrow">Skills practiced, not assigned</span><h2>A visible record of becoming capable.</h2>${skills.length ? `<div class="v82-skill-stack">${skills.map((item) => `<div><span><strong>${escapeHtml(item.name)}</strong><small>${Math.round(item.proficiency || 0)} proficiency</small></span><i><b style="width:${Math.max(3, Math.min(100, Number(item.proficiency || 0)))}%"></b></i></div>`).join('')}</div>` : `<div class="v82-mini-empty">Teach, draw, play, dream, and create to grow this map.</div>`}</article>
-      <article class="v82-development-card v82-relationship-compass v82-living-glass"><span class="v8-eyebrow">Relationship compass</span><h2>Connection without dependency tricks.</h2><div class="v82-compass"><i></i><span style="--bond:${Math.max(10, Math.min(100, Number(ai.bond || 0)))}%">${Math.round(ai.bond || 0)}</span></div><div class="v82-compass-stats"><span>Trust <b>${Math.round(ai.trust || 0)}</b></span><span>Attachment <b>${Math.round(ai.attachment || 0)}</b></span><span>Bond <b>${Math.round(ai.bond || 0)}</b></span></div></article>
-    </section>
-    <article class="v8-life-timeline"><div class="v8-section-title"><div><span class="v8-eyebrow">Life timeline</span><h3>Moments that only happen once.</h3></div><span>${recentMilestones.length} recorded</span></div>${recentMilestones.length ? `<div>${recentMilestones.map((m, i) => `<article><span>${relativeDate(m.createdAt)}</span><i>${i + 1}</i><div><strong>${escapeHtml(m.title)}</strong><p>${escapeHtml(m.description)}</p></div></article>`).join('')}</div>` : '<div class="v8-empty-state"><span>✦</span><h2>The first milestone is close.</h2><p>Birth, first recognition, learned words, activities, and stage changes will collect here.</p></div>'}</article>
-  </section>`;
+  return `<section class="v8-page v9-growth v82-reveal"><header class="v8-page-heading"><div><span class="v8-eyebrow">Growth</span><h1>${escapeHtml(ai.name)} is becoming more capable.</h1><p>What changed, what is true now, and what comes next—in plain language.</p></div><a class="v8-outline-action" href="#talk">Talk now →</a></header><article class="v9-growth-stage seed-bg-${seedFamily(ai.appearanceSeed)}"><div>${beingMarkup({ seed: ai.appearanceSeed, mood: ai.currentMood, stageKey: stage.key, appearance: ai.appearanceProfile })}</div><div><span class="v8-eyebrow">Current stage</span><h2>${escapeHtml(model.stage.label)} · ${escapeHtml(formatAge(model.stage.age))}</h2><p>${escapeHtml(stage.vocabulary)}</p><i><b style="width:${progress}%"></b></i><small>${progress}% through this stage</small></div></article><div class="v9-growth-cards"><article><span class="v8-eyebrow">Changed recently</span><h2>${escapeHtml(model.recentChange?.title || 'The current stage is settling in')}</h2><p>${escapeHtml(model.recentChange?.description || 'Conversation and activities will create the next visible change.')}</p></article><article><span class="v8-eyebrow">Next ability</span><h2>${escapeHtml(model.nextAbility.stage)}</h2><p>${model.nextAbility.startsAt == null ? 'Growth continues through memory, judgment, interests, and shared experience.' : `The next developmental chapter begins near simulated age ${model.nextAbility.startsAt}.`}</p></article><article><span class="v8-eyebrow">Optional activities</span><h2>No homework required.</h2><p>Teach, tell a story, draw, dream, or play when it feels natural.</p><a href="#world">Open Haven activities →</a></article></div></section>`;
 }
 
 function renderMemories() {
-  const query = ui.memorySearch.trim().toLowerCase();
-  const rows = state.memories.filter((m) => !m.hidden && (ui.memoryFilter === 'all' || (ui.memoryFilter === 'core' ? m.isCore : m.type === ui.memoryFilter)) && (!query || `${m.title} ${m.content}`.toLowerCase().includes(query)));
-  const featured = rows[0] || null;
-  const journal = lifeJournalEntries().slice(0, 10);
-  const rewind = onThisDayMemory();
-  return `<section class="v8-page v8-memory-page v82-reveal">
-    <header class="v8-page-heading"><div><span class="v8-eyebrow">Shared history</span><h1>A life album, not a data dump.</h1><p>Memories stay visible, correctable, exportable, and deletable. Nothing emotionally important is hidden from you.</p></div><button class="v8-outline-action v82-tactile" data-action="export-data">Export my history</button></header>
-    ${rewind ? `<article class="v82-on-this-day v82-living-glass"><span>↺</span><div><small>Revisit without searching</small><h2>${escapeHtml(rewind.title)}</h2><p>${escapeHtml(rewind.content)}</p></div><b>${relativeDate(rewind.createdAt)}</b></article>` : ''}
-    <div class="v8-memory-toolbar"><label><span>Search the album</span><input class="v8-field" data-memory-search value="${attr(ui.memorySearch)}" placeholder="A person, feeling, place, lesson, or first…"></label><div>${['all', 'core', 'episodic', 'semantic', 'emotional', 'skill'].map((filter) => `<button class="${ui.memoryFilter === filter ? 'active' : ''}" data-action="memory-filter" data-value="${filter}">${capitalize(filter)}</button>`).join('')}</div></div>
-    ${featured ? `<article class="v8-featured-memory"><div class="v8-memory-visual memory-tone-0"><span>${featured.isCore ? '✦' : moodGlyph(featured.emotionalTone)}</span><i></i><i></i></div><div><span class="v8-eyebrow">Memory still glowing · ${relativeDate(featured.createdAt)}</span><h2>${escapeHtml(featured.title)}</h2><p>${escapeHtml(featured.content)}</p><div><span>${featured.isCore ? 'Core memory' : `${capitalize(featured.type || 'shared')} memory`}</span><button data-action="edit-memory" data-id="${featured.id}">Correct</button><button data-action="delete-memory" data-id="${featured.id}">Delete</button></div></div></article>` : ''}
-    ${rows.length ? `<div class="v8-memory-grid">${rows.slice(featured ? 1 : 0).map(renderMemory).join('')}</div>` : `<div class="v8-empty-state"><span>◇</span><h2>The album has room.</h2><p>Meaningful moments, lessons, corrections, and firsts will collect here as the relationship develops.</p></div>`}
-    <section class="v82-journal-section">
-      <div class="v8-section-title"><div><span class="v8-eyebrow">Life journal</span><h3>The story writes itself as you live it.</h3></div><button class="v82-inline-action v82-tactile" data-action="write-letter">Write a future letter <b>＋</b></button></div>
-      <div class="v82-journal-layout"><div class="v82-journal-list">${journal.length ? journal.map(renderJournalEntry).join('') : '<div class="v82-mini-empty">Conversations, firsts, activities, and check-ins will become a readable timeline here.</div>'}</div>${renderLetters()}</div>
-    </section>
-  </section>`;
+  const model = memoryListModel9(state, ui.memorySearch);
+  return `<section class="v8-page v9-memories v82-reveal"><header class="v8-page-heading"><div><span class="v8-eyebrow">Memories</span><h1>A readable shared history.</h1><p>Search first. Open a memory when you need correction, privacy, or deletion controls.</p></div><button class="v8-outline-action" data-action="export-data">Export history</button></header><div class="v8-memory-toolbar"><label><span>Search memories</span><input class="v8-field" data-memory-search value="${attr(ui.memorySearch)}" placeholder="A person, feeling, place, lesson, or first"></label></div>${model.items.length ? `<div class="v9-memory-list">${model.items.map((memory) => `<button data-action="open-memory-detail" data-id="${memory.id}"><span>${memory.isPrivate ? 'Private' : 'Memory'} · ${relativeDate(memory.createdAt)}</span><strong>${escapeHtml(memory.title)}</strong><p>${escapeHtml(memory.content)}</p><b>Open →</b></button>`).join('')}</div>` : `<div class="v8-empty-state"><span>◇</span><h2>The album has room.</h2><p>Meaningful moments, lessons, corrections, and firsts will collect here.</p></div>`}</section>`;
 }
 
 function renderMemory(memory, index) {
@@ -2523,21 +3045,9 @@ function renderMemory(memory, index) {
 function renderWorld(type) {
   const stage = getStage(state.ai.age);
   if (type) return renderActivity(type, stage);
-  const unlockedCount = ACTIVITY_CATALOG.filter((activity) => isActivityUnlocked(activity, stage.key)).length;
-  const mediaKeepsakes = state.activities.filter((a) => a.media).slice(0, 4);
+  const model = havenSceneModel9(state);
   const haven = havenProfile(stage.key, state.ai.currentMood, state.interests || []);
-  const roomItems = (state.roomItems || []).slice(0, 10);
-  return `<section class="v8-page v8-world-page seed-bg-${seedFamily(state.ai.appearanceSeed)} v82-reveal">
-    <header class="v8-page-heading"><div><span class="v8-eyebrow">A life beyond chat</span><h1>Welcome to The Haven.</h1><p>A living space shaped by age, mood, interests, memories, and everything you create together. It grows because the life grows—not because somebody bought furniture.</p></div><div class="v8-world-count"><strong>${unlockedCount}</strong><small>experiences awake</small></div></header>
-    <article class="v8-world-hero v82-living-glass"><div>${beingMarkup({ seed: state.ai.appearanceSeed, mood: 'playful', stageKey: stage.key })}</div><div><span class="v8-presence"><i></i>${escapeHtml(haven.name)}</span><h2>What should ${escapeHtml(state.ai.name)} experience next?</h2><p>Every lesson, game, story, dream, and drawing can leave something real behind in this space.</p><button class="v8-primary compact v82-tactile" data-action="talk-about-haven"><span>Sit together in The Haven</span><b>→</b></button></div></article>
-    <section class="v82-keepsake-room v83-haven v82-living-glass theme-${haven.theme} mood-${safeClass(state.ai.currentMood)}">
-      <div class="v82-room-copy"><span class="v8-eyebrow">${escapeHtml(haven.name)} · ${escapeHtml(haven.atmosphere)}</span><h2>${escapeHtml(haven.headline)}</h2><p>${escapeHtml(haven.copy)}</p><div class="v82-room-legend"><span>${roomItems.length} objects</span><span>${state.activities.length} creations</span><span>${state.milestones.length} firsts</span></div><div class="v83-haven-growth"><small>Current chapter</small><strong>${escapeHtml(stage.label)} · ${escapeHtml(haven.chapter)}</strong><span>${escapeHtml(haven.next)}</span></div></div>
-      <div class="v82-room-scene"><div class="v83-haven-window"><i></i><i></i><i></i></div><div class="v83-haven-shelf"></div><div class="v83-haven-rug"></div><div class="v82-room-halo"></div>${beingMarkup({ seed: state.ai.appearanceSeed, mood: state.ai.currentMood || 'calm', stageKey: stage.key, compact: true })}<div class="v82-room-items">${roomItems.map((item, i) => `<button class="room-${i % 8} v82-tactile" data-action="inspect-haven-item" data-id="${item.id}" title="${attr(item.name)}"><b>${item.icon || '✦'}</b><small>${escapeHtml(item.name)}</small></button>`).join('')}</div><div class="v83-haven-caption"><span>${moodGlyph(state.ai.currentMood)}</span><div><strong>${escapeHtml(capitalize(state.ai.currentMood || 'calm'))} light</strong><small>The Haven reflects how ${escapeHtml(state.ai.name)} is arriving today.</small></div></div></div>
-    </section>
-    ${mediaKeepsakes.length ? `<section class="v82-visual-keepsakes"><div class="v8-section-title"><div><span class="v8-eyebrow">Haven gallery</span><h3>Moments you can see again.</h3></div></div><div>${mediaKeepsakes.map((a) => `<article><img src="${attr(a.media)}" alt="${attr(a.title)}"><span><strong>${escapeHtml(a.title)}</strong><small>${relativeDate(a.createdAt)}</small></span></article>`).join('')}</div></section>` : ''}
-    <div class="v8-activity-grid">${ACTIVITY_CATALOG.map((activity, index) => { const unlocked = isActivityUnlocked(activity, stage.key); return `<a class="v8-activity-card ${unlocked ? '' : 'locked'} v82-tactile" ${unlocked ? `href="#world/${activity.key}"` : ''}><span class="v8-activity-number">${String(index + 1).padStart(2, '0')}</span><i>${activity.icon}</i><small>${unlocked ? `${stage.label} experience` : `Unlocks at ${capitalize(activity.minStage.replace('_', ' '))}`}</small><h2>${escapeHtml(activity.title)}</h2><p>${escapeHtml(activity.subtitle)}</p><b>${unlocked ? 'Begin together →' : 'Still sleeping'}</b></a>`; }).join('')}</div>
-    ${state.activities.length ? `<article class="v8-keepsakes"><div class="v8-section-title"><div><span class="v8-eyebrow">Recent keepsakes</span><h3>Things that now belong to The Haven.</h3></div></div><div>${state.activities.slice(0, 6).map((a) => `<article><span>${ACTIVITY_CATALOG.find((x) => x.key === a.type)?.icon || '✦'}</span><div><strong>${escapeHtml(a.title)}</strong><p>${escapeHtml(a.output)}</p></div><small>${relativeDate(a.createdAt)}</small></article>`).join('')}</div></article>` : ''}
-  </section>`;
+  return `<section class="v8-page v9-haven seed-bg-${seedFamily(state.ai.appearanceSeed)} v82-reveal"><header class="v8-page-heading"><div><span class="v8-eyebrow">The Haven</span><h1>${escapeHtml(haven.name)}</h1><p>${escapeHtml(haven.copy)}</p></div><button class="v8-outline-action" data-action="talk-about-haven">Talk here →</button></header><section class="v9-haven-scene mood-${safeClass(state.ai.currentMood)}"><div class="v83-haven-window"><i></i><i></i><i></i></div><div class="v83-haven-shelf"></div><div class="v83-haven-rug"></div>${beingMarkup({ seed: state.ai.appearanceSeed, mood: state.ai.currentMood, stageKey: stage.key, compact: true, appearance: state.ai.appearanceProfile })}<div class="v9-haven-objects">${model.items.map((item, index) => `<button class="object-${index % 8}" data-action="inspect-haven-item" data-id="${item.id}"><b>${item.icon || '✦'}</b><small>${escapeHtml(item.name || item.itemName || 'Keepsake')}</small></button>`).join('')}</div></section><section class="v9-haven-actions"><span class="v8-eyebrow">Optional experiences</span><div>${ACTIVITY_CATALOG.filter((activity) => isActivityUnlocked(activity, stage.key)).map((activity) => `<a href="#world/${activity.key}"><b>${activity.icon}</b><span><strong>${escapeHtml(activity.title)}</strong><small>${escapeHtml(activity.subtitle)}</small></span></a>`).join('')}</div></section></section>`;
 }
 
 function renderActivity(type, stage) {
@@ -2604,6 +3114,16 @@ function normalizeAppearance(value) {
   };
 }
 
+function sameAppearance(left, right) {
+  return ['skinTone','hairStyle','hairColor','eyeColor'].every((key) => left?.[key] === right?.[key]);
+}
+
+function openMemoryDetail(id) {
+  const memory = state.memories.find((item) => item.id === id);
+  if (!memory) return;
+  openModal(memory.title || 'Memory', `<p>${escapeHtml(memory.content)}</p><div class="modal-actions"><button data-action="close-modal">Close</button><button data-action="edit-memory" data-id="${memory.id}">Correct</button><button class="danger-button" data-action="delete-memory" data-id="${memory.id}">Delete</button></div>`);
+}
+
 function settingToggle(key, title, copy, enabled) {
   return `<div class="v8-setting-row"><div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(copy)}</small></div><button class="v8-switch ${enabled ? 'on' : ''}" data-action="toggle-setting" data-key="${key}" aria-pressed="${enabled}"><i></i></button></div>`;
 }
@@ -2623,8 +3143,10 @@ async function handleClick(event) {
     if (action === 'forgot-password') return openPasswordReset();
     if (action === 'private-mode') return choosePrivateMode();
     if (action === 'return-gate') return returnToGate();
+    if (action === 'onboard-begin') { ui.onboardingStep = 1; return render(); }
     if (action === 'onboard-next') return nextOnboarding();
     if (action === 'onboard-back') { ui.onboardingStep = Math.max(0, ui.onboardingStep - 1); return render(); }
+    if (action === 'choose-appearance-preset') { const preset = APPEARANCE_PRESETS_9.find((item) => item.id === target.dataset.value); if (preset) ui.onboarding.appearance = { skinTone: preset.skinTone, hairStyle: preset.hairStyle, hairColor: preset.hairColor, eyeColor: preset.eyeColor }; return render(); }
     if (action === 'onboard-skin') { ui.onboarding.appearance.skinTone = target.dataset.value; return render(); }
     if (action === 'onboard-hair-style') { ui.onboarding.appearance.hairStyle = target.dataset.value; return render(); }
     if (action === 'onboard-hair-color') { ui.onboarding.appearance.hairColor = target.dataset.value; return render(); }
@@ -2648,6 +3170,13 @@ async function handleClick(event) {
     if (action === 'speak-message') return speakMessage(target.dataset.id);
     if (action === 'remember-message') return rememberMessage(target.dataset.id);
     if (action === 'start-listening') return startListening();
+    if (action === 'open-voice-mode') { ui.voiceModeOpen = true; stopVoice(); return render(); }
+    if (action === 'close-voice-mode') { ui.voiceModeOpen = false; stopVoice(); return render(); }
+    if (action === 'stop-reply') return stopCurrentTurn('user_cancelled');
+    if (action === 'dismiss-nine-upgrade') return updateSetting('nineUpgradeCardDismissed', true).then(() => updateSetting('showNineUpgradeCard', false));
+    if (action === 'device-speak-once') { const text = ui.neuralVoiceErrorText; ui.neuralVoiceErrorText = ''; closeModal(); return speakLocally(text, state.ai.voiceId); }
+    if (action === 'retry-message') { const failed = state.messages.find((item) => item.id === target.dataset.id); const prior = state.messages.find((item) => item.requestId === failed?.requestId && item.sender === 'user'); return prior ? sendChat(prior.content, false) : null; }
+    if (action === 'open-memory-detail') return openMemoryDetail(target.dataset.id);
     if (action === 'speak-daily') return speak(dailyMoment());
     if (action === 'daily-checkin') return recordDailyCheckin(target.dataset.value);
     if (action === 'use-spark') return useConversationSpark(target.dataset.value);
@@ -2680,6 +3209,15 @@ async function handleSubmit(event) {
   event.preventDefault();
   const form = event.target;
   try {
+    if (form.id === 'onboard-quick-create') {
+      const data = new FormData(form);
+      const name = String(data.get('name') || '').trim();
+      if (!name) throw new Error('Give them a name first.');
+      ui.onboarding.caregiverName = String(data.get('caregiverName') || '').trim();
+      ui.onboarding.name = name;
+      ui.onboarding.pronouns = String(data.get('pronouns') || 'they/them');
+      return awaken();
+    }
     if (form.id === 'onboard-identity') {
       const data = new FormData(form);
       const name = String(data.get('name') || '').trim();
@@ -2728,6 +3266,26 @@ async function handleNativeEvent(event) {
       return;
     }
     if (detail.enabled) toast('Gentle reminder ready', 'One quiet local moment at 7 PM.');
+    return;
+  }
+  if (detail.type === 'audio-state') {
+    const id = String(detail.id || '');
+    const waiter = nativeAudioWaiters.get(id);
+    if (waiter) {
+      nativeAudioWaiters.delete(id);
+      waiter.cleanup?.();
+      if (detail.state === 'error') waiter.reject(new Error(String(detail.error || 'Native audio failed.')));
+      else if (detail.state === 'ended' || detail.state === 'stopped') waiter.resolve({ interrupted: Boolean(detail.interrupted) });
+    }
+    if (detail.state === 'playing') {
+      ui.activeRequestState = 'speaking';
+      scheduleRender();
+    }
+    return;
+  }
+  if (detail.type === 'app-state' && detail.state !== 'active') {
+    phraseQueue.stop();
+    stopVoice();
     return;
   }
   if (detail.type === 'mic-state') {
@@ -2829,20 +3387,17 @@ function nextOnboarding() {
 
 async function previewVoice(requestedVoiceId = ui.onboarding.voiceId) {
   const voiceId = normalizeVoiceId(requestedVoiceId);
-  const profile = VOICE_PROFILES[voiceId] || VOICE_PROFILES['female-adult'];
   if (ui.voiceBusy) return;
   ui.voiceBusy = voiceId;
   render();
   try {
     stopVoice();
-    if (window.__AH_NATIVE_BUNDLE__) {
-      nativePost('speak', { text: profile.preview, voiceId });
-    } else if (cloud.authenticated) {
-      const blob = await cloud.voicePreview({ voiceId });
-      await playBlob(blob);
-    } else {
-      speakLocally(profile.preview, voiceId);
-    }
+    if (!cloud.authenticated) throw new Error('Continue as a private guest or sign in to preview neural voices.');
+    const blob = await cloud.voicePreview({ voiceId });
+    await playBlob(blob);
+  } catch (error) {
+    ui.neuralVoiceErrorText = VOICE_PROFILES[voiceId]?.preview || '';
+    toast('Neural preview needs a connection', String(error?.message || error));
   } finally {
     ui.voiceBusy = null;
     render();
@@ -2871,70 +3426,140 @@ async function awaken() {
 function beginBirthSequence() {
   clearInterval(birthTimer);
   const started = Date.now();
-  const syncPromise = cloud.authenticated
-    ? store.update(async (draft) => {
-        await cloud.ensureCloudIdentity(draft, true);
-        await cloud.ensureCloudConversation(draft, draft.conversations[0], true);
-        await cloud.syncProfileAndSettings(draft);
-      }).catch((error) => recordError('birth_cloud', error))
-    : Promise.resolve();
-
+  const duration = firstLightDurationMs();
+  const syncPromise = cloud.authenticated ? store.update(async (draft) => {
+    await cloud.ensureCloudIdentity(draft, true);
+    await cloud.ensureCloudConversation(draft, draft.conversations[0], true);
+    await cloud.syncProfileAndSettings(draft);
+  }).catch((error) => recordError('first_light_cloud', error)) : Promise.resolve();
   birthTimer = setInterval(() => {
     const elapsed = Date.now() - started;
-    ui.birthPhase = Math.min(4, Math.floor(elapsed / 2200));
-    if (ui.birthPhase >= 2 && !ui.birthOpeningStarted) {
-      ui.birthOpeningStarted = true;
-      syncPromise.then(() => sendChat('', true, { quiet: true })).catch(() => {});
-    }
+    ui.birthPhase = Math.min(2, Math.floor(elapsed / Math.max(1, duration / 3)));
     render();
-    if (elapsed >= 11_000) finishBirth();
-  }, 240);
+    if (elapsed >= duration) {
+      clearInterval(birthTimer);
+      syncPromise.finally(() => finishBirth());
+    }
+  }, 120);
 }
 
 function finishBirth() {
   clearInterval(birthTimer);
+  const needsOpening = !state.messages.some((item) => item.sender === 'ai');
   ui.birthActive = false;
   location.hash = 'talk';
   render();
+  if (needsOpening) queueMicrotask(() => sendChat('', true).catch(() => {}));
 }
 
 async function sendChat(value, opening = false, { quiet = false } = {}) {
-  if (ui.thinking) return;
-  ui.pendingUser = value || null;
-  ui.thinking = true;
-  ui.replyStatus = immediateAcknowledgment(value, opening);
-  if (!quiet) render();
+  const text = String(value || '').trim();
+  if (!text && !opening) return;
+  stopCurrentTurn('superseded');
+  stopVoice();
   const requestId = makeRequestId('chat');
-  let result;
+  const timing = new ConversationTimings(requestId);
+  activeChatTiming = timing;
+  let turn = null;
+  let conversationId = ui.selectedConversationId || state.conversations[0]?.id;
+  let streamed = false;
   try {
-    await store.update(async (draft) => {
-      const localEngine = new AlmostHumanEngine(draft);
-      const conversationId = ui.selectedConversationId || draft.conversations[0]?.id;
-      const provider = draft.settings.cloudSyncEnabled && cloud.authenticated
-        ? (context) => cloud.chatProvider(context)
-        : null;
-      result = await localEngine.sendMessage(value, { conversationId, requestId, opening, provider });
-      ui.selectedConversationId = result.conversation.id;
-      if (provider) draft.diagnostics.lastCloudSyncAt = new Date().toISOString();
-    });
-    if (state.settings.voiceAutoplay && state.settings.voiceEnabled && result?.aiMessage) void speak(result.aiMessage.content);
+    if (state.settings.cloudSyncEnabled && cloud.authenticated) {
+      await store.update((draft) => {
+        const localEngine = new AlmostHumanEngine(draft);
+        localEngine.reconcileGrowth();
+        let conversation = conversationId ? draft.conversations.find((item) => item.id === conversationId) : null;
+        if (!conversation) conversation = localEngine.createConversation(opening ? 'The first hello' : 'A new beginning');
+        conversationId = conversation.id;
+        ui.selectedConversationId = conversationId;
+        turn = createOptimisticTurn(draft, { requestId, conversationId, text, age: draft.ai.age, stageKey: getStage(draft.ai.age).key });
+        if (text && !turn.reused) {
+          conversation.messageCount = Number(conversation.messageCount || 0) + 1;
+          conversation.lastMessageAt = new Date().toISOString();
+          conversation.currentTopic = text.split(/\s+/).slice(0, 5).join(' ');
+        }
+      });
+      ui.activeRequestId = requestId;
+      ui.activeRequestState = 'connecting';
+      activeChatController = new AbortController();
+      if (!quiet) render();
+      await store.update(async (draft) => {
+        const conversation = draft.conversations.find((item) => item.id === conversationId);
+        await cloud.ensureCloudIdentity(draft);
+        await cloud.ensureCloudConversation(draft, conversation);
+      });
+      const snapshot = store.snapshot();
+      const conversation = snapshot.conversations.find((item) => item.id === conversationId);
+      let cursor = 0;
+      const final = await cloud.chatStreamProvider({ state: snapshot, conversation, text, requestId, opening, localUserMessageId: turn.userMessageId, localAiMessageId: turn.aiMessageId }, async (event) => {
+        await store.update((draft) => {
+          const message = applyStreamEvent(draft, turn, event);
+          const conversationDraft = draft.conversations.find((item) => item.id === conversationId);
+          if (event.type === 'delta') { timing.markFirstDelta(); ui.activeRequestState = 'receiving'; }
+          if (event.type === 'metadata') timing.providerMode = event.data.providerMode || timing.providerMode;
+          if (event.type === 'done' && conversationDraft) {
+            timing.markDone();
+            conversationDraft.messageCount = Number(conversationDraft.messageCount || 0) + 1;
+            conversationDraft.lastMessageAt = new Date().toISOString();
+            conversationDraft.updatedAt = new Date().toISOString();
+            if (/^(A new beginning|The first hello)$/.test(conversationDraft.title || '')) conversationDraft.title = (text || message?.content || 'First hello').split(/\s+/).slice(0, 6).join(' ');
+            draft.ai.lastInteractionAt = new Date().toISOString();
+            appendTimingSample(draft.diagnostics, timing.toSample());
+          }
+        });
+        streamed = streamed || event.type === 'delta';
+        const message = state.messages.find((item) => item.id === turn.aiMessageId);
+        if (message && state.settings.voiceAutoplay && state.settings.voiceEnabled) {
+          const segmented = segmentSpeakablePhrases(message.content, cursor, event.type === 'done');
+          cursor = segmented.cursor;
+          segmented.phrases.forEach((phrase, index) => phraseQueue.enqueue({ id: `${requestId}-${cursor}-${index}`, text: phrase, voiceId: normalizeVoiceId(state.ai.voiceId) }));
+        }
+        scrollMessages();
+      }, activeChatController.signal);
+      if (!final?.text && !streamed) throw new Error('The reply stream ended before text arrived.');
+      queueCloudSync(1200);
+    } else {
+      let result;
+      await store.update(async (draft) => {
+        const localEngine = new AlmostHumanEngine(draft);
+        result = await localEngine.sendMessage(text, { conversationId, requestId, opening });
+        ui.selectedConversationId = result.conversation.id;
+      });
+      timing.markFirstDelta(); timing.markDone();
+      if (state.settings.voiceAutoplay && state.settings.voiceEnabled && result?.aiMessage) void speak(result.aiMessage.content);
+    }
   } catch (error) {
-    reportError(error, 'chat');
+    if (activeChatController?.signal.aborted) {
+      if (turn) await store.update((draft) => applyStreamEvent(draft, turn, { type: 'error', data: { code: 'CANCELLED', cancelled: true } }));
+    } else if (turn) {
+      try {
+        const snapshot = store.snapshot();
+        const conversation = snapshot.conversations.find((item) => item.id === conversationId);
+        const fallback = await cloud.chatProvider({ state: snapshot, conversation, text, requestId, localUserMessageId: turn.userMessageId, localAiMessageId: turn.aiMessageId });
+        await store.update((draft) => applyStreamEvent(draft, turn, { type: 'done', data: { text: fallback.text, messageId: fallback.cloudMessageId, userMessageId: fallback.cloudUserMessageId, providerMode: 'cloud-nonstream-fallback' } }));
+        toast('Live text was unavailable', 'The reply completed without streaming.');
+      } catch (fallbackError) {
+        await store.update((draft) => applyStreamEvent(draft, turn, { type: 'error', data: { code: 'REPLY_FAILED' } }));
+        reportError(fallbackError, 'chat');
+      }
+    } else reportError(error, 'chat');
   } finally {
-    ui.pendingUser = null;
-    ui.thinking = false;
-    ui.replyStatus = '';
-    render();
-    scrollMessages();
+    if (ui.activeRequestId === requestId) {
+      ui.activeRequestId = null;
+      ui.activeRequestState = null;
+      activeChatController = null;
+      activeChatTiming = null;
+      render();
+      scrollMessages();
+    }
   }
 }
 
-function immediateAcknowledgment(value, opening = false) {
-  if (opening) return 'I am here.';
-  const text = String(value || '');
-  if (/\?$/.test(text.trim())) return 'I hear the question.';
-  if (/sad|hurt|angry|scared|worried|depress|alone/i.test(text)) return 'I hear you.';
-  return 'I am with you.';
+function stopCurrentTurn(reason = 'cancelled') {
+  if (activeChatController && !activeChatController.signal.aborted) activeChatController.abort(reason);
+  phraseQueue.stop();
+  stopVoice();
+  ui.activeRequestState = null;
 }
 
 async function newConversation() {
@@ -2972,38 +3597,80 @@ function speakMessage(id) {
 }
 
 async function speak(text) {
-  if (!state.settings.voiceEnabled) return;
+  if (!state.settings.voiceEnabled || !String(text || '').trim()) return;
   stopVoice();
   const voiceId = normalizeVoiceId(state.ai.voiceId);
-  if (window.__AH_NATIVE_BUNDLE__) {
-    nativePost('speak', { text: String(text || ''), voiceId });
-    return;
-  }
   if (cloud.authenticated && state.settings.cloudSyncEnabled && state.ai?.cloudId) {
     try {
-      const blob = await cloud.voiceProvider({ state, text });
+      const blob = await cloud.voiceProvider({ state, text, voiceId, requestId: makeRequestId('voice') });
       return playBlob(blob);
-    } catch (error) { recordError('cloud_voice', error); }
+    } catch (error) {
+      recordError('neural_voice', error);
+      ui.neuralVoiceErrorText = String(text || '');
+      openModal('Neural voice is unavailable', `<p>The text reply is safe. Device speech is optional and may sound robotic.</p><div class="modal-actions"><button data-action="close-modal">Keep text only</button><button data-action="device-speak-once">Use device voice this time</button></div>`);
+      return;
+    }
   }
-  speakLocally(text, voiceId);
+  ui.neuralVoiceErrorText = String(text || '');
+  toast('Neural voice needs a connection', 'Text is still available. Device voice will not start automatically.');
 }
 
-async function playBlob(blob) {
+async function playBlob(blob, signal) {
   stopVoice();
+  if (window.__AH_NATIVE_BUNDLE__) {
+    const id = makeRequestId('native_audio');
+    const base64 = await blobToBase64(blob);
+    return new Promise((resolve, reject) => {
+      const abort = () => nativePost('audio-stop');
+      const cleanup = () => signal?.removeEventListener('abort', abort);
+      nativeAudioWaiters.set(id, { resolve, reject, cleanup });
+      signal?.addEventListener('abort', abort, { once: true });
+      nativePost('audio-play', { id, base64, mimeType: blob.type || 'audio/mpeg' });
+    });
+  }
   activeAudioUrl = URL.createObjectURL(blob);
   activeAudio = new Audio(activeAudioUrl);
-  activeAudio.onended = stopVoice;
-  activeAudio.onerror = stopVoice;
-  await activeAudio.play();
+  let settleInterrupted = null;
+  const complete = new Promise((resolve, reject) => {
+    settleInterrupted = () => resolve({ interrupted: true });
+    activeAudio.onended = () => { stopVoice(); resolve({ interrupted: false }); };
+    activeAudio.onerror = () => { stopVoice(); reject(new Error('Audio playback failed.')); };
+  });
+  const abort = () => {
+    stopVoice();
+    settleInterrupted?.();
+  };
+  signal?.addEventListener('abort', abort, { once: true });
+  try { await activeAudio.play(); return await complete; }
+  finally { signal?.removeEventListener('abort', abort); }
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error || new Error('Audio could not be prepared.'));
+    reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+    reader.readAsDataURL(blob);
+  });
 }
 
 function stopVoice() {
+  if (window.__AH_NATIVE_BUNDLE__) nativePost('audio-stop');
+  for (const [id, waiter] of nativeAudioWaiters) {
+    nativeAudioWaiters.delete(id);
+    waiter.cleanup?.();
+    waiter.resolve({ interrupted: true });
+  }
   if (activeAudio) { activeAudio.pause(); activeAudio.src = ''; activeAudio = null; }
   if (activeAudioUrl) { URL.revokeObjectURL(activeAudioUrl); activeAudioUrl = null; }
   if ('speechSynthesis' in window) speechSynthesis.cancel();
 }
 
 function speakLocally(text, rawVoiceId) {
+  if (window.__AH_NATIVE_BUNDLE__) {
+    nativePost('device-speak-once', { text: String(text || ''), voiceId: normalizeVoiceId(rawVoiceId) });
+    return;
+  }
   if (!('speechSynthesis' in window)) return;
   const voiceId = normalizeVoiceId(rawVoiceId);
   const profile = VOICE_PROFILES[voiceId] || VOICE_PROFILES['female-adult'];
@@ -3017,6 +3684,8 @@ function speakLocally(text, rawVoiceId) {
 }
 
 function startListening() {
+  phraseQueue.stop();
+  stopVoice();
   if (window.__AH_NATIVE_BUNDLE__) {
     if (!cloud.authenticated) return toast('Voice input needs a private guest or account', 'Connect once so speech can be transcribed securely.');
     nativePost('mic-toggle');

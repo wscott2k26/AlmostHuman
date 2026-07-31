@@ -24,6 +24,17 @@ const EMPATHY_PHRASES = [
   "thank you for sharing", "i'm glad you told me"
 ];
 
+const VOCAL_PRAISE_PATTERNS = [
+  /\byour (?:voice|tone|sound) (?:is|feels|sounds|seems) (?:so )?(?:warm|gentle|soft|beautiful|comforting|calm|lovely|sweet)\b/i,
+  /\bi (?:love|like) (?:hearing|the sound of) your voice\b/i,
+  /\byou sound (?:so )?(?:warm|gentle|soft|beautiful|comforting|calm|lovely|sweet)\b/i,
+  /\bthe (?:warmth|gentleness|softness) in your voice\b/i,
+];
+
+export function containsVocalPraise(text: string): boolean {
+  return VOCAL_PRAISE_PATTERNS.some((pattern) => pattern.test(String(text || '')));
+}
+
 const GENERIC_OPENERS = [
   "that sounds", "i hear", "i understand", "it sounds like", "thank you for sharing",
   "that's okay", "i'm sorry"
@@ -127,6 +138,7 @@ export function checkRepetition(proposed: string, ctx: RepeatContext): Repetitio
     return { score: 0.86, reason: "question_budget_exceeded", shouldRegenerate: true };
   }
 
+  if (containsVocalPraise(proposed) && ctx.recentResponses.slice(0, 12).some(containsVocalPraise)) return { score: 0.9, reason: "repeated_vocal_praise", shouldRegenerate: true };
   if (repeatedEmpathy(proposed, ctx)) return { score: 0.76, reason: "repeated_empathy", shouldRegenerate: true };
   if (repeatedGenericOpener(proposed, ctx)) return { score: 0.7, reason: "repeated_opener", shouldRegenerate: true };
 
