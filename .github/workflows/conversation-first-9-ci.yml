@@ -1,0 +1,65 @@
+name: Almost Human 9.0 No-Build CI
+
+on:
+  push:
+    branches:
+      - feature/conversation-first-9-0
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: almost-human-9-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-and-edge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: 9.0 behavior tests
+        run: node --test tests/onboarding9.test.mjs tests/navigation9.test.mjs
+      - name: Existing web and edge gates
+        run: npm run lint && npm run typecheck:edge && npm test && npm run test:integrity && npm run build && npm run test:browser
+
+  mobile-no-credit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm run doctor
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run preflight:quadruple
+
+  forbidden-release-commands:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prove this workflow cannot spend or submit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -f .github/run-ios-build-3.json
+          test ! -f .github/run-ios-build-4.json
+          test ! -f .github/run-ios-testflight-build-4.json
+          ! grep -R --line-number --include='conversation-first-9-ci.yml' -E 'eas[[:space:]]+(build|submit)|altool|notarytool' .github/workflows
+          echo 'No EAS build or TestFlight command exists in the 9.0 CI lane.'
