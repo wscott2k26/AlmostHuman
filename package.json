@@ -1,6 +1,6 @@
 {
   "name": "almost-human-premium",
-  "version": "8.3.0",
+  "version": "8.4.0",
   "private": true,
   "type": "module",
   "description": "A cinematic AI life-sim companion with digital birth, developmental stages, user-controlled memory, journaling, keepsakes, voice, and secure Supabase services.",

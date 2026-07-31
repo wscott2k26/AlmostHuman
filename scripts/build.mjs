@@ -17,7 +17,7 @@ for (const file of files.filter((file) => !file.endsWith('build-meta.json')).sor
 }
 const metadata = {
   product: 'Almost Human',
-  version: '8.3.0',
+  version: '8.4.0',
   builtAt: new Date().toISOString(),
   contentHash: hash.digest('hex'),
   files: files.length,

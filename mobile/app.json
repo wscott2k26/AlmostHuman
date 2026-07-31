@@ -42,7 +42,10 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0B0F"
-      }
+      },
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -66,13 +69,20 @@
           "color": "#FF9B6A",
           "defaultChannel": "gentle-moments"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Almost Human uses your microphone only while you hold a private voice conversation with your companion.",
+          "recordAudioAndroid": true
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "releaseChannel": "haven-8.3",
+      "releaseChannel": "haven-8.4-native",
       "router": {},
       "eas": {
         "projectId": "cd0be7bb-e65a-454e-b255-3b261de060ee"

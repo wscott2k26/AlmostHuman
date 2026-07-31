@@ -36,7 +36,7 @@ expect('identity:ios-bundle', app.expo.ios?.bundleIdentifier === 'com.stormandme
 expect('identity:android-package', app.expo.android?.package === 'com.stormandme.almosthuman', app.expo.android?.package);
 expect('identity:scheme', app.expo.scheme === 'almost-human', app.expo.scheme);
 expect('release:version', app.expo.version === '1.0.0', app.expo.version);
-expect('release:build-number', app.expo.ios?.buildNumber === '1', app.expo.ios?.buildNumber);
+expect('release:build-number-present', /^\d+$/.test(String(app.expo.ios?.buildNumber || '')), app.expo.ios?.buildNumber);
 expect('release:eas-auto-increment', eas.build?.production?.autoIncrement === true);
 expect('release:no-auto-submit-before-asc-record', Object.keys(eas.submit?.production?.ios || {}).length === 0);
 
@@ -44,6 +44,7 @@ const expectedDeps = {
   expo: '54.0.36', react: '19.1.0', 'react-native': '0.81.5',
   'react-native-webview': '13.15.0', 'expo-haptics': '15.0.8',
   'expo-notifications': '~0.32.17', 'expo-blur': '~15.0.8', 'expo-linear-gradient': '15.0.8',
+  'expo-asset': '12.0.13', 'expo-audio': '~1.1.1', 'expo-file-system': '~19.0.23', 'expo-speech': '~14.0.8',
 };
 for (const [name, version] of Object.entries(expectedDeps)) {
   expect(`dependency:${name}`, pkg.dependencies?.[name] === version, pkg.dependencies?.[name]);
@@ -54,17 +55,19 @@ for (const marker of [
   'configureDailyMoment', 'A quiet moment in The Haven', 'Haptics', 'Share.share',
   'useSafeAreaInsets', 'onContentProcessDidTerminate', 'onRenderProcessGone',
   'pullToRefreshEnabled', 'routeFromUrl', 'almost-human-swart.vercel.app',
+  'requestRecordingPermissionsAsync', 'useAudioRecorder', 'readAsStringAsync', 'Speech.speak',
 ]) expect(`native-shell:${marker}`, shell.includes(marker));
 
 for (const marker of [
   'The Haven', 'A quiet Haven reminder', 'native-share', 'notificationsEnabled',
   'talk-about-haven', 'inspect-haven-item', 'v83-haven-window', '__AH_NATIVE_BUNDLE__',
+  'female-child', 'male-adult', 'customize-companion', 'mic-toggle',
 ]) expect(`web-bundle:${marker}`, html.includes(marker));
 
-for (const marker of ['nativePost', "nativePost('daily-moment'", 'shareAlmostHuman', "navigator.serviceWorker.register('./sw.js?v=8.3')"]) {
+for (const marker of ['nativePost', "nativePost('daily-moment'", "nativePost('mic-toggle')", "nativePost('speak'", 'shareAlmostHuman', "navigator.serviceWorker.register('./sw.js?v=8.4')"]) {
   expect(`web-source:${marker}`, webApp.includes(marker));
 }
-for (const marker of ['V8.3 — THE HAVEN', 'v83-top-share', 'v83-haven-window']) {
+for (const marker of ['V8.3 — THE HAVEN', 'V8.4 — SIMPLE NATIVE CONVERSATION', 'v83-top-share', 'v83-haven-window', 'v84-look-controls']) {
   expect(`visual-system:${marker}`, webCss.includes(marker));
 }
 

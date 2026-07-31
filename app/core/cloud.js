@@ -432,7 +432,7 @@ export class SupabaseCloud {
       personality_state: state.ai.personality, personality_history: state.ai.personalityHistory || [],
       development_state: { growthEventKeys: state.ai.growthEventKeys || [] },
       trust_score: state.ai.trust, attachment_score: state.ai.attachment, bond_score: state.ai.bond,
-      room_state: state.ai.roomState || {}, favorite_things: state.ai.favoriteThings || {},
+      room_state: { ...(state.ai.roomState || {}), appearanceProfile: state.ai.appearanceProfile || null }, favorite_things: state.ai.favoriteThings || {},
       last_interaction_at: state.ai.lastInteractionAt, last_growth_bucket: String(state.ai.lastGrowthBucket || ''),
       archived: Boolean(state.ai.archived), onboarding_complete: true
     };
@@ -575,8 +575,15 @@ export class SupabaseCloud {
 
   async voicePreview({ voiceId }) {
     if (!this.authenticated) throw new CloudError('Continue as guest or sign in to preview cloud voices.', 401, 'AUTH_REQUIRED');
-    const response = await this.invoke('voiceService', { preview: true, voice_id: String(voiceId || 'soft-neutral') }, { raw: true, timeoutMs: 30000 });
+    const response = await this.invoke('voiceService', { preview: true, voice_id: String(voiceId || 'female-adult') }, { raw: true, timeoutMs: 30000 });
     return response.blob();
+  }
+
+  async transcribeAudio({ audioBase64, mimeType = 'audio/m4a', language = 'en-US' }) {
+    if (!this.authenticated) throw new CloudError('Continue as guest or sign in before using voice input.', 401, 'AUTH_REQUIRED');
+    return this.invoke('transcriptionService', {
+      audio_base64: String(audioBase64 || ''), mime_type: String(mimeType || 'audio/m4a'), language: String(language || 'en-US')
+    }, { timeoutMs: 45000 });
   }
 
   async createLetter({ state, letter }) {
@@ -678,7 +685,7 @@ function fromCloudAI(row) {
   const development = row.development_state || {};
   return { id: row.local_id || `cloud-ai-${row.id}`, cloudId: row.id, name: row.name, nickname: row.nickname, pronouns: row.pronouns,
     birthday: row.birthday, birthTimestamp: row.birthday, age: Number(row.simulated_age || 0), stageKey: row.developmental_stage,
-    appearanceSeed: row.appearance_seed, voiceId: row.voice_id, relationshipStyle: row.relationship_style, currentMood: row.current_mood,
+    appearanceSeed: row.appearance_seed, appearanceProfile: row.room_state?.appearanceProfile || null, voiceId: row.voice_id, relationshipStyle: row.relationship_style, currentMood: row.current_mood,
     moodIntensity: Number(row.mood_intensity || 50), personality: row.personality_state || {}, personalityHistory: row.personality_history || [],
     favoriteThings: row.favorite_things || {}, roomState: row.room_state || {}, trust: Number(row.trust_score || 0), attachment: Number(row.attachment_score || 0),
     bond: Number(row.bond_score || 0), lastInteractionAt: row.last_interaction_at, lastGrowthBucket: Number(row.last_growth_bucket || 0),

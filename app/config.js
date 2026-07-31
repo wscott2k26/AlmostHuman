@@ -18,6 +18,7 @@ window.__ALMOST_HUMAN_CONFIG__ = Object.freeze({
     progressAging: 'progress-aging',
     diagnosticsService: 'diagnostics-service',
     voiceService: 'voice-service',
+    transcriptionService: 'transcription-service',
     letterService: 'letter-service',
     health: 'health'
   }

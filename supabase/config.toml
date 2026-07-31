@@ -40,6 +40,8 @@ verify_jwt = true
 verify_jwt = true
 [functions.voice-service]
 verify_jwt = true
+[functions.transcription-service]
+verify_jwt = true
 [functions.letter-service]
 verify_jwt = true
 [functions.health]

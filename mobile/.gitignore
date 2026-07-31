@@ -5,3 +5,6 @@ dist-ios/
 .DS_Store
 ios-build.json
 submission.json
+
+/dist-android/
+/dist-ios/
