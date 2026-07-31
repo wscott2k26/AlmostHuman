@@ -1,0 +1,44 @@
+name: Almost Human 8.4 Clean Generated Proof
+
+on:
+  push:
+    branches:
+      - repair/native-experience-8-4
+    paths:
+      - '.github/run-v84-clean-generated.json'
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: repair/native-experience-8-4
+          fetch-depth: 0
+      - name: Validate cleanup authorization
+        run: |
+          python3 - <<'PY'
+          import json
+          t=json.load(open('.github/run-v84-clean-generated.json'))
+          assert t['operation']=='REMOVE_GENERATED_EXPORT_FOLDERS_ONLY'
+          assert t['sourceFilesAuthorized']==0
+          PY
+      - name: Remove generated exports and ignore future output
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -r --ignore-unmatch mobile/dist-android mobile/dist-ios
+          printf '\n/dist-android/\n/dist-ios/\n' >> mobile/.gitignore
+          awk '!seen[$0]++' mobile/.gitignore > mobile/.gitignore.tmp
+          mv mobile/.gitignore.tmp mobile/.gitignore
+          git rm .github/workflows/v84-clean-generated-proof.yml .github/run-v84-clean-generated.json
+          git config user.name 'Almost Human Cleanup'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add mobile/.gitignore
+          git commit -m 'Remove generated native export proof from source'
+          git pull --rebase --autostash origin repair/native-experience-8-4
+          git push origin HEAD:repair/native-experience-8-4
