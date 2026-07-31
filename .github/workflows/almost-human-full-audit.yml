@@ -1,0 +1,175 @@
+name: Almost Human Full No-Credit Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/run-full-audit.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
+concurrency:
+  group: almost-human-full-audit
+  cancel-in-progress: false
+
+env:
+  CI: '1'
+  EXPECTED_OWNER: wscott2k26
+  EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
+
+jobs:
+  full-no-credit-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out canonical source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Prove this workflow cannot spend an EAS build credit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(grep -RInE '(^|[[:space:]])eas[[:space:]]+build([[:space:]]|$)' .github/workflows/almost-human-full-audit.yml || true)"
+          test -z "$(grep -RInE '(^|[[:space:]])eas[[:space:]]+submit([[:space:]]|$)' .github/workflows/almost-human-full-audit.yml || true)"
+          echo 'Confirmed: this audit contains no EAS build or submit command.'
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify repository identity and public-secret boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const app = JSON.parse(fs.readFileSync('mobile/app.json', 'utf8')).expo;
+          if (app.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${app.owner}`);
+          if (app.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${app.ios?.bundleIdentifier}`);
+          if (app.android?.package !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong Android package: ${app.android?.package}`);
+          NODE
+          if git grep -nEI '(sk-[A-Za-z0-9_-]{16,}|SUPABASE_SERVICE_ROLE_KEY[[:space:]]*[:=][[:space:]]*[A-Za-z0-9._-]{16,}|OPENAI_API_KEY[[:space:]]*[:=][[:space:]]*[A-Za-z0-9._-]{16,}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)' -- ':!*.md' ':!*.example' ':!.github/workflows/*'; then
+            echo 'A private-secret-shaped value was found in tracked source.'
+            exit 1
+          fi
+
+      - name: Create temporary locked root dependency graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run full web cloud backend and security gate four times
+        shell: bash
+        run: npm run test:quadruple
+
+      - name: Rebuild the exact offline native web bundle
+        shell: bash
+        run: node scripts/build-inline.mjs
+
+      - name: Create temporary locked mobile dependency graph
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Verify Expo package alignment and native source
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx expo install --check
+          npm run doctor
+          npm run typecheck
+          npm run lint
+          npm run preflight:quadruple
+
+      - name: Export both native bundles without EAS
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx expo export --platform ios --output-dir dist-ios
+          npx expo export --platform android --output-dir dist-android
+          test -n "$(find dist-ios -type f -print -quit)"
+          test -n "$(find dist-android -type f -print -quit)"
+
+      - name: Record successful audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const cp = require('child_process');
+          const mobile = JSON.parse(fs.readFileSync('mobile/STEP7_PREFLIGHT.json', 'utf8'));
+          const report = {
+            status: 'passed',
+            auditVersion: 1,
+            auditedCommit: cp.execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(),
+            generatedAt: new Date().toISOString(),
+            expoOwner: process.env.EXPECTED_OWNER,
+            bundleId: process.env.EXPECTED_BUNDLE_ID,
+            webCloudSecurityPasses: 4,
+            mobilePreflightPasses: 4,
+            mobileChecksPerPass: mobile.passed,
+            mobileFailures: mobile.failed,
+            iosExportVerified: true,
+            androidExportVerified: true,
+            easBuildCommandsRun: 0,
+            easSubmitCommandsRun: 0
+          };
+          fs.writeFileSync('FULL_AUDIT_RESULT.json', JSON.stringify(report, null, 2) + '\n');
+          NODE
+          git config user.name 'Almost Human Audit Bot'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add FULL_AUDIT_RESULT.json
+          if git diff --cached --quiet; then
+            echo 'Audit result already current.'
+          else
+            git commit -m 'Record successful Almost Human full no-credit audit'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      - name: Save complete audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: almost-human-full-no-credit-audit
+          path: |
+            FULL_AUDIT_RESULT.json
+            mobile/STEP7_PREFLIGHT.json
+            mobile/STEP7_QUADRUPLE_PREFLIGHT.md
+            dist/
+            mobile/dist-ios/
+            mobile/dist-android/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Report exact audit blocker
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Almost Human full audit needs attention — run $GITHUB_RUN_ID" \
+            --body "No EAS build or submission was started. The no-credit audit stopped here: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
