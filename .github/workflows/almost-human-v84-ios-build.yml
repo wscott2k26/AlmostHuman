@@ -1,0 +1,209 @@
+name: Almost Human 8.4 Protected iOS Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/run-v84-ios-build.json'
+  workflow_dispatch:
+    inputs:
+      confirm_build:
+        description: 'Type BUILD_V84_ONCE to authorize one new iOS EAS build credit'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+  issues: write
+
+concurrency:
+  group: almost-human-v84-ios-build
+  cancel-in-progress: false
+
+env:
+  MOBILE_DIR: mobile
+  EXPECTED_OWNER: wscott2k8
+  EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
+  EXPECTED_EAS_PROJECT_ID: cd0be7bb-e65a-454e-b255-3b261de060ee
+  CERTIFIED_SOURCE_COMMIT: 35b8ca581d06a5e287c2ed2a24d7306d18276a01
+
+jobs:
+  certify-and-build-ios:
+    if: ${{ github.event_name == 'push' || inputs.confirm_build == 'BUILD_V84_ONCE' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+
+    steps:
+      - name: Check out canonical main source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate explicit one-build authorization
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_CONFIRM: ${{ inputs.confirm_build }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            node -e "const t=require('./.github/run-v84-ios-build.json'); if(t.operation!=='BUILD_V84_ONCE')throw Error('Invalid build operation'); if(t.confirm!=='BUILD_V84_ONCE')throw Error('Missing exact build confirmation'); if(t.expectedOwner!==process.env.EXPECTED_OWNER)throw Error('Expo owner mismatch'); if(t.expectedBundleId!==process.env.EXPECTED_BUNDLE_ID)throw Error('Bundle mismatch'); if(t.expectedEasProjectId!==process.env.EXPECTED_EAS_PROJECT_ID)throw Error('EAS project mismatch'); if(t.easBuildCreditsAuthorized!==1)throw Error('Exactly one EAS build credit must be authorized'); if(t.easSubmissionsAuthorized!==0)throw Error('This lane cannot submit to TestFlight'); console.log('One Almost Human 8.4 build authorized');"
+          else
+            test "$MANUAL_CONFIRM" = "BUILD_V84_ONCE"
+          fi
+
+      - name: Preserve build 2 and refuse duplicate repaired build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f STEP7_IOS_BUILD_RECORD.json
+          node -e "const b=require('./STEP7_IOS_BUILD_RECORD.json'); if(b.status!=='FINISHED'||String(b.appBuildVersion)!=='2')throw Error('Original build 2 receipt is not intact');"
+          if [[ -f STEP8_IOS_BUILD_RECORD.json ]]; then
+            echo 'A successful 8.4 iOS build already exists. Reuse and submit that exact build.'
+            cat STEP8_IOS_BUILD_RECORD.json
+            exit 1
+          fi
+
+      - name: Require certified 8.4 source and live deployment receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$CERTIFIED_SOURCE_COMMIT" HEAD
+          test -f V84_NATIVE_EXPERIENCE_CERTIFICATION.md
+          test -f V84_LIVE_DEPLOYMENT_STATUS.md
+          grep -q 'passed four consecutive times' V84_NATIVE_EXPERIENCE_CERTIFICATION.md
+          grep -q 'dpl_9YJyPzAxjYbHxVd4GZS2hUcH7Cch' V84_LIVE_DEPLOYMENT_STATUS.md
+          grep -q 'transcription-service.*version `1`' V84_LIVE_DEPLOYMENT_STATUS.md
+          test -f package-lock.json
+          test -f mobile/package-lock.json
+          node -e "const a=require('./mobile/app.json').expo||{}; if(a.owner!==process.env.EXPECTED_OWNER)throw Error('Wrong Expo owner'); if(a.ios?.bundleIdentifier!==process.env.EXPECTED_BUNDLE_ID)throw Error('Wrong iOS bundle'); if(a.android?.package!==process.env.EXPECTED_BUNDLE_ID)throw Error('Wrong Android package'); if(a.extra?.eas?.projectId!==process.env.EXPECTED_EAS_PROJECT_ID)throw Error('Wrong EAS project'); if(a.extra?.releaseChannel!=='haven-8.4-native')throw Error('Wrong 8.4 release channel');"
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          packager: npm
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verify protected Expo account
+        shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "${EXPO_TOKEN:-}"
+          ACCOUNT="$(eas whoami | tr -d '\r' | head -n 1 | awk '{print $1}')"
+          echo "Expo account: $ACCOUNT"
+          test "$ACCOUNT" = "$EXPECTED_OWNER"
+
+      - name: Install exact web dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Re-run complete web backend security gate four times
+        run: npm run test:quadruple
+
+      - name: Rebuild the exact offline mobile bundle
+        run: node scripts/build-inline.mjs
+
+      - name: Install exact mobile dependencies
+        working-directory: mobile
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Re-run all mobile gates and no-credit exports
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx expo install --check
+          npm run doctor
+          npm run typecheck
+          npm run lint
+          npm run preflight:quadruple
+          npx expo export --platform ios --output-dir dist-ios
+          npx expo export --platform android --output-dir dist-android
+
+      - name: Verify canonical EAS project without relinking
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          eas project:info --non-interactive | tee ../v84-eas-project-info.txt
+          node -e "const a=require('./app.json').expo||{}; if(a.owner!==process.env.EXPECTED_OWNER)throw Error('Wrong Expo owner'); if(a.ios?.bundleIdentifier!==process.env.EXPECTED_BUNDLE_ID)throw Error('Wrong iOS bundle'); if(a.extra?.eas?.projectId!==process.env.EXPECTED_EAS_PROJECT_ID)throw Error('Wrong EAS project');"
+          git diff --quiet -- app.json eas.json package-lock.json
+
+      - name: Spend exactly one production iOS build credit
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          eas build --platform ios --profile production --non-interactive --wait --json > ../v84-ios-build.json
+          node -e "const x=require('../v84-ios-build.json'); console.log(JSON.stringify(x,null,2));"
+
+      - name: Record the successful repaired build without submitting it
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('fs'), cp=require('child_process');
+          const raw=require('./v84-ios-build.json');
+          const b=Array.isArray(raw)?raw[0]:raw;
+          if(!b?.id) throw Error('EAS returned no build ID');
+          if(String(b.status||'').toLowerCase()!=='finished') throw Error('Build status is not finished: '+b.status);
+          const buildNumber=Number(b.appBuildVersion);
+          if(!Number.isInteger(buildNumber)||buildNumber<=2) throw Error('Expected a new build number after build 2; received '+b.appBuildVersion);
+          const record={
+            status:b.status,
+            buildId:b.id,
+            platform:b.platform||'IOS',
+            appVersion:b.appVersion||'1.0.0',
+            appBuildVersion:String(b.appBuildVersion),
+            artifacts:b.artifacts||null,
+            buildDetailsPageUrl:b.buildDetailsPageUrl||null,
+            createdAt:b.createdAt||new Date().toISOString(),
+            githubRunId:process.env.GITHUB_RUN_ID,
+            sourceCommit:cp.execSync('git rev-parse HEAD',{encoding:'utf8'}).trim(),
+            certifiedSourceCommit:process.env.CERTIFIED_SOURCE_COMMIT,
+            testFlightSubmissionsRun:0
+          };
+          fs.writeFileSync('STEP8_IOS_BUILD_RECORD.json',JSON.stringify(record,null,2)+'\n');
+          NODE
+          git config user.name 'Almost Human 8.4 Release Bot'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add STEP8_IOS_BUILD_RECORD.json
+          git commit -m 'Record successful Almost Human 8.4 iOS build'
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
+
+      - name: Save release records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: almost-human-v84-ios-records
+          path: |
+            v84-ios-build.json
+            v84-eas-project-info.txt
+            mobile/STEP7_PREFLIGHT.json
+            mobile/STEP7_QUADRUPLE_PREFLIGHT.md
+            STEP8_IOS_BUILD_RECORD.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Report exact blocker without retrying
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "Almost Human 8.4 iOS build needs attention — run $GITHUB_RUN_ID" --body "The protected repaired-build lane stopped. Do not rerun blindly. Review the exact failed step: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
