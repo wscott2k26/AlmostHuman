@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "checkedAt": "2026-07-31T17:08:12.460Z",
+  "productionUrl": "https://almost-human-swart.vercel.app",
+  "sourceCommit": "e1db4e8801aed99c50cc29bdd979a1a134a5ec42",
+  "supabaseLiveGate": true,
+  "productionHtmlV83": true,
+  "serviceWorkerV83": true,
+  "cspHeader": true,
+  "nosniffHeader": true,
+  "authenticatedUserMutationTests": "not run; no test-account credentials were exposed to GitHub"
+}
