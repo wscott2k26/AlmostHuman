@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   inventory:
@@ -34,34 +35,7 @@ jobs:
           ACCOUNT="$(eas whoami | tr -d '\r' | head -n 1 | awk '{print $1}')"
           test "$ACCOUNT" = "wscott2k8"
           eas build:list --platform ios --limit 10 --json --non-interactive > /tmp/builds.json
-          node - <<'NODE'
-          const fs = require('fs');
-          const rows = JSON.parse(fs.readFileSync('/tmp/builds.json','utf8'));
-          const builds = rows.map((b) => ({
-            id: b.id,
-            status: b.status,
-            platform: b.platform,
-            createdAt: b.createdAt,
-            completedAt: b.completedAt || null,
-            appVersion: b.appVersion || null,
-            appBuildVersion: b.appBuildVersion || null,
-            gitCommitHash: b.gitCommitHash || null,
-            distribution: b.distribution || null,
-            errorCode: b.error?.errorCode || b.error?.code || null,
-            errorMessage: b.error?.message || null
-          }));
-          const result = {
-            status: 'passed',
-            operation: 'READ_ONLY_EAS_IOS_INVENTORY',
-            generatedAt: new Date().toISOString(),
-            expoOwner: 'wscott2k8',
-            buildCommandsRun: 0,
-            submitCommandsRun: 0,
-            iosBuildCount: builds.length,
-            builds
-          };
-          fs.writeFileSync('../EAS_IOS_INVENTORY_RESULT.json', JSON.stringify(result, null, 2) + '\n');
-          NODE
+          node -e "const fs=require('fs'); const rows=JSON.parse(fs.readFileSync('/tmp/builds.json','utf8')); const builds=rows.map(b=>({id:b.id,status:b.status,platform:b.platform,createdAt:b.createdAt,completedAt:b.completedAt||null,appVersion:b.appVersion||null,appBuildVersion:b.appBuildVersion||null,gitCommitHash:b.gitCommitHash||null,distribution:b.distribution||null,errorCode:b.error?.errorCode||b.error?.code||null,errorMessage:b.error?.message||null})); const result={status:'passed',operation:'READ_ONLY_EAS_IOS_INVENTORY',generatedAt:new Date().toISOString(),expoOwner:'wscott2k8',buildCommandsRun:0,submitCommandsRun:0,iosBuildCount:builds.length,builds}; fs.writeFileSync('../EAS_IOS_INVENTORY_RESULT.json',JSON.stringify(result,null,2)+'\n');"
       - name: Save sanitized inventory receipt
         shell: bash
         run: |
@@ -69,6 +43,17 @@ jobs:
           git config user.name 'Almost Human Release Bot'
           git config user.email 'wscott2k26@users.noreply.github.com'
           git add EAS_IOS_INVENTORY_RESULT.json
-          git commit -m 'Record read-only Almost Human EAS iOS inventory'
-          git pull --rebase --autostash origin main
-          git push origin HEAD:main
+          if git diff --cached --quiet; then
+            echo 'Inventory receipt already current.'
+          else
+            git commit -m 'Record read-only Almost Human EAS iOS inventory'
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main
+          fi
+      - name: Report inventory blocker
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "Almost Human EAS inventory needs attention — run $GITHUB_RUN_ID" --body "Read-only inventory failed. No build or submission command exists in this workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
