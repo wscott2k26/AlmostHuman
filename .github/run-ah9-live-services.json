@@ -1,0 +1,8 @@
+{
+  "operation": "DEPLOY_EXACT_AH9_SERVICES_ONCE",
+  "sourceCommit": "a442a23fb1826a826ba3461a18101fa76ed96a4f",
+  "projectRef": "onvoaskzzxozmhkzyycy",
+  "functions": ["chat-stream", "voice-service", "health"],
+  "easBuildsAuthorized": 0,
+  "testFlightUploadsAuthorized": 0
+}
