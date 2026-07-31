@@ -1,0 +1,156 @@
+name: Almost Human 8.4 Apply and Quadruple Certify
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: almost-human-v84-pr-apply
+  cancel-in-progress: false
+
+jobs:
+  apply-and-certify:
+    if: github.head_ref == 'repair/native-experience-8-4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+
+    steps:
+      - name: Check out exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: repair/native-experience-8-4
+          fetch-depth: 0
+
+      - name: Determine whether repair is already certified
+        id: state
+        shell: bash
+        run: |
+          if [ -f V84_NATIVE_EXPERIENCE_CERTIFICATION.md ]; then
+            echo 'complete=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'complete=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply deterministic repair
+        if: steps.state.outputs.complete != 'true'
+        run: python3 scripts/repair_v84_native_experience.py
+
+      - name: Set up Node 20
+        if: steps.state.outputs.complete != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Refresh dependency locks safely
+        if: steps.state.outputs.complete != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts
+          npm --prefix mobile install --package-lock-only --ignore-scripts
+
+      - name: Install exact root dependencies
+        if: steps.state.outputs.complete != 'true'
+        run: npm ci
+
+      - name: Run full web backend security gate four times
+        if: steps.state.outputs.complete != 'true'
+        run: npm run test:quadruple
+
+      - name: Rebuild native offline bundle
+        if: steps.state.outputs.complete != 'true'
+        run: node scripts/build-inline.mjs
+
+      - name: Install exact mobile dependencies
+        if: steps.state.outputs.complete != 'true'
+        run: npm --prefix mobile ci
+
+      - name: Expo Doctor
+        if: steps.state.outputs.complete != 'true'
+        run: npm --prefix mobile run doctor
+
+      - name: Mobile TypeScript and lint
+        if: steps.state.outputs.complete != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix mobile run typecheck
+          npm --prefix mobile run lint
+
+      - name: Run mobile preflight four times
+        if: steps.state.outputs.complete != 'true'
+        run: npm --prefix mobile run preflight:quadruple
+
+      - name: Export iOS and Android without EAS
+        if: steps.state.outputs.complete != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix mobile run export:ios
+          npm --prefix mobile run export:android
+
+      - name: Verify requested experience changes
+        if: steps.state.outputs.complete != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "requestRecordingPermissionsAsync" mobile/src/NativeShell.tsx
+          grep -q "useAudioRecorder" mobile/src/NativeShell.tsx
+          grep -q "Speech.speak" mobile/src/NativeShell.tsx
+          grep -q "transcription-service" app/config.js
+          grep -q "female-child" app/app.js
+          grep -q "female-teen" app/app.js
+          grep -q "female-adult" app/app.js
+          grep -q "male-child" app/app.js
+          grep -q "male-teen" app/app.js
+          grep -q "male-adult" app/app.js
+          grep -q "customize-companion" app/app.js
+          grep -q "onboardLookAndVoice" app/app.js
+          ! grep -q "typing-dots" app/app.js
+          ! grep -q "THOUGHT_PHASES" app/app.js
+
+      - name: Write certification receipt
+        if: steps.state.outputs.complete != 'true'
+        shell: bash
+        run: |
+          cat > V84_NATIVE_EXPERIENCE_CERTIFICATION.md <<'EOF'
+          # Almost Human 8.4 Native Experience Certification
+
+          - EAS builds authorized/run: 0 / 0
+          - TestFlight uploads authorized/run: 0 / 0
+          - Web/backend/security gate: passed four consecutive times
+          - Mobile preflight: passed four consecutive times
+          - Expo Doctor, TypeScript, and lint: passed
+          - iOS and Android no-credit exports: passed
+          - Real native microphone permission and recorder: present
+          - Authenticated speech transcription: present
+          - Native speech playback: present
+          - Six voice styles: girl young, girl teen, woman adult, boy young, boy teen, man adult
+          - Avatar controls: skin, hair style, hair color, and eyes
+          - Existing companion customization: available in Settings
+          - Onboarding: three short steps
+          - Home: simplified
+          - Fake typing dots and rotating wait phrases: removed
+          - Conversation wait state: immediate plain-language acknowledgment
+
+          A new signed TestFlight binary is not authorized by this certification.
+          EOF
+
+      - name: Commit certified repair to PR branch
+        if: steps.state.outputs.complete != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human Native Repair'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add app mobile supabase tests scripts package.json package-lock.json V84_NATIVE_EXPERIENCE_CERTIFICATION.md
+          git commit -m 'Repair native voice mic avatar and fluid conversation UX'
+          git pull --rebase --autostash origin repair/native-experience-8-4
+          git push origin HEAD:repair/native-experience-8-4
+
+      - name: Confirm already-certified branch
+        if: steps.state.outputs.complete == 'true'
+        run: echo 'Almost Human 8.4 repair is already certified on this branch.'
