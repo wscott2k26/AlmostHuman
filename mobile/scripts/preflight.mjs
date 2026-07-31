@@ -31,7 +31,7 @@ const webCss = await readFile(path.join(REPO, 'app/styles.css'), 'utf8');
 
 expect('identity:name', app.expo.name === 'Almost Human', app.expo.name);
 expect('identity:slug', app.expo.slug === 'almost-human', app.expo.slug);
-expect('identity:owner', app.expo.owner === 'wscott2k26', app.expo.owner);
+expect('identity:owner', app.expo.owner === 'wscott2k8', app.expo.owner);
 expect('identity:ios-bundle', app.expo.ios?.bundleIdentifier === 'com.stormandme.almosthuman', app.expo.ios?.bundleIdentifier);
 expect('identity:android-package', app.expo.android?.package === 'com.stormandme.almosthuman', app.expo.android?.package);
 expect('identity:scheme', app.expo.scheme === 'almost-human', app.expo.scheme);
