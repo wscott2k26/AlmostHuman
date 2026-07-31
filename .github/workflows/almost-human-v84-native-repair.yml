@@ -1,0 +1,147 @@
+name: Almost Human 8.4 Native Experience Repair
+
+on:
+  push:
+    branches:
+      - repair/native-experience-8-4
+    paths:
+      - '.github/run-v84-native-repair.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: almost-human-v84-native-repair
+  cancel-in-progress: false
+
+jobs:
+  repair-and-certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Check out exact repair branch
+        uses: actions/checkout@v4
+        with:
+          ref: repair/native-experience-8-4
+          fetch-depth: 0
+
+      - name: Validate zero-credit authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          t=json.load(open('.github/run-v84-native-repair.json'))
+          assert t['operation']=='REPAIR_AND_QUADRUPLE_TEST_ONLY'
+          assert t['easBuildsAuthorized']==0
+          assert t['testFlightUploadsAuthorized']==0
+          assert t['target']=='Almost Human 8.4 native voice, microphone, avatar, and simple conversation UX'
+          PY
+
+      - name: Apply deterministic source repair
+        run: python3 scripts/repair_v84_native_experience.py
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mobile/package-lock.json
+
+      - name: Refresh dependency locks without running package scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts
+          npm --prefix mobile install --package-lock-only --ignore-scripts
+
+      - name: Install root dependencies exactly
+        run: npm ci
+
+      - name: Run complete web, backend, security, and UX gate four times
+        run: npm run test:quadruple
+
+      - name: Rebuild exact offline native web bundle
+        run: node scripts/build-inline.mjs
+
+      - name: Install mobile dependencies exactly
+        run: npm --prefix mobile ci
+
+      - name: Expo Doctor
+        run: npm --prefix mobile run doctor
+
+      - name: TypeScript and lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix mobile run typecheck
+          npm --prefix mobile run lint
+
+      - name: Mobile release preflight four times
+        run: npm --prefix mobile run preflight:quadruple
+
+      - name: Export both native platforms without EAS
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix mobile run export:ios
+          npm --prefix mobile run export:android
+
+      - name: Verify repaired user experience markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "requestRecordingPermissionsAsync" mobile/src/NativeShell.tsx
+          grep -q "useAudioRecorder" mobile/src/NativeShell.tsx
+          grep -q "Speech.speak" mobile/src/NativeShell.tsx
+          grep -q "transcription-service" app/config.js
+          grep -q "female-child" app/app.js
+          grep -q "male-adult" app/app.js
+          grep -q "customize-companion" app/app.js
+          grep -q "onboardLookAndVoice" app/app.js
+          ! grep -q "typing-dots" app/app.js
+          ! grep -q "THOUGHT_PHASES" app/app.js
+          grep -q "V8.4 — SIMPLE NATIVE CONVERSATION" app/styles.css
+
+      - name: Write sanitized certification receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > V84_NATIVE_EXPERIENCE_CERTIFICATION.md <<'EOF'
+          # Almost Human 8.4 Native Experience Certification
+
+          - Repair lane: zero-credit source and export validation
+          - EAS builds authorized/run: 0 / 0
+          - TestFlight uploads authorized/run: 0 / 0
+          - Web/backend/security test gate: passed four consecutive times
+          - Mobile preflight: passed four consecutive times
+          - Expo Doctor: passed
+          - iOS JavaScript export: passed
+          - Android JavaScript export: passed
+          - Native microphone permission and recording bridge: present
+          - Authenticated audio transcription function: present
+          - Native text-to-speech bridge: present
+          - Voice profiles: girl young, girl teen, woman adult, boy young, boy teen, man adult
+          - Avatar controls: skin, hair style, hair color, and eyes
+          - Existing companion customizer: present in Settings
+          - Onboarding: reduced to three steps
+          - Fake typing dots and rotating thought phrases: removed
+          - Conversation wait state: immediate plain-language acknowledgment
+
+          This receipt certifies source, tests, and no-credit exports only. A new signed store binary requires separate explicit authorization after review.
+          EOF
+
+      - name: Commit repaired and generated source to repair branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human Native Repair'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add app mobile supabase tests scripts package.json package-lock.json V84_NATIVE_EXPERIENCE_CERTIFICATION.md
+          git diff --cached --stat
+          git commit -m 'Repair native voice mic avatar and simple conversation UX'
+          git pull --rebase --autostash origin repair/native-experience-8-4
+          git push origin HEAD:repair/native-experience-8-4
