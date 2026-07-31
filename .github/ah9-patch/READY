@@ -1,0 +1,8 @@
+{
+  "operation": "APPLY_REVIEWED_SOURCE_PATCH_ONCE",
+  "sourceCommit": "46a2590",
+  "parts": 4,
+  "gzipSha256": "264590ef7a57c30da7db50abfb5f41cae826bacf2fe826e7d6631d26286d5e48",
+  "easBuildsAuthorized": 0,
+  "testFlightUploadsAuthorized": 0
+}
