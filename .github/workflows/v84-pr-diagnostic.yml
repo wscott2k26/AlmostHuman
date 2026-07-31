@@ -13,10 +13,14 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-      - name: Compile repair script
-        run: python3 -m py_compile scripts/repair_v84_native_experience.py
+      - name: Compile repair scripts
+        run: |
+          python3 -m py_compile scripts/repair_v84_native_experience.py
+          python3 -m py_compile scripts/repair_v84_gate_followup.py
       - name: Apply repair in disposable workspace
-        run: python3 scripts/repair_v84_native_experience.py
+        run: |
+          python3 scripts/repair_v84_native_experience.py
+          python3 scripts/repair_v84_gate_followup.py
       - name: Parse JavaScript and JSON
         shell: bash
         run: |
@@ -38,5 +42,7 @@ jobs:
           grep -q "male-adult" app/app.js
           grep -q "customize-companion" app/app.js
           grep -q "transcription-service" app/config.js
+          grep -q "One tap. No streak. No judgment." app/app.js
+          grep -q "simple, never meaningless" app/app.js
           ! grep -q "typing-dots" app/app.js
           ! grep -q "THOUGHT_PHASES" app/app.js
