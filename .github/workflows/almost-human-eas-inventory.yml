@@ -1,0 +1,54 @@
+name: Almost Human Read-Only EAS Inventory
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/run-eas-inventory.json'
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          packager: npm
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Verify identity and list sanitized iOS builds
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACCOUNT="$(eas whoami | tr -d '\r' | head -n 1 | awk '{print $1}')"
+          test "$ACCOUNT" = "wscott2k8"
+          eas build:list --platform ios --limit 10 --json --non-interactive > /tmp/builds.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const rows = JSON.parse(fs.readFileSync('/tmp/builds.json','utf8'));
+          const safe = rows.map((b) => ({
+            id: b.id,
+            status: b.status,
+            platform: b.platform,
+            createdAt: b.createdAt,
+            completedAt: b.completedAt || null,
+            appVersion: b.appVersion || null,
+            appBuildVersion: b.appBuildVersion || null,
+            gitCommitHash: b.gitCommitHash || null,
+            distribution: b.distribution || null,
+            errorCode: b.error?.errorCode || b.error?.code || null,
+            errorMessage: b.error?.message || null
+          }));
+          console.log('SANITIZED_EAS_IOS_BUILDS=' + JSON.stringify(safe));
+          console.log('IOS_BUILD_COUNT=' + safe.length);
+          NODE
