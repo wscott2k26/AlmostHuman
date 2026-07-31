@@ -1,0 +1,114 @@
+name: Almost Human Live Outside-In Smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/run-live-smoke.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
+concurrency:
+  group: almost-human-live-smoke
+  cancel-in-progress: false
+
+env:
+  CI: '1'
+  PRODUCTION_URL: https://almost-human-swart.vercel.app
+
+jobs:
+  live-outside-in-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out canonical source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify live Supabase auth health database schema AI and deletion service
+        shell: bash
+        run: npm run verify:live | tee live-supabase-check.json
+
+      - name: Verify public production delivery and V8.3 markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            --max-time 30 \
+            --dump-header live-headers.txt \
+            --output live-index.html \
+            "$PRODUCTION_URL/?almost-human-audit=${GITHUB_RUN_ID}"
+          grep -qi 'Almost Human' live-index.html
+          grep -q 'app.js?v=8.3' live-index.html
+          curl --fail --silent --show-error --location \
+            --max-time 30 \
+            --output live-sw.js \
+            "$PRODUCTION_URL/sw.js?v=8.3&almost-human-audit=${GITHUB_RUN_ID}"
+          grep -q "almost-human-v8-3-haven-1" live-sw.js
+          grep -qi '^content-security-policy:' live-headers.txt
+          grep -qi '^x-content-type-options:[[:space:]]*nosniff' live-headers.txt
+
+      - name: Record successful live smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const cp = require('child_process');
+          const report = {
+            status: 'passed',
+            checkedAt: new Date().toISOString(),
+            productionUrl: process.env.PRODUCTION_URL,
+            sourceCommit: cp.execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(),
+            supabaseLiveGate: true,
+            productionHtmlV83: true,
+            serviceWorkerV83: true,
+            cspHeader: true,
+            nosniffHeader: true,
+            authenticatedUserMutationTests: 'not run; no test-account credentials were exposed to GitHub'
+          };
+          fs.writeFileSync('LIVE_SMOKE_RESULT.json', JSON.stringify(report, null, 2) + '\n');
+          NODE
+          git config user.name 'Almost Human Live Audit Bot'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add LIVE_SMOKE_RESULT.json
+          git commit -m 'Record successful Almost Human live outside-in smoke'
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
+
+      - name: Save live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: almost-human-live-outside-in-smoke
+          path: |
+            LIVE_SMOKE_RESULT.json
+            live-supabase-check.json
+            live-headers.txt
+            live-index.html
+            live-sw.js
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Report exact live blocker
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Almost Human live smoke needs attention — run $GITHUB_RUN_ID" \
+            --body "The read-only outside-in check found a live deployment or backend blocker. No EAS build or submission ran: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
