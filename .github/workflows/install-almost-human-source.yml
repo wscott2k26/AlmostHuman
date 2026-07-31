@@ -36,10 +36,11 @@ jobs:
           set -euo pipefail
           EXPECTED='bb72d70bdc66d270c04a315a4092aeff27d04927b227cdc04f74221fa62c6225'
           mapfile -t CANDIDATES < <(find . -maxdepth 1 -type f -name 'Almost-Human-8.3-Haven-TestFlight-Source*.zip' -printf '%f\n' | sort)
-          (( ${#CANDIDATES[@]} > 0 )) || {
-            echo 'Upload the certified Almost Human 8.3 ZIP at the repository root, then run this workflow again.'
-            exit 1
-          }
+          if (( ${#CANDIDATES[@]} == 0 )); then
+            echo 'No source ZIP is present; this is the normal post-publication no-op run.'
+            echo 'skip=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           PACKAGE=''
           for CANDIDATE in "${CANDIDATES[@]}"; do
             ACTUAL="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
@@ -54,9 +55,11 @@ jobs:
             exit 1
           }
           unzip -t "$PACKAGE"
+          echo 'skip=false' >> "$GITHUB_OUTPUT"
           echo "package=$PACKAGE" >> "$GITHUB_OUTPUT"
 
       - name: Extract and verify every packaged source file
+        if: steps.package.outputs.skip != 'true'
         shell: bash
         env:
           PACKAGE: ${{ steps.package.outputs.package }}
@@ -77,15 +80,22 @@ jobs:
           )
 
       - name: Publish normal certified source to main
+        if: steps.package.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
           SOURCE='/tmp/almost-human-source/AlmostHuman'
-          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          cp -a "$SOURCE"/. ./
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='.github/workflows/' \
+            "$SOURCE/" ./
           git config user.name 'Almost Human Source Installer'
           git config user.email 'loftlatte25@gmail.com'
           git add -A
+          if git diff --cached --quiet; then
+            echo 'Certified normal source already matches main.'
+            exit 0
+          fi
           git commit -m 'Publish certified Almost Human 8.3 Haven source'
           git push origin HEAD:main
 
