@@ -1,0 +1,203 @@
+name: Almost Human Step 7 iOS Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_build:
+        description: 'Type BUILD_ONCE to spend one iOS EAS build credit'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+  issues: write
+
+concurrency:
+  group: almost-human-step7-ios
+  cancel-in-progress: false
+
+env:
+  MOBILE_DIR: mobile
+  EXPECTED_OWNER: wscott2k26
+  EXPECTED_BUNDLE_ID: com.stormandme.almosthuman
+
+jobs:
+  certify-and-build-ios:
+    if: ${{ inputs.confirm_build == 'BUILD_ONCE' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+
+    steps:
+      - name: Check out canonical source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Refuse accidental duplicate successful build
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f STEP7_IOS_BUILD_RECORD.json ]]; then
+            echo 'A successful Step 7 iOS build record already exists. Submit that build instead of spending another credit.'
+            cat STEP7_IOS_BUILD_RECORD.json
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verify protected Expo token
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${EXPO_TOKEN:-}" || { echo 'EXPO_TOKEN repository secret is missing.'; exit 1; }
+          eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install web certification dependencies
+        shell: bash
+        run: npm install --no-audit --no-fund
+
+      - name: Run complete web cloud and security gate four times
+        shell: bash
+        run: npm run test:quadruple
+
+      - name: Rebuild exact offline native bundle
+        shell: bash
+        run: node scripts/build-inline.mjs
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        shell: bash
+        run: npm install --no-audit --no-fund
+
+      - name: Verify Expo dependency alignment
+        working-directory: mobile
+        shell: bash
+        run: npx expo install --check
+
+      - name: Run mobile release gates
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run doctor
+          npm run typecheck
+          npm run lint
+          npm run preflight:quadruple
+          npx expo export --platform ios --output-dir dist-ios
+          npx expo export --platform android --output-dir dist-android
+
+      - name: Connect canonical EAS project
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          eas init --force --non-interactive
+          eas project:info --non-interactive | tee ../eas-project-info.txt
+          node - <<'NODE'
+          const fs = require('fs');
+          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+          const expo = app.expo || {};
+          if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
+          if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
+          if (!expo.extra?.eas?.projectId) throw new Error('EAS project ID was not written to app.json');
+          console.log(`Verified EAS project ${expo.extra.eas.projectId}`);
+          NODE
+
+      - name: Preserve EAS project identity on main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human Release Bot'
+          git config user.email 'loftlatte25@gmail.com'
+          git add mobile/app.json package-lock.json mobile/package-lock.json
+          if git diff --cached --quiet; then
+            echo 'EAS identity and dependency locks already recorded.'
+          else
+            git commit -m 'Record Almost Human EAS identity and dependency locks'
+            git push origin HEAD:main
+          fi
+
+      - name: Spend one production iOS build credit
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          eas build \
+            --platform ios \
+            --profile production \
+            --non-interactive \
+            --wait \
+            --json > ../ios-build.json
+          node -e "const x=require('../ios-build.json'); console.log(JSON.stringify(x,null,2));"
+
+      - name: Record successful build without creating another
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const raw = JSON.parse(fs.readFileSync('ios-build.json', 'utf8'));
+          const build = Array.isArray(raw) ? raw[0] : raw;
+          const record = {
+            status: build.status || 'finished',
+            buildId: build.id || null,
+            platform: build.platform || 'IOS',
+            appVersion: build.appVersion || '1.0.0',
+            appBuildVersion: build.appBuildVersion || null,
+            artifacts: build.artifacts || null,
+            buildDetailsPageUrl: build.buildDetailsPageUrl || null,
+            createdAt: build.createdAt || new Date().toISOString(),
+            githubRunId: process.env.GITHUB_RUN_ID,
+            sourceCommit: require('child_process').execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(),
+          };
+          fs.writeFileSync('STEP7_IOS_BUILD_RECORD.json', JSON.stringify(record, null, 2) + '\n');
+          NODE
+          git config user.name 'Almost Human Release Bot'
+          git config user.email 'loftlatte25@gmail.com'
+          git add STEP7_IOS_BUILD_RECORD.json
+          git commit -m 'Record successful Almost Human Step 7 iOS build'
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Save release records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: almost-human-step7-ios-records
+          path: |
+            ios-build.json
+            eas-project-info.txt
+            mobile/STEP7_PREFLIGHT.json
+            mobile/STEP7_QUADRUPLE_PREFLIGHT.md
+            STEP7_IOS_BUILD_RECORD.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Report exact blocker
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Almost Human Step 7 iOS build needs attention — run $GITHUB_RUN_ID" \
+            --body "The protected one-build workflow stopped before TestFlight submission. Review the exact failed step: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
