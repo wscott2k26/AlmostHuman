@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(find .github/ah9-patch -maxdepth 1 -name 'part-*' | wc -l)" -eq 4
+          test "$(find .github/ah9-patch -maxdepth 1 -name 'part-*' | wc -l)" -eq 5
           cat .github/ah9-patch/part-* > "$RUNNER_TEMP/ah9.patch.gz.b64"
           base64 --decode "$RUNNER_TEMP/ah9.patch.gz.b64" > "$RUNNER_TEMP/ah9.patch.gz"
           echo '264590ef7a57c30da7db50abfb5f41cae826bacf2fe826e7d6631d26286d5e48  '"$RUNNER_TEMP"'/ah9.patch.gz' | sha256sum -c -
