@@ -45,6 +45,22 @@ jobs:
             exit 1
           fi
 
+      - name: Require completed no-build preflight state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f package-lock.json || { echo 'Root package-lock.json is missing. Run the no-build preflight first.'; exit 1; }
+          test -f mobile/package-lock.json || { echo 'Mobile package-lock.json is missing. Run the no-build preflight first.'; exit 1; }
+          node - <<'NODE'
+          const app = require('./mobile/app.json');
+          const expo = app.expo || {};
+          if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
+          if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
+          if (expo.android?.package !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong Android package: ${expo.android?.package}`);
+          if (!expo.extra?.eas?.projectId) throw new Error('No EAS project ID is recorded. Run the no-build preflight first.');
+          console.log(`Preflight identity present: ${expo.extra.eas.projectId}`);
+          NODE
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -59,20 +75,23 @@ jobs:
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
+          packager: npm
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Verify protected Expo token
+      - name: Verify protected Expo token and account
         shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           set -euo pipefail
           test -n "${EXPO_TOKEN:-}" || { echo 'EXPO_TOKEN repository secret is missing.'; exit 1; }
-          eas whoami
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          ACCOUNT="$(eas whoami | tr -d '\r' | tail -n 1)"
+          echo "Expo account: $ACCOUNT"
+          test "$ACCOUNT" = "$EXPECTED_OWNER"
 
-      - name: Install web certification dependencies
+      - name: Install locked web certification dependencies
         shell: bash
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Run complete web cloud and security gate four times
         shell: bash
@@ -82,10 +101,10 @@ jobs:
         shell: bash
         run: node scripts/build-inline.mjs
 
-      - name: Install mobile dependencies
+      - name: Install locked mobile dependencies
         working-directory: mobile
         shell: bash
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Verify Expo dependency alignment
         working-directory: mobile
@@ -104,12 +123,11 @@ jobs:
           npx expo export --platform ios --output-dir dist-ios
           npx expo export --platform android --output-dir dist-android
 
-      - name: Connect canonical EAS project
+      - name: Verify canonical EAS project without relinking
         working-directory: mobile
         shell: bash
         run: |
           set -euo pipefail
-          eas init --force --non-interactive
           eas project:info --non-interactive | tee ../eas-project-info.txt
           node - <<'NODE'
           const fs = require('fs');
@@ -117,23 +135,15 @@ jobs:
           const expo = app.expo || {};
           if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
           if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
-          if (!expo.extra?.eas?.projectId) throw new Error('EAS project ID was not written to app.json');
+          if (expo.android?.package !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong Android package: ${expo.android?.package}`);
+          if (!expo.extra?.eas?.projectId) throw new Error('EAS project ID is missing');
           console.log(`Verified EAS project ${expo.extra.eas.projectId}`);
           NODE
-
-      - name: Preserve EAS project identity on main
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'Almost Human Release Bot'
-          git config user.email 'loftlatte25@gmail.com'
-          git add mobile/app.json package-lock.json mobile/package-lock.json
-          if git diff --cached --quiet; then
-            echo 'EAS identity and dependency locks already recorded.'
-          else
-            git commit -m 'Record Almost Human EAS identity and dependency locks'
-            git push origin HEAD:main
-          fi
+          test -z "$(git status --porcelain)" || {
+            echo 'Build preparation changed tracked files. Refusing to spend a credit from a dirty tree.'
+            git status --short
+            exit 1
+          }
 
       - name: Spend one production iOS build credit
         working-directory: mobile
@@ -156,9 +166,11 @@ jobs:
           const fs = require('fs');
           const raw = JSON.parse(fs.readFileSync('ios-build.json', 'utf8'));
           const build = Array.isArray(raw) ? raw[0] : raw;
+          if (!build?.id) throw new Error('EAS returned no build ID');
+          if (String(build.status || '').toLowerCase() !== 'finished') throw new Error(`Build status is not finished: ${build.status}`);
           const record = {
-            status: build.status || 'finished',
-            buildId: build.id || null,
+            status: build.status,
+            buildId: build.id,
             platform: build.platform || 'IOS',
             appVersion: build.appVersion || '1.0.0',
             appBuildVersion: build.appBuildVersion || null,
@@ -171,7 +183,7 @@ jobs:
           fs.writeFileSync('STEP7_IOS_BUILD_RECORD.json', JSON.stringify(record, null, 2) + '\n');
           NODE
           git config user.name 'Almost Human Release Bot'
-          git config user.email 'loftlatte25@gmail.com'
+          git config user.email 'wscott2k26@users.noreply.github.com'
           git add STEP7_IOS_BUILD_RECORD.json
           git commit -m 'Record successful Almost Human Step 7 iOS build'
           git pull --rebase origin main
