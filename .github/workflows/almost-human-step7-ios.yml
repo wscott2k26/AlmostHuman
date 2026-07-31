@@ -47,16 +47,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "$EVENT_NAME" == "push" ]]; then
-            node - <<'NODE'
-            const fs = require('fs');
-            const trigger = JSON.parse(fs.readFileSync('.github/run-ios-build.json', 'utf8'));
-            if (trigger.operation !== 'BUILD_ONCE') throw new Error('Invalid build operation.');
-            if (trigger.confirm !== 'BUILD_ONCE') throw new Error('Missing exact build confirmation.');
-            if (trigger.expectedOwner !== process.env.EXPECTED_OWNER) throw new Error('Build owner mismatch.');
-            if (trigger.expectedBundleId !== process.env.EXPECTED_BUNDLE_ID) throw new Error('Build bundle mismatch.');
-            if (trigger.easBuildCreditsAuthorized !== 1) throw new Error('Exactly one build credit must be authorized.');
-            if (trigger.easSubmissionsAuthorized !== 0) throw new Error('This lane cannot submit to TestFlight.');
-            NODE
+            node -e "const t=require('./.github/run-ios-build.json'); if(t.operation!=='BUILD_ONCE')throw Error('Invalid build operation'); if(t.confirm!=='BUILD_ONCE')throw Error('Missing exact build confirmation'); if(t.expectedOwner!==process.env.EXPECTED_OWNER)throw Error('Build owner mismatch'); if(t.expectedBundleId!==process.env.EXPECTED_BUNDLE_ID)throw Error('Build bundle mismatch'); if(t.easBuildCreditsAuthorized!==1)throw Error('Exactly one build credit must be authorized'); if(t.easSubmissionsAuthorized!==0)throw Error('This lane cannot submit to TestFlight'); console.log('One-build authorization verified');"
           else
             test "$MANUAL_CONFIRM" = "BUILD_ONCE"
           fi
@@ -75,23 +66,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f package-lock.json || { echo 'Root package-lock.json is missing. Run the no-build preflight first.'; exit 1; }
-          test -f mobile/package-lock.json || { echo 'Mobile package-lock.json is missing. Run the no-build preflight first.'; exit 1; }
-          test -f FULL_AUDIT_RESULT.json || { echo 'Full audit record is missing.'; exit 1; }
-          test -f LIVE_SMOKE_RESULT.json || { echo 'Live smoke record is missing.'; exit 1; }
-          node - <<'NODE'
-          const app = require('./mobile/app.json');
-          const audit = require('./FULL_AUDIT_RESULT.json');
-          const live = require('./LIVE_SMOKE_RESULT.json');
-          const expo = app.expo || {};
-          if (audit.status !== 'passed') throw new Error('Full audit is not passed.');
-          if (live.status !== 'passed') throw new Error('Live smoke is not passed.');
-          if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
-          if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
-          if (expo.android?.package !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong Android package: ${expo.android?.package}`);
-          if (!expo.extra?.eas?.projectId) throw new Error('No EAS project ID is recorded. Run the no-build preflight first.');
-          console.log(`Preflight identity present: ${expo.extra.eas.projectId}`);
-          NODE
+          test -f package-lock.json
+          test -f mobile/package-lock.json
+          test -f FULL_AUDIT_RESULT.json
+          test -f LIVE_SMOKE_RESULT.json
+          node -e "const a=require('./mobile/app.json').expo||{}; const audit=require('./FULL_AUDIT_RESULT.json'); const live=require('./LIVE_SMOKE_RESULT.json'); if(audit.status!=='passed')throw Error('Full audit is not passed'); if(live.status!=='passed')throw Error('Live smoke is not passed'); if(a.owner!==process.env.EXPECTED_OWNER)throw Error('Wrong Expo owner'); if(a.ios?.bundleIdentifier!==process.env.EXPECTED_BUNDLE_ID)throw Error('Wrong iOS bundle'); if(a.android?.package!==process.env.EXPECTED_BUNDLE_ID)throw Error('Wrong Android package'); if(!a.extra?.eas?.projectId)throw Error('EAS project ID missing'); console.log('Certified EAS project '+a.extra.eas.projectId);"
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -116,7 +95,7 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           set -euo pipefail
-          test -n "${EXPO_TOKEN:-}" || { echo 'EXPO_TOKEN repository secret is missing.'; exit 1; }
+          test -n "${EXPO_TOKEN:-}"
           ACCOUNT="$(eas whoami | tr -d '\r' | head -n 1 | awk '{print $1}')"
           echo "Expo account: $ACCOUNT"
           test "$ACCOUNT" = "$EXPECTED_OWNER"
@@ -138,16 +117,12 @@ jobs:
         shell: bash
         run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Verify Expo dependency alignment
-        working-directory: mobile
-        shell: bash
-        run: npx expo install --check
-
-      - name: Run mobile release gates
+      - name: Verify Expo dependency alignment and mobile release gates
         working-directory: mobile
         shell: bash
         run: |
           set -euo pipefail
+          npx expo install --check
           npm run doctor
           npm run typecheck
           npm run lint
@@ -161,59 +136,22 @@ jobs:
         run: |
           set -euo pipefail
           eas project:info --non-interactive | tee ../eas-project-info.txt
-          node - <<'NODE'
-          const fs = require('fs');
-          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
-          const expo = app.expo || {};
-          if (expo.owner !== process.env.EXPECTED_OWNER) throw new Error(`Wrong Expo owner: ${expo.owner}`);
-          if (expo.ios?.bundleIdentifier !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong iOS bundle: ${expo.ios?.bundleIdentifier}`);
-          if (expo.android?.package !== process.env.EXPECTED_BUNDLE_ID) throw new Error(`Wrong Android package: ${expo.android?.package}`);
-          if (!expo.extra?.eas?.projectId) throw new Error('EAS project ID is missing');
-          console.log(`Verified EAS project ${expo.extra.eas.projectId}`);
-          NODE
-          git diff --quiet -- app.json eas.json package-lock.json || {
-            echo 'Critical mobile identity or lock files changed during preparation. Refusing to spend a credit.'
-            git diff -- app.json eas.json package-lock.json
-            exit 1
-          }
+          node -e "const a=require('./app.json').expo||{}; if(a.owner!==process.env.EXPECTED_OWNER)throw Error('Wrong Expo owner'); if(a.ios?.bundleIdentifier!==process.env.EXPECTED_BUNDLE_ID)throw Error('Wrong iOS bundle'); if(a.android?.package!==process.env.EXPECTED_BUNDLE_ID)throw Error('Wrong Android package'); if(!a.extra?.eas?.projectId)throw Error('EAS project ID missing'); console.log('Verified EAS project '+a.extra.eas.projectId);"
+          git diff --quiet -- app.json eas.json package-lock.json
 
       - name: Spend one production iOS build credit
         working-directory: mobile
         shell: bash
         run: |
           set -euo pipefail
-          eas build \
-            --platform ios \
-            --profile production \
-            --non-interactive \
-            --wait \
-            --json > ../ios-build.json
+          eas build --platform ios --profile production --non-interactive --wait --json > ../ios-build.json
           node -e "const x=require('../ios-build.json'); console.log(JSON.stringify(x,null,2));"
 
       - name: Record successful build without creating another
         shell: bash
         run: |
           set -euo pipefail
-          node - <<'NODE'
-          const fs = require('fs');
-          const raw = JSON.parse(fs.readFileSync('ios-build.json', 'utf8'));
-          const build = Array.isArray(raw) ? raw[0] : raw;
-          if (!build?.id) throw new Error('EAS returned no build ID');
-          if (String(build.status || '').toLowerCase() !== 'finished') throw new Error(`Build status is not finished: ${build.status}`);
-          const record = {
-            status: build.status,
-            buildId: build.id,
-            platform: build.platform || 'IOS',
-            appVersion: build.appVersion || '1.0.0',
-            appBuildVersion: build.appBuildVersion || null,
-            artifacts: build.artifacts || null,
-            buildDetailsPageUrl: build.buildDetailsPageUrl || null,
-            createdAt: build.createdAt || new Date().toISOString(),
-            githubRunId: process.env.GITHUB_RUN_ID,
-            sourceCommit: require('child_process').execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(),
-          };
-          fs.writeFileSync('STEP7_IOS_BUILD_RECORD.json', JSON.stringify(record, null, 2) + '\n');
-          NODE
+          node -e "const fs=require('fs'),cp=require('child_process'); const raw=require('./ios-build.json'); const b=Array.isArray(raw)?raw[0]:raw; if(!b?.id)throw Error('EAS returned no build ID'); if(String(b.status||'').toLowerCase()!=='finished')throw Error('Build status is not finished: '+b.status); const r={status:b.status,buildId:b.id,platform:b.platform||'IOS',appVersion:b.appVersion||'1.0.0',appBuildVersion:b.appBuildVersion||null,artifacts:b.artifacts||null,buildDetailsPageUrl:b.buildDetailsPageUrl||null,createdAt:b.createdAt||new Date().toISOString(),githubRunId:process.env.GITHUB_RUN_ID,sourceCommit:cp.execSync('git rev-parse HEAD',{encoding:'utf8'}).trim()}; fs.writeFileSync('STEP7_IOS_BUILD_RECORD.json',JSON.stringify(r,null,2)+'\n');"
           git config user.name 'Almost Human Release Bot'
           git config user.email 'wscott2k26@users.noreply.github.com'
           git add STEP7_IOS_BUILD_RECORD.json
@@ -241,7 +179,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue create \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Almost Human Step 7 iOS build needs attention — run $GITHUB_RUN_ID" \
-            --body "The protected one-build workflow stopped before TestFlight submission. Review the exact failed step: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "Almost Human Step 7 iOS build needs attention — run $GITHUB_RUN_ID" --body "The protected one-build workflow stopped before TestFlight submission. Review the exact failed step: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
