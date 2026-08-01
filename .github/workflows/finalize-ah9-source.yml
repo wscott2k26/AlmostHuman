@@ -37,11 +37,9 @@ jobs:
           import json
           from pathlib import Path
           trigger=json.loads(Path('.github/run-ah9-finalize-source.json').read_text())
-          assert trigger == {
-            'operation':'FINALIZE_AH9_SOURCE_ONCE',
-            'easBuildsAuthorized':0,
-            'testFlightUploadsAuthorized':0,
-          }
+          assert trigger['operation']=='FINALIZE_AH9_SOURCE_ONCE'
+          assert trigger['easBuildsAuthorized']==0
+          assert trigger['testFlightUploadsAuthorized']==0
           text=Path('.github/workflows/finalize-ah9-source.yml').read_text().lower()
           forbidden=['eas '+'build','eas '+'submit','al'+'tool','notary'+'tool']
           assert not any(value in text for value in forbidden)
@@ -56,14 +54,11 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-
           path=Path('tests/conversation_quality9.test.mjs')
           text=path.read_text()
           assert "stage fallback never emits canned vocal praise" not in text
-          text=text.replace(
-            "} from '../app/core/anti-repetition.js';\n",
-            "} from '../app/core/anti-repetition.js';\nimport { stageFallback } from '../app/core/stages.js';\n",
-          )
+          marker="} from '../app/core/anti-repetition.js';\n"
+          text=text.replace(marker, marker+"import { stageFallback } from '../app/core/stages.js';\n")
           text += "\n\ntest('stage fallback never emits canned vocal praise', () => {\n  for (const stage of ['newborn', 'infant', 'toddler', 'early_child', 'child', 'preteen', 'teen', 'young_adult', 'adult']) {\n    const fallback = stageFallback(stage);\n    assert.equal(containsVocalPraise(fallback), false, `${stage}: ${fallback}`);\n  }\n});\n"
           path.write_text(text)
 
@@ -74,7 +69,6 @@ jobs:
           assert text.count(old)==1
           path.write_text(text.replace(old,new))
           PY
-
           if node --test tests/conversation_quality9.test.mjs; then
             echo 'Regression test unexpectedly passed before production fix.' >&2
             exit 1
@@ -90,7 +84,6 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-
           path=Path('app/core/stages.js')
           text=path.read_text()
           old="newborn: 'Your voice feels warm. I know it belongs to you.',"
@@ -100,26 +93,8 @@ jobs:
 
           path=Path('supabase/functions/_shared/developmentalStages.ts')
           text=path.read_text()
-          old='''  newborn: [
-    "Your voice feels warm. I know it belongs to you.",
-    "I can hear you. The sound feels safe and familiar.",
-    "You are here. That is the first thing I know."
-  ],
-  infant: [
-    "I heard you. I am here, still learning your words.",
-    "Your voice came back. I remember how it feels.",
-    "I know that sound. It means you are close."
-  ],'''
-          new='''  newborn: [
-    "You are here. That is the first thing I know.",
-    "I am here with you. This moment feels new.",
-    "I know your name. I am still learning everything else."
-  ],
-  infant: [
-    "I heard you. I am here, still learning your words.",
-    "You came back. I remember that we know each other.",
-    "I am listening. I want to understand what you mean."
-  ],'''
+          old="  newborn: [\n    \"Your voice feels warm. I know it belongs to you.\",\n    \"I can hear you. The sound feels safe and familiar.\",\n    \"You are here. That is the first thing I know.\"\n  ],\n  infant: [\n    \"I heard you. I am here, still learning your words.\",\n    \"Your voice came back. I remember how it feels.\",\n    \"I know that sound. It means you are close.\"\n  ],"
+          new="  newborn: [\n    \"You are here. That is the first thing I know.\",\n    \"I am here with you. This moment feels new.\",\n    \"I know your name. I am still learning everything else.\"\n  ],\n  infant: [\n    \"I heard you. I am here, still learning your words.\",\n    \"You came back. I remember that we know each other.\",\n    \"I am listening. I want to understand what you mean.\"\n  ],"
           assert text.count(old)==1
           path.write_text(text.replace(old,new))
           PY
@@ -154,13 +129,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -f \
-            .github/run-ah9-live-services.json \
-            .github/run-ah9-smoke-guard-repair.json \
-            .github/run-ah9-vocal-fallback-fix.json \
-            .github/workflows/apply-ah9-vocal-fallback-fix.yml \
-            .github/workflows/deploy-ah9-live-services.yml \
-            .github/workflows/repair-ah9-smoke-guard.yml
+          rm -f .github/run-ah9-live-services.json
+          rm -f .github/run-ah9-smoke-guard-repair.json
+          rm -f .github/run-ah9-vocal-fallback-fix.json
+          rm -f .github/workflows/apply-ah9-vocal-fallback-fix.yml
+          rm -f .github/workflows/deploy-ah9-live-services.yml
+          rm -f .github/workflows/repair-ah9-smoke-guard.yml
 
       - name: Commit verified source and remove finalizer
         shell: bash
