@@ -1,0 +1,138 @@
+name: Build 5 Verified Source Installer
+
+on:
+  push:
+    branches:
+      - feature/build-5-version-10
+    paths:
+      - .release/READY
+
+permissions:
+  contents: write
+
+concurrency:
+  group: almost-human-build5-source-install
+  cancel-in-progress: false
+
+jobs:
+  install-and-certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact feature head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: feature/build-5-version-10
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mobile/package-lock.json
+
+      - name: Verify and apply certified source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .release/build5-source.patch.gz
+          gzip -t .release/build5-source.patch.gz
+          sha256sum .release/build5-source.patch.gz | tee BUILD5_SOURCE_PACKAGE_SHA256.txt
+          gzip -dc .release/build5-source.patch.gz > /tmp/build5-source.patch
+          git apply --check /tmp/build5-source.patch
+          git apply --index /tmp/build5-source.patch
+          rm -rf .build5 .build5v10
+          rm -f .release/build5-source.patch.gz .release/READY
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Synchronize offline bundle
+        run: |
+          npm run build
+          node scripts/build-inline.mjs
+
+      - name: Run four complete web backend security passes
+        run: npm run test:quadruple
+
+      - name: Install native dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Validate native project
+        working-directory: mobile
+        run: |
+          npm run doctor
+          npm run typecheck
+          npm run lint
+          npm run preflight:quadruple
+
+      - name: Export iOS locally without EAS
+        working-directory: mobile
+        run: npm run export:ios
+
+      - name: Export Android locally without EAS
+        working-directory: mobile
+        run: npm run export:android
+
+      - name: Record zero-credit export hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          hash_dir() {
+            find "$1" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}'
+          }
+          IOS_HASH="$(hash_dir mobile/dist-ios)"
+          ANDROID_HASH="$(hash_dir mobile/dist-android)"
+          export IOS_HASH ANDROID_HASH
+          node <<'NODE'
+          const fs = require('node:fs');
+          const receipt = {
+            product: 'Almost Human',
+            release: 'Build 5 / Version 10.0',
+            generated_at: new Date().toISOString(),
+            validation: {
+              web_backend_security_passes: 4,
+              native_preflight_passes: 4,
+              expo_doctor: 'pass',
+              native_typecheck: 'pass',
+              native_lint: 'pass'
+            },
+            exports: {
+              ios_directory_sha256: process.env.IOS_HASH,
+              android_directory_sha256: process.env.ANDROID_HASH
+            },
+            release_counters: {
+              eas_builds: 0,
+              testflight_uploads: 0,
+              app_store_releases: 0
+            }
+          };
+          fs.writeFileSync('mobile/BUILD5_EXPORTS.json', `${JSON.stringify(receipt, null, 2)}\n`);
+          NODE
+
+      - name: Upload zero-credit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: almost-human-build5-zero-credit-exports
+          path: |
+            mobile/dist-ios
+            mobile/dist-android
+            mobile/BUILD5_EXPORTS.json
+            mobile/BUILD5_QUADRUPLE_PREFLIGHT.md
+            BUILD5_SOURCE_PACKAGE_SHA256.txt
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Commit certified source to feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Almost Human Build Validator"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: install and certify Almost Human Build 5 Version 10"
+          git push origin HEAD:feature/build-5-version-10
