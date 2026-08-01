@@ -1,0 +1,91 @@
+name: Sync Almost Human 9.0 Inline Bundle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/run-v90-inline-sync.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: almost-human-v90-inline-sync
+  cancel-in-progress: false
+
+env:
+  CERTIFIED_MERGE_COMMIT: 3015a1572e2708646ac87ca4fc16655b2941097f
+  EXPECTED_WEB_HASH: 07db3f766057641e56682919f4b05bb1c16b080e766e05c79fab09a31928a87e
+
+jobs:
+  sync-generated-native-bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate zero-credit synchronization authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const trigger = require('./.github/run-v90-inline-sync.json');
+          if (trigger.operation !== 'SYNC_V90_INLINE_ONCE') throw new Error('Invalid synchronization operation');
+          if (trigger.confirm !== 'SYNC_V90_INLINE_ONCE') throw new Error('Missing exact synchronization confirmation');
+          if (trigger.priorRunId !== 30678930708) throw new Error('Wrong blocked run');
+          if (trigger.priorAttemptBuildRequestSubmitted !== false) throw new Error('The prior run must not have submitted an EAS build request');
+          if (trigger.easBuildCreditsAuthorized !== 0) throw new Error('This synchronization lane cannot use an EAS build credit');
+          if (trigger.easSubmissionsAuthorized !== 0) throw new Error('This synchronization lane cannot submit to TestFlight');
+          NODE
+          git diff --quiet "$CERTIFIED_MERGE_COMMIT" HEAD -- \
+            app mobile/src mobile/app.json mobile/eas.json mobile/package.json mobile/package-lock.json \
+            supabase scripts tests package.json package-lock.json tsconfig.edge.json vercel.json \
+            ':!mobile/src/almostHumanHtml.ts'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Rebuild certified web and generated native bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+          node -e "const b=require('./dist/build-meta.json'); if(b.version!=='9.0.0')throw Error('Wrong web version'); if(b.contentHash!==process.env.EXPECTED_WEB_HASH)throw Error('Certified web hash mismatch');"
+          node scripts/build-inline.mjs
+
+      - name: Require only the two deterministic generated files to change
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import subprocess
+          expected = {
+              'mobile/assets/almost-human.html',
+              'mobile/src/almostHumanHtml.ts',
+          }
+          changed = {
+              line.strip()
+              for line in subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+              if line.strip()
+          }
+          if changed != expected:
+              raise SystemExit(f'Unexpected generated-file diff. Expected {sorted(expected)}, received {sorted(changed)}')
+          PY
+          git diff --check
+
+      - name: Commit exact generated bundle synchronization
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human 9.0 Release Bot'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add mobile/assets/almost-human.html mobile/src/almostHumanHtml.ts
+          git commit -m 'Sync Almost Human 9.0 offline native bundle'
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
