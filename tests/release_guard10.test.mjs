@@ -46,4 +46,4 @@ test('Build 5 rollback baseline explicitly preserves TestFlight build 4', async 
   assert.match(baseline, /dpl_JCVTgEzyXbar4SnFegsBxTcfX3Gp/);
   assert.match(baseline, /EAS builds?[^\n]*0/i);
   assert.match(baseline, /TestFlight uploads?[^\n]*0/i);
-}
+});
