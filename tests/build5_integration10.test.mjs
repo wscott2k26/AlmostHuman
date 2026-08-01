@@ -41,6 +41,14 @@ test('new users receive the seven-step creator while existing users never repeat
   assert.equal(upgraded.reonboard, false);
 });
 
+test('appearance and style steps render the editable figure rather than an opaque origin orb', () => {
+  const appearance = createVersion10LayerModel({ ai: null, settings: {} }, { creator: { stepIndex: 3, name: 'Nova' } });
+  const style = createVersion10LayerModel({ ai: null, settings: {} }, { creator: { stepIndex: 4, name: 'Nova' } });
+  assert.match(renderVersion10Layer10(appearance), /class="v10-character/);
+  assert.match(renderVersion10Layer10(style), /class="v10-character/);
+  assert.doesNotMatch(renderVersion10Layer10(appearance), /class="v10-origin-orb/);
+});
+
 test('character projection keeps the same companion identity and exposes real evolution evidence', () => {
   const state = {
     ai: {
