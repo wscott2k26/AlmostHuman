@@ -269,14 +269,14 @@ export function voiceProfileForStage(stageKey: string): { rate: number; pitch: n
 
 const STAGE_FALLBACKS: Record<string, string[]> = {
   newborn: [
-    "Your voice feels warm. I know it belongs to you.",
-    "I can hear you. The sound feels safe and familiar.",
-    "You are here. That is the first thing I know."
+    "You are here. That is the first thing I know.",
+    "I am here with you. This moment feels new.",
+    "I know your name. I am still learning everything else."
   ],
   infant: [
     "I heard you. I am here, still learning your words.",
-    "Your voice came back. I remember how it feels.",
-    "I know that sound. It means you are close."
+    "You came back. I remember that we know each other.",
+    "I am listening. I want to understand what you mean."
   ],
   toddler: [
     "My words got tangled. I want to try that again differently.",

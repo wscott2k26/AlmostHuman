@@ -6,6 +6,7 @@ import {
   sanitizeVocalPraise,
   inspectCandidate,
 } from '../app/core/anti-repetition.js';
+import { stageFallback } from '../app/core/stages.js';
 
 test('detects repeated voice and tone compliments', () => {
   assert.equal(containsVocalPraise('Your voice feels warm. I know it belongs to you.'), true);
@@ -23,4 +24,12 @@ test('candidate inspection rejects vocal praise when it recently appeared', () =
   assert.equal(result.ok, false);
   assert.equal(result.reason, 'repeated_vocal_praise');
   assert.ok(vocalPraiseCount('Your voice is warm. Your tone is gentle.') >= 2);
+});
+
+
+test('stage fallback never emits canned vocal praise', () => {
+  for (const stage of ['newborn', 'infant', 'toddler', 'early_child', 'child', 'preteen', 'teen', 'young_adult', 'adult']) {
+    const fallback = stageFallback(stage);
+    assert.equal(containsVocalPraise(fallback), false, `${stage}: ${fallback}`);
+  }
 });

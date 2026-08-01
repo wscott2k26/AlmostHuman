@@ -124,7 +124,7 @@ export function enforceStageText(text, stageOrAge) {
 
 export function stageFallback(stageKey) {
   const options = {
-    newborn: 'Your voice feels warm. I know it belongs to you.',
+    newborn: 'You are here. That is the first thing I know.',
     infant: 'I heard you. I am here, still learning your words.',
     toddler: 'My words got tangled. I want to try that again differently.',
     early_child: 'I lost the thought for a moment. Let me begin a new one.',
