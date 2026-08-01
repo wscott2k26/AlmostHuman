@@ -1,0 +1,61 @@
+name: Build 5 Creator Preview Patch
+
+on:
+  push:
+    branches:
+      - feature/build-5-version-10
+    paths:
+      - .build5v10/patch-creator-preview
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build5-creator-preview-patch
+  cancel-in-progress: false
+
+jobs:
+  patch-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/build-5-version-10
+          fetch-depth: 0
+
+      - name: Replace exactly two opaque creator preview phases
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('app/version10.js')
+          source = path.read_text()
+          replacements = {
+            "step === 'origin' ? 'origin_orb' : 'forming_energy'": "step === 'origin' ? 'origin_orb' : 'emerging_figure'",
+            "creator.stepIndex === 0 ? 'origin_orb' : 'forming_energy'": "creator.stepIndex === 0 ? 'origin_orb' : 'emerging_figure'",
+          }
+          for old, new in replacements.items():
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected one occurrence of {old!r}, found {count}.')
+              source = source.replace(old, new, 1)
+          path.write_text(source)
+
+      - name: Verify bounded patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test "$(git diff --numstat -- app/version10.js | awk '{print $1+$2}')" = "4"
+          ! git diff --name-only | grep -Ev '^app/version10.js$'
+          node --test tests/build5_integration10.test.mjs
+
+      - name: Commit correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human Build 5 Guard'
+          git config user.email 'actions@users.noreply.github.com'
+          git add app/version10.js
+          git commit -m 'fix: show editable figure throughout creator'
+          git push origin HEAD:feature/build-5-version-10
