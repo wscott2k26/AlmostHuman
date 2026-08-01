@@ -8,6 +8,7 @@ import {
   renderVersion10Layer10,
 } from '../app/version10.js';
 import { normalizeNativeBridgeMessage10 } from '../app/version10-compat.js';
+import { renderCompanion10 } from '../app/character/renderer10.js';
 
 const index = await readFile(new URL('../app/index.html', import.meta.url), 'utf8');
 const stylesheet = await readFile(new URL('../app/version10.css', import.meta.url), 'utf8');
@@ -76,6 +77,18 @@ test('Version 10 semantic haptics use the already-certified native tap protocol'
     JSON.stringify({ type: 'tap', strength: 'warning' }),
   );
   assert.equal(normalizeNativeBridgeMessage10('not-json'), 'not-json');
+});
+
+test('each rendered companion owns unique SVG gradients and filters', () => {
+  const first = renderCompanion10({ aiEntityId: 'ai-1', name: 'Nova', evolution: { phase: 'young_persona' } });
+  const second = renderCompanion10({ aiEntityId: 'ai-1', name: 'Nova', evolution: { phase: 'young_persona' } });
+  const firstIds = [...first.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+  const secondIds = [...second.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(firstIds.length, 3);
+  assert.equal(secondIds.length, 3);
+  assert.equal(new Set([...firstIds, ...secondIds]).size, 6);
+  for (const id of firstIds) assert.match(first, new RegExp(`url\\(#${id}\\)`));
+  for (const id of secondIds) assert.match(second, new RegExp(`url\\(#${id}\\)`));
 });
 
 test('Version 10 stylesheet includes accessibility fallbacks and tactile controls', () => {
