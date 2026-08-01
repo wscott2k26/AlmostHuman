@@ -1,0 +1,3 @@
+checkpoint=integration
+expected=release-guard-core-integration-pass
+paid_release_actions=0
