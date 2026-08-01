@@ -40,7 +40,7 @@ jobs:
           set -euo pipefail
           cat .build5v10/part-* > /tmp/build5-v10.b64
           base64 --decode /tmp/build5-v10.b64 > /tmp/build5-v10.tar.gz
-          echo "93d99984547a345ee3cab5de541ba6f3c4de3bb4550559dc15f2afbbed178b78  /tmp/build5-v10.tar.gz" | sha256sum --check
+          echo "c1400fef9cdbe7d7c055adce3a1ef09db5915bca8c35ad33c0841f36840e9f7c  /tmp/build5-v10.tar.gz" | sha256sum --check
           tar -tzf /tmp/build5-v10.tar.gz >/tmp/build5-v10-files.txt
           tar -xzf /tmp/build5-v10.tar.gz -C .
           rm -f .build5v10/part-*
