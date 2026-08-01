@@ -1,4 +1,4 @@
-name: Build 5 Boot Gate Patch
+name: Build 5 Boot And Local-First Patch
 
 on:
   push:
@@ -11,20 +11,20 @@ permissions:
   contents: write
 
 concurrency:
-  group: build5-boot-gate-patch
+  group: build5-boot-localfirst-patch
   cancel-in-progress: false
 
 jobs:
-  patch-boot-gate:
+  patch-version10-safety:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           ref: feature/build-5-version-10
           fetch-depth: 0
 
-      - name: Apply bounded boot and access gate correction
+      - name: Apply bounded boot, access, and local-first corrections
         shell: python
         run: |
           from pathlib import Path
@@ -35,7 +35,10 @@ jobs:
           new_runtime = "  error: '',\n  voiceStatus: '',\n  accessDeferred: false,\n  accessRefreshQueued: false,\n  layer: {"
 
           old_boot = "export async function bootVersion10Layer10() {\n  if (typeof document === 'undefined' || document.getElementById(LAYER_ID)) return null;\n  runtime.state = await readState10();\n  runtime.root = document.createElement('div');\n  runtime.root.id = LAYER_ID;\n  runtime.root.className = 'v10-layer-root';\n  document.body.appendChild(runtime.root);\n  bindVersion10Events();\n  renderRuntime10();\n  enhanceExistingCharacters10();\n  runtime.observer = new MutationObserver(() => enhanceExistingCharacters10());\n  const appRoot = document.querySelector('#app');\n  if (appRoot) runtime.observer.observe(appRoot, { childList: true, subtree: true });\n  return runtime.root;\n}"
-          new_boot = "export function shouldDeferVersion10ForAccess10(appRoot = typeof document !== 'undefined' ? document.querySelector('#app') : null) {\n  return Boolean(appRoot?.querySelector?.('.v8-gate'));\n}\n\nexport async function awaitStableAppShell10({ appRoot = typeof document !== 'undefined' ? document.querySelector('#app') : null, timeoutMs = 15000 } = {}) {\n  if (!appRoot?.querySelector?.('.boot-v7')) return;\n  if (typeof MutationObserver === 'undefined') return;\n  await new Promise((resolve) => {\n    let complete = false;\n    const finish = () => {\n      if (complete) return;\n      complete = true;\n      clearTimeout(timer);\n      observer.disconnect();\n      resolve();\n    };\n    const observer = new MutationObserver(() => {\n      if (!appRoot.querySelector('.boot-v7')) finish();\n    });\n    const timer = setTimeout(finish, Math.max(500, Number(timeoutMs) || 15000));\n    observer.observe(appRoot, { childList: true, subtree: true });\n    if (!appRoot.querySelector('.boot-v7')) finish();\n  });\n}\n\nexport async function bootVersion10Layer10() {\n  if (typeof document === 'undefined' || document.getElementById(LAYER_ID)) return null;\n  const appRoot = document.querySelector('#app');\n  await awaitStableAppShell10({ appRoot });\n  runtime.state = await readState10();\n  runtime.accessDeferred = shouldDeferVersion10ForAccess10(appRoot);\n  runtime.root = document.createElement('div');\n  runtime.root.id = LAYER_ID;\n  runtime.root.className = 'v10-layer-root';\n  document.body.appendChild(runtime.root);\n  bindVersion10Events();\n  renderRuntime10();\n  enhanceExistingCharacters10();\n  runtime.observer = new MutationObserver(() => {\n    const deferred = shouldDeferVersion10ForAccess10(appRoot);\n    if (deferred !== runtime.accessDeferred) {\n      runtime.accessDeferred = deferred;\n      refreshAfterAccessTransition10();\n      return;\n    }\n    enhanceExistingCharacters10();\n  });\n  if (appRoot) runtime.observer.observe(appRoot, { childList: true, subtree: true });\n  return runtime.root;\n}"
+          new_boot = "export function shouldDeferVersion10ForAccess10(appRoot = typeof document !== 'undefined' ? document.querySelector('#app') : null) {\n  return Boolean(appRoot?.querySelector?.('.boot-v7') || appRoot?.querySelector?.('.v8-gate'));\n}\n\nexport async function awaitStableAppShell10({ appRoot = typeof document !== 'undefined' ? document.querySelector('#app') : null, timeoutMs = 15000 } = {}) {\n  if (!appRoot?.querySelector?.('.boot-v7')) return;\n  if (typeof MutationObserver === 'undefined') return;\n  await new Promise((resolve) => {\n    let complete = false;\n    const finish = () => {\n      if (complete) return;\n      complete = true;\n      clearTimeout(timer);\n      observer.disconnect();\n      resolve();\n    };\n    const observer = new MutationObserver(() => {\n      if (!appRoot.querySelector('.boot-v7')) finish();\n    });\n    const timer = setTimeout(finish, Math.max(500, Number(timeoutMs) || 15000));\n    observer.observe(appRoot, { childList: true, subtree: true });\n    if (!appRoot.querySelector('.boot-v7')) finish();\n  });\n}\n\nexport async function bootVersion10Layer10() {\n  if (typeof document === 'undefined' || document.getElementById(LAYER_ID)) return null;\n  const appRoot = document.querySelector('#app');\n  await awaitStableAppShell10({ appRoot });\n  runtime.state = await readState10();\n  runtime.accessDeferred = shouldDeferVersion10ForAccess10(appRoot);\n  runtime.root = document.createElement('div');\n  runtime.root.id = LAYER_ID;\n  runtime.root.className = 'v10-layer-root';\n  document.body.appendChild(runtime.root);\n  bindVersion10Events();\n  renderRuntime10();\n  enhanceExistingCharacters10();\n  runtime.observer = new MutationObserver(() => {\n    const deferred = shouldDeferVersion10ForAccess10(appRoot);\n    if (deferred !== runtime.accessDeferred) {\n      runtime.accessDeferred = deferred;\n      refreshAfterAccessTransition10();\n      return;\n    }\n    enhanceExistingCharacters10();\n  });\n  if (appRoot) runtime.observer.observe(appRoot, { childList: true, subtree: true });\n  return runtime.root;\n}"
+
+          old_persist = "async function persistAndSync10(draft, { includeConversation = false } = {}) {\n  await writeState10(draft);\n  const cloud = new SupabaseCloud();\n  if (cloud.authenticated && draft.settings?.cloudSyncEnabled) {\n    await cloud.ensureCloudIdentity(draft, true);\n    if (includeConversation && draft.conversations?.[0]) await cloud.ensureCloudConversation(draft, draft.conversations[0], true);\n    await cloud.syncProfileAndSettings(draft);\n    await writeState10(draft);\n  }\n  runtime.state = draft;\n}"
+          new_persist = "export async function commitVersion10LocalFirst10(draft, {\n  includeConversation = false,\n  persist = writeState10,\n  cloudFactory = () => new SupabaseCloud(),\n} = {}) {\n  if (!draft || typeof draft !== 'object') throw new Error('A writable Version 10 state is required.');\n  const persisted = await persist(draft);\n  const state = persisted && typeof persisted === 'object' ? persisted : draft;\n  state.diagnostics ||= {};\n  const cloud = cloudFactory();\n  const cloudAttempted = Boolean(cloud?.authenticated && state.settings?.cloudSyncEnabled);\n  if (!cloudAttempted) {\n    return { state, localCommitted: true, cloudAttempted: false, cloudSynced: false, error: null };\n  }\n  try {\n    await cloud.ensureCloudIdentity(state, true);\n    if (includeConversation && state.conversations?.[0]) await cloud.ensureCloudConversation(state, state.conversations[0], true);\n    await cloud.syncProfileAndSettings(state);\n    state.diagnostics.cloudSyncPending = false;\n    await persist(state);\n    return { state, localCommitted: true, cloudAttempted: true, cloudSynced: true, error: null };\n  } catch (error) {\n    state.diagnostics.cloudSyncPending = true;\n    state.diagnostics.lastError = {\n      area: 'version10_cloud_sync',\n      message: String(error?.message || error),\n      at: new Date().toISOString(),\n    };\n    await persist(state).catch(() => {});\n    return { state, localCommitted: true, cloudAttempted: true, cloudSynced: false, error };\n  }\n}\n\nasync function persistAndSync10(draft, { includeConversation = false } = {}) {\n  const result = await commitVersion10LocalFirst10(draft, { includeConversation });\n  runtime.state = result.state;\n  return result;\n}"
 
           old_render = "function renderRuntime10() {\n  if (!runtime.root) return;\n  const model = createVersion10LayerModel(runtime.state || {}, {"
           new_render = "function renderRuntime10() {\n  if (!runtime.root) return;\n  if (runtime.accessDeferred || shouldDeferVersion10ForAccess10()) {\n    runtime.root.innerHTML = '';\n    document.body.classList.remove('v10-modal-open');\n    return;\n  }\n  const model = createVersion10LayerModel(runtime.state || {}, {"
@@ -46,31 +49,33 @@ jobs:
           replacements = [
             (old_runtime, new_runtime),
             (old_boot, new_boot),
+            (old_persist, new_persist),
             (old_render, new_render),
             (old_enhance, new_enhance),
           ]
           for old, new in replacements:
               count = source.count(old)
               if count != 1:
-                  raise SystemExit(f'Expected exactly one bounded match, found {count}: {old[:80]!r}')
+                  raise SystemExit(f'Expected exactly one bounded match, found {count}: {old[:90]!r}')
               source = source.replace(old, new, 1)
           path.write_text(source)
 
-      - name: Verify boot regression and full Node suite
+      - name: Verify focused and full Node suites
         shell: bash
         run: |
           set -euo pipefail
           git diff --check
           ! git diff --name-only | grep -Ev '^app/version10.js$'
-          node --test tests/build5_boot10.test.mjs tests/build5_integration10.test.mjs
+          node --check app/version10.js
+          node --test tests/build5_boot10.test.mjs tests/build5_localfirst10.test.mjs tests/build5_integration10.test.mjs tests/build5_appearance_visual10.test.mjs
           node --test tests/*.test.mjs
 
-      - name: Commit correction
+      - name: Commit both safety corrections atomically
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'Almost Human Build 5 Guard'
           git config user.email 'actions@users.noreply.github.com'
           git add app/version10.js
-          git commit -m 'fix: resolve access and restore before Version 10 creator'
+          git commit -m 'fix: gate restore and commit Version 10 locally first'
           git push origin HEAD:feature/build-5-version-10
