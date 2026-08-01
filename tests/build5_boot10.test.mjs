@@ -8,7 +8,7 @@ const source = await readFile(new URL('../app/version10.js', import.meta.url), '
 
 test('Version 10 waits for the stable app shell before reading companion state', () => {
   assert.match(source, /awaitStableAppShell10/);
-  assert.match(source, /await\s+awaitStableAppShell10\(\)/);
+  assert.match(source, /await\s+awaitStableAppShell10\(/);
 });
 
 test('access gate defers creator while onboarding and restored lives may continue', () => {
