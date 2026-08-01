@@ -75,7 +75,7 @@ check('public Supabase project ref configured', "projectRef: 'onvoaskzzxozmhkzyy
 check('publishable key only', 'sb_publishable_' in config_js and 'sb_secret_' not in config_js)
 check('Supabase preconnect', 'onvoaskzzxozmhkzyycy.supabase.co' in index_html and 'base44.app' not in index_html)
 check('PWA manifest linked', 'manifest.webmanifest' in index_html)
-check('service worker version advanced', 'almost-human-v9-0-conversation' in sw and 'v=9.0' in sw)
+check('service worker version advanced', 'almost-human-v10-0-evolution-shell' in sw and 'v=10.0' in sw and 'version10.js?v=10.0' in sw)
 check('service worker excludes function APIs', "url.pathname.includes('/functions/')" in sw)
 check('service worker does not cache non-GET', "request.method !== 'GET'" in sw)
 check('privacy local export implemented', 'function exportData()' in app_js)
