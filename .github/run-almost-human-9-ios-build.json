@@ -1,9 +1,0 @@
-{
-  "operation": "BUILD_ALMOST_HUMAN_9_IOS_ONCE",
-  "easBuildCreditsAuthorized": 1,
-  "testFlightUploadsAuthorized": 0,
-  "projectId": "cd0be7bb-e65a-454e-b255-3b261de060ee",
-  "bundleIdentifier": "com.stormandme.almosthuman",
-  "sourceCommit": "3015a1572e2708646ac87ca4fc16655b2941097f",
-  "authorizedAt": "2026-07-31T22:30:00-04:00"
-}
