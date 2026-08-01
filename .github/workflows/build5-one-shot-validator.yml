@@ -1,11 +1,6 @@
-name: Almost Human Build 5 Candidate Validator
+name: Almost Human Build 5 Transfer Fingerprint
 
 on:
-  push:
-    branches:
-      - feature/build-5-version-10
-    paths:
-      - .build5v10/READY
   pull_request:
     branches:
       - main
@@ -13,141 +8,61 @@ on:
       - synchronize
 
 permissions:
-  contents: write
-
-concurrency:
-  group: almost-human-build5-candidate
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  validate-candidate:
-    if: github.head_ref == 'feature/build-5-version-10' || github.ref_name == 'feature/build-5-version-10'
+  fingerprint:
+    if: github.head_ref == 'feature/build-5-version-10'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 10
     steps:
       - name: Checkout isolated branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: feature/build-5-version-10
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            mobile/package-lock.json
-
-      - name: Reassemble and verify candidate patch
+      - name: Verify each transfer block
         shell: bash
         run: |
-          set -euo pipefail
+          set -u
+          expected_lengths=(7000 7000 10000 10000 15000 15000 15000 15000 15000 15000 10380)
+          expected_hashes=(
+            cbc13909b17fbd8866e31c8b85436adeaecff81af0ff31515c85666dc0d16ea9
+            91fb9188b60a782a55ce25fa9ffe9f78f246ececa9284bb3a406579b39c2ed12
+            882ed50bce092507f703d5de9802cd9654fe00ebd4244c5c7abc5e4604529bbd
+            5ea303abe5b4b4a4a6818cd5698829df4f96b692777e7dd3255bdc3cc0ab5bee
+            add8ad0644717789cd65807f3e4ca25cda9a624f5b14fd16778056f3408dfb35
+            40027de11d07235f2ec9e9bbe2f126d5d3bed09cf71bc7958a49a0159788ca0e
+            b806e7c4f5fe77e64da358cbd89e2891cbd873851c031987b73a1f069dd85918
+            d09050f6376ea2986809b49f6a3b178cf8268cc1ef359682d971e93137b1361f
+            e78a1ca65c690082666c6a0eb4bc777eee3a43421b12f21dec6709fd159e2949
+            14eacebfedfcb597c040f4bafd3a546f2b9fe21c098e1394fbb2f09911132bd0
+            6fa2841de92b387539a44898e1c8addb4e5766b1cdd8cee704e59e7c1448e0c9
+          )
+          failed=0
+          for i in $(seq -w 0 10); do
+            file=".build5v10/part-${i}"
+            index=$((10#$i))
+            if [ ! -f "$file" ]; then
+              echo "PART_${i}=MISSING"
+              failed=1
+              continue
+            fi
+            length=$(wc -c < "$file" | tr -d ' ')
+            hash=$(sha256sum "$file" | awk '{print $1}')
+            invalid=$(LC_ALL=C tr -d 'A-Za-z0-9+/=\r\n' < "$file" | wc -c | tr -d ' ')
+            echo "PART_${i} length=${length}/${expected_lengths[$index]} sha=${hash}/${expected_hashes[$index]} invalid=${invalid}"
+            if [ "$length" != "${expected_lengths[$index]}" ] || [ "$hash" != "${expected_hashes[$index]}" ] || [ "$invalid" != "0" ]; then
+              failed=1
+            fi
+          done
           cat .build5v10/part-* > /tmp/build5-v10.b64
-          base64 --decode /tmp/build5-v10.b64 > /tmp/build5-v10.tar.gz
-          echo "c1400fef9cdbe7d7c055adce3a1ef09db5915bca8c35ad33c0841f36840e9f7c  /tmp/build5-v10.tar.gz" | sha256sum --check
-          tar -tzf /tmp/build5-v10.tar.gz >/tmp/build5-v10-files.txt
-          tar -xzf /tmp/build5-v10.tar.gz -C .
-          rm -f .build5v10/part-*
-
-      - name: Install and synchronize source
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm ci
-          npm run build
-          node scripts/build-inline.mjs
-
-      - name: Freeze source commit
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "Almost Human Build Validator"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git commit -m "feat: implement Almost Human Build 5 Version 10"
-          echo "BUILD5_SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-
-      - name: Run four complete web backend security passes
-        run: npm run test:quadruple
-
-      - name: Install native dependencies
-        working-directory: mobile
-        run: npm ci
-
-      - name: Validate native project
-        working-directory: mobile
-        run: |
-          npm run doctor
-          npm run typecheck
-          npm run lint
-          npm run preflight:quadruple
-
-      - name: Export iOS locally without cloud build
-        working-directory: mobile
-        run: npm run export:ios
-
-      - name: Export Android locally without cloud build
-        working-directory: mobile
-        run: npm run export:android
-
-      - name: Record review and export evidence
-        shell: bash
-        run: |
-          set -euo pipefail
-          hash_dir() {
-            find "$1" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}'
-          }
-          IOS_HASH="$(hash_dir mobile/dist-ios)"
-          ANDROID_HASH="$(hash_dir mobile/dist-android)"
-          export IOS_HASH ANDROID_HASH
-          node <<'NODE'
-          const fs = require('node:fs');
-          const generatedAt = new Date().toISOString();
-          const receipt = {
-            product: 'Almost Human',
-            release: 'Build 5 / Version 10.0',
-            source_sha: process.env.BUILD5_SOURCE_SHA,
-            generated_at: generatedAt,
-            validation: {
-              web_backend_security_passes: 4,
-              native_preflight_passes: 4,
-              expo_doctor: 'pass',
-              native_typecheck: 'pass',
-              native_lint: 'pass',
-            },
-            exports: {
-              ios_directory_sha256: process.env.IOS_HASH,
-              android_directory_sha256: process.env.ANDROID_HASH,
-            },
-            release_counters: {
-              eas_builds: 0,
-              testflight_uploads: 0,
-              app_store_releases: 0,
-            },
-          };
-          fs.writeFileSync('mobile/BUILD5_EXPORTS.json', `${JSON.stringify(receipt, null, 2)}\n`);
-          fs.writeFileSync('BUILD5_CODE_REVIEW.md', `# Almost Human Build 5 Code Review\n\nSource SHA: ${process.env.BUILD5_SOURCE_SHA}\nGenerated: ${generatedAt}\n\n## Corrections made before certification\n\n- Rebuilt the Version 10 app integration shell from the certified Version 9 foundation after rejecting a corrupted handoff archive.\n- Implemented real Identity Studio category undo instead of a no-op.\n- Corrected Identity Studio neural preview to use the Version 10 voice profile.\n- Replaced unsupported CSS multiplication in particle placement with deterministic positions.\n- Removed a duplicate native bridge type declaration.\n- Ensured meaningful haptics honor tactile-feedback and reduced-motion preferences.\n- Corrected rollback result handling so a missing snapshot cannot report success.\n\n## Verified boundaries\n\n- Existing companion identity and history are preserved.\n- Database changes are additive.\n- Device speech is explicit only after neural failure.\n- No EAS build, TestFlight upload, App Store release, or automatic production merge occurred.\n\n## Result\n\nFour complete web/backend/security passes, Expo Doctor, native TypeScript, native lint, four native preflights, and both local exports passed from the frozen source SHA.\n`);
-          NODE
-
-      - name: Upload zero-credit export evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: almost-human-build5-zero-credit-exports
-          path: |
-            mobile/dist-ios
-            mobile/dist-android
-            mobile/BUILD5_EXPORTS.json
-            mobile/BUILD5_QUADRUPLE_PREFLIGHT.md
-            BUILD5_CODE_REVIEW.md
-          retention-days: 14
-          if-no-files-found: error
-
-      - name: Commit receipts and push isolated branch
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add mobile/BUILD5_EXPORTS.json mobile/BUILD5_QUADRUPLE_PREFLIGHT.md BUILD5_CODE_REVIEW.md
-          git commit -m "test: certify Build 5 zero-credit candidate"
-          git push origin HEAD:feature/build-5-version-10
+          echo "TOTAL_LENGTH=$(wc -c < /tmp/build5-v10.b64 | tr -d ' ')"
+          if base64 --decode /tmp/build5-v10.b64 > /tmp/build5-v10.tar.gz; then
+            echo "BASE64_DECODE=pass"
+            echo "ARCHIVE_SHA=$(sha256sum /tmp/build5-v10.tar.gz | awk '{print $1}')"
+          else
+            echo "BASE64_DECODE=fail"
+            failed=1
+          fi
+          exit "$failed"
