@@ -1,3 +1,14 @@
+import {
+  normalizeVoiceProviderPreference10,
+  normalizeVoiceRate10,
+  normalizeVoiceTone10,
+  resolveVoiceProvider10,
+  toneDirections10,
+  toneVoiceSettings10,
+  type VoiceProviderPreference10,
+  type VoiceTone10,
+} from './voiceProfile10.ts';
+
 export const PUBLIC_VOICE_IDS = [
   'female-child', 'female-teen', 'female-adult', 'male-child', 'male-teen', 'male-adult',
 ] as const;
@@ -45,56 +56,110 @@ export function normalizePublicVoiceId(value: unknown): PublicVoiceId {
 
 export function neuralVoiceConfiguration() {
   const elevenKey = Deno.env.get('ELEVENLABS_API_KEY') || '';
-  const elevenVoices = Object.fromEntries(PUBLIC_VOICE_IDS.map((id) => [id, Deno.env.get(ELEVEN_SECRET_NAMES[id]) || ''])) as Record<PublicVoiceId, string>;
+  const elevenVoices = Object.fromEntries(
+    PUBLIC_VOICE_IDS.map((id) => [id, Deno.env.get(ELEVEN_SECRET_NAMES[id]) || '']),
+  ) as Record<PublicVoiceId, string>;
   const allElevenMapped = PUBLIC_VOICE_IDS.every((id) => Boolean(elevenVoices[id]));
-  const openai = Boolean(Deno.env.get('OPENAI_API_KEY'));
+  const openaiConfigured = Boolean(Deno.env.get('OPENAI_API_KEY'));
+  const elevenConfigured = Boolean(elevenKey && allElevenMapped);
   return {
-    provider: elevenKey && allElevenMapped ? 'elevenlabs' : openai ? 'openai' : 'none',
-    configured: Boolean((elevenKey && allElevenMapped) || openai),
-    elevenConfigured: Boolean(elevenKey && allElevenMapped),
-    openaiConfigured: openai,
+    provider: elevenConfigured ? 'elevenlabs' : openaiConfigured ? 'openai' : 'none',
+    configured: Boolean(elevenConfigured || openaiConfigured),
+    elevenConfigured,
+    openaiConfigured,
     elevenVoices,
   };
 }
 
-export async function generateNeuralSpeech({ text, voiceId, stageLabel = 'Adult', requestId = '' }: { text: string; voiceId: PublicVoiceId; stageLabel?: string; requestId?: string }) {
+export async function generateNeuralSpeech({
+  text,
+  voiceId,
+  stageLabel = 'Adult',
+  requestId = '',
+  tone = 'calm',
+  providerPreference = 'auto',
+  rate = 0.96,
+}: {
+  text: string;
+  voiceId: PublicVoiceId;
+  stageLabel?: string;
+  requestId?: string;
+  tone?: VoiceTone10;
+  providerPreference?: VoiceProviderPreference10;
+  rate?: number;
+}) {
   const input = String(text || '').trim().slice(0, 4096);
   if (!input) throw Object.assign(new Error('Speech text required'), { status: 400, code: 'EMPTY_SPEECH' });
+
+  const safeTone = normalizeVoiceTone10(tone);
+  const safePreference = normalizeVoiceProviderPreference10(providerPreference);
+  const safeRate = normalizeVoiceRate10(rate);
   const config = neuralVoiceConfiguration();
-  if (config.provider === 'elevenlabs') {
+  const provider = resolveVoiceProvider10(safePreference, config);
+
+  if (provider === 'elevenlabs') {
     const providerVoiceId = config.elevenVoices[voiceId];
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(providerVoiceId)}/stream?output_format=mp3_44100_128`, {
-      method: 'POST',
-      headers: { 'xi-api-key': Deno.env.get('ELEVENLABS_API_KEY') || '', 'Content-Type': 'application/json', Accept: 'audio/mpeg', 'x-request-id': requestId },
-      body: JSON.stringify({
-        text: input,
-        model_id: Deno.env.get('ELEVENLABS_TTS_MODEL') || 'eleven_flash_v2_5',
-        language_code: 'en',
-        apply_text_normalization: 'auto',
-        voice_settings: { stability: 0.48, similarity_boost: 0.72, style: 0.18, use_speaker_boost: true, speed: 1.0 },
-      }),
-    });
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(providerVoiceId)}/stream?output_format=mp3_44100_128`,
+      {
+        method: 'POST',
+        headers: {
+          'xi-api-key': Deno.env.get('ELEVENLABS_API_KEY') || '',
+          'Content-Type': 'application/json',
+          Accept: 'audio/mpeg',
+          'x-request-id': requestId,
+        },
+        body: JSON.stringify({
+          text: input,
+          model_id: Deno.env.get('ELEVENLABS_TTS_MODEL') || 'eleven_flash_v2_5',
+          language_code: 'en',
+          apply_text_normalization: 'auto',
+          voice_settings: toneVoiceSettings10(safeTone, safeRate),
+        }),
+      },
+    );
     if (!response.ok || !response.body) {
       const detail = await response.text();
-      throw Object.assign(new Error(`ElevenLabs speech failed (${response.status}): ${detail.slice(0, 220)}`), { status: 502, code: 'ELEVENLABS_FAILED' });
+      throw Object.assign(
+        new Error(`ElevenLabs speech failed (${response.status}): ${detail.slice(0, 220)}`),
+        { status: 502, code: 'ELEVENLABS_FAILED' },
+      );
     }
-    return { body: response.body, provider: 'elevenlabs', contentType: response.headers.get('Content-Type') || 'audio/mpeg' };
+    return {
+      body: response.body,
+      provider: 'elevenlabs' as const,
+      tone: safeTone,
+      contentType: response.headers.get('Content-Type') || 'audio/mpeg',
+    };
   }
-  if (config.provider === 'openai') {
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json', 'x-request-id': requestId },
-      body: JSON.stringify({
-        model: Deno.env.get('OPENAI_TTS_MODEL') || 'gpt-4o-mini-tts',
-        voice: OPENAI_VOICES[voiceId], input, response_format: 'mp3', speed: .98,
-        instructions: `${DIRECTIONS[voiceId]} The character is in the ${stageLabel.toLowerCase()} developmental stage; vocabulary changes, not audio quality.`,
-      }),
-    });
-    if (!response.ok || !response.body) {
-      const detail = await response.text();
-      throw Object.assign(new Error(`OpenAI speech failed (${response.status}): ${detail.slice(0, 220)}`), { status: 502, code: 'OPENAI_TTS_FAILED' });
-    }
-    return { body: response.body, provider: 'openai', contentType: response.headers.get('Content-Type') || 'audio/mpeg' };
+
+  const response = await fetch('https://api.openai.com/v1/audio/speech', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+      'Content-Type': 'application/json',
+      'x-request-id': requestId,
+    },
+    body: JSON.stringify({
+      model: Deno.env.get('OPENAI_TTS_MODEL') || 'gpt-4o-mini-tts',
+      voice: OPENAI_VOICES[voiceId],
+      input,
+      response_format: 'mp3',
+      speed: safeRate,
+      instructions: `${DIRECTIONS[voiceId]} ${toneDirections10(safeTone)} The character is in the ${stageLabel.toLowerCase()} developmental stage; vocabulary changes, not audio quality.`,
+    }),
+  });
+  if (!response.ok || !response.body) {
+    const detail = await response.text();
+    throw Object.assign(
+      new Error(`OpenAI speech failed (${response.status}): ${detail.slice(0, 220)}`),
+      { status: 502, code: 'OPENAI_TTS_FAILED' },
+    );
   }
-  throw Object.assign(new Error('Neural voice is not configured'), { status: 503, code: 'NEURAL_VOICE_UNAVAILABLE' });
+  return {
+    body: response.body,
+    provider: 'openai' as const,
+    tone: safeTone,
+    contentType: response.headers.get('Content-Type') || 'audio/mpeg',
+  };
 }
