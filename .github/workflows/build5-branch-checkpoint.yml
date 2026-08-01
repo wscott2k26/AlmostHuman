@@ -1,0 +1,68 @@
+name: Build 5 Branch Checkpoint
+
+on:
+  push:
+    branches:
+      - feature/build-5-version-10
+    paths:
+      - .build5v10/validate-release-guard
+      - .build5v10/validate-core
+      - .build5v10/validate-integration
+      - .build5v10/validate-full
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: almost-human-build5-checkpoint-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/build-5-version-10
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Select checkpoint
+        id: checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed=$(git diff-tree --no-commit-id --name-only -r HEAD)
+          echo "$changed"
+          if grep -qx '.build5v10/validate-full' <<< "$changed"; then
+            echo 'command=npm run test:all' >> "$GITHUB_OUTPUT"
+          elif grep -qx '.build5v10/validate-integration' <<< "$changed"; then
+            echo 'command=node --test tests/release_guard10.test.mjs tests/build5_core10.test.mjs tests/build5_integration10.test.mjs' >> "$GITHUB_OUTPUT"
+          elif grep -qx '.build5v10/validate-core' <<< "$changed"; then
+            echo 'command=node --test tests/release_guard10.test.mjs tests/build5_core10.test.mjs' >> "$GITHUB_OUTPUT"
+          else
+            echo 'command=node --test tests/release_guard10.test.mjs' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run selected no-credit checkpoint
+        run: ${{ steps.checkpoint.outputs.command }}
+
+      - name: Prove checkpoint cannot spend or submit
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -R --line-number -E '\beas[[:space:]]+(build|submit)\b|\bfastlane\b|\baltool\b|\bnotarytool\b' .github/workflows/build5-branch-checkpoint.yml
+          echo 'No EAS build, submit, TestFlight, App Store, or signing command is present.'
