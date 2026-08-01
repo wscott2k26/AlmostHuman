@@ -55,6 +55,8 @@ const runtime = {
   busy: false,
   error: '',
   voiceStatus: '',
+  accessDeferred: false,
+  accessRefreshQueued: false,
   layer: {
     screen: null,
     activeCategory: 'skinTone',
@@ -138,9 +140,37 @@ export function renderVersion10Layer10(model = {}) {
   return renderAmbientControls10(model);
 }
 
+export function shouldDeferVersion10ForAccess10(appRoot = typeof document !== 'undefined' ? document.querySelector('#app') : null) {
+  return Boolean(appRoot?.querySelector?.('.boot-v7') || appRoot?.querySelector?.('.v8-gate'));
+}
+
+export async function awaitStableAppShell10({ appRoot = typeof document !== 'undefined' ? document.querySelector('#app') : null, timeoutMs = 15000 } = {}) {
+  if (!appRoot?.querySelector?.('.boot-v7')) return;
+  if (typeof MutationObserver === 'undefined') return;
+  await new Promise((resolve) => {
+    let complete = false;
+    const finish = () => {
+      if (complete) return;
+      complete = true;
+      clearTimeout(timer);
+      observer.disconnect();
+      resolve();
+    };
+    const observer = new MutationObserver(() => {
+      if (!appRoot.querySelector('.boot-v7')) finish();
+    });
+    const timer = setTimeout(finish, Math.max(500, Number(timeoutMs) || 15000));
+    observer.observe(appRoot, { childList: true, subtree: true });
+    if (!appRoot.querySelector('.boot-v7')) finish();
+  });
+}
+
 export async function bootVersion10Layer10() {
   if (typeof document === 'undefined' || document.getElementById(LAYER_ID)) return null;
+  const appRoot = document.querySelector('#app');
+  await awaitStableAppShell10({ appRoot });
   runtime.state = await readState10();
+  runtime.accessDeferred = shouldDeferVersion10ForAccess10(appRoot);
   runtime.root = document.createElement('div');
   runtime.root.id = LAYER_ID;
   runtime.root.className = 'v10-layer-root';
@@ -148,8 +178,15 @@ export async function bootVersion10Layer10() {
   bindVersion10Events();
   renderRuntime10();
   enhanceExistingCharacters10();
-  runtime.observer = new MutationObserver(() => enhanceExistingCharacters10());
-  const appRoot = document.querySelector('#app');
+  runtime.observer = new MutationObserver(() => {
+    const deferred = shouldDeferVersion10ForAccess10(appRoot);
+    if (deferred !== runtime.accessDeferred) {
+      runtime.accessDeferred = deferred;
+      refreshAfterAccessTransition10();
+      return;
+    }
+    enhanceExistingCharacters10();
+  });
   if (appRoot) runtime.observer.observe(appRoot, { childList: true, subtree: true });
   return runtime.root;
 }
@@ -483,20 +520,52 @@ async function previewVoice10(voiceId) {
   renderRuntime10();
 }
 
-async function persistAndSync10(draft, { includeConversation = false } = {}) {
-  await writeState10(draft);
-  const cloud = new SupabaseCloud();
-  if (cloud.authenticated && draft.settings?.cloudSyncEnabled) {
-    await cloud.ensureCloudIdentity(draft, true);
-    if (includeConversation && draft.conversations?.[0]) await cloud.ensureCloudConversation(draft, draft.conversations[0], true);
-    await cloud.syncProfileAndSettings(draft);
-    await writeState10(draft);
+export async function commitVersion10LocalFirst10(draft, {
+  includeConversation = false,
+  persist = writeState10,
+  cloudFactory = () => new SupabaseCloud(),
+} = {}) {
+  if (!draft || typeof draft !== 'object') throw new Error('A writable Version 10 state is required.');
+  const persisted = await persist(draft);
+  const state = persisted && typeof persisted === 'object' ? persisted : draft;
+  state.diagnostics ||= {};
+  const cloud = cloudFactory();
+  const cloudAttempted = Boolean(cloud?.authenticated && state.settings?.cloudSyncEnabled);
+  if (!cloudAttempted) {
+    return { state, localCommitted: true, cloudAttempted: false, cloudSynced: false, error: null };
   }
-  runtime.state = draft;
+  try {
+    await cloud.ensureCloudIdentity(state, true);
+    if (includeConversation && state.conversations?.[0]) await cloud.ensureCloudConversation(state, state.conversations[0], true);
+    await cloud.syncProfileAndSettings(state);
+    state.diagnostics.cloudSyncPending = false;
+    await persist(state);
+    return { state, localCommitted: true, cloudAttempted: true, cloudSynced: true, error: null };
+  } catch (error) {
+    state.diagnostics.cloudSyncPending = true;
+    state.diagnostics.lastError = {
+      area: 'version10_cloud_sync',
+      message: String(error?.message || error),
+      at: new Date().toISOString(),
+    };
+    await persist(state).catch(() => {});
+    return { state, localCommitted: true, cloudAttempted: true, cloudSynced: false, error };
+  }
+}
+
+async function persistAndSync10(draft, { includeConversation = false } = {}) {
+  const result = await commitVersion10LocalFirst10(draft, { includeConversation });
+  runtime.state = result.state;
+  return result;
 }
 
 function renderRuntime10() {
   if (!runtime.root) return;
+  if (runtime.accessDeferred || shouldDeferVersion10ForAccess10()) {
+    runtime.root.innerHTML = '';
+    document.body.classList.remove('v10-modal-open');
+    return;
+  }
   const model = createVersion10LayerModel(runtime.state || {}, {
     ...runtime.layer,
     busy: runtime.busy,
@@ -507,8 +576,20 @@ function renderRuntime10() {
   enhanceExistingCharacters10();
 }
 
+async function refreshAfterAccessTransition10() {
+  if (runtime.accessRefreshQueued) return;
+  runtime.accessRefreshQueued = true;
+  try {
+    if (!runtime.accessDeferred) runtime.state = await readState10();
+    renderRuntime10();
+    enhanceExistingCharacters10();
+  } finally {
+    runtime.accessRefreshQueued = false;
+  }
+}
+
 function enhanceExistingCharacters10() {
-  if (typeof document === 'undefined' || !runtime.state?.ai) return;
+  if (typeof document === 'undefined' || runtime.accessDeferred || !runtime.state?.ai) return;
   const projection = characterProjection10(runtime.state, activityFromDocument10());
   document.querySelectorAll('.v8-being').forEach((node) => {
     if (node.closest(`#${LAYER_ID}`)) return;
