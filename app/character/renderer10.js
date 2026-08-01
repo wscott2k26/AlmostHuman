@@ -2,6 +2,7 @@ import { APPEARANCE_FIELDS_10, normalizeAppearance10 } from '../core/appearance1
 import { EVOLUTION_PHASES_10 } from '../core/evolution10.js';
 import { normalizeOrigin10 } from '../core/origin10.js';
 import { materialTokens10 } from './materials10.js';
+import { appearanceVisualTokens10 } from './appearanceVisual10.js';
 import { motionModel10 } from './motion10.js';
 
 let renderSerial10 = 0;
@@ -22,11 +23,13 @@ export function renderCompanion10(model = {}) {
   const phase = validPhase(model.evolution?.phase) || 'forming_energy';
   const motion = motionModel10({ phase, mood: model.mood, activityState: model.activityState, reducedMotion: model.reducedMotion });
   const material = materialTokens10(origin, { mood: model.mood, reducedTransparency: model.reducedTransparency });
+  const appearanceTokens = appearanceVisualTokens10(appearance);
   const name = String(model.name || 'Companion');
   const label = escapeAttribute(model.label || `${name}, ${phase.replaceAll('_', ' ')}`);
   const attributes = APPEARANCE_FIELDS_10.map((field) => `data-${kebab(field)}="${escapeAttribute(appearance[field])}"`).join(' ');
   const style = styleVariables({
     ...material.cssVars,
+    ...appearanceTokens,
     '--v10-breath-ms': `${motion.breathMs}ms`,
     '--v10-drift-px': `${motion.driftPx}px`,
     '--v10-gaze-deg': `${motion.gazeDegrees}deg`,
