@@ -1,0 +1,76 @@
+name: Build 5 Boot Gate Patch
+
+on:
+  push:
+    branches:
+      - feature/build-5-version-10
+    paths:
+      - .build5v10/patch-boot-gate
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build5-boot-gate-patch
+  cancel-in-progress: false
+
+jobs:
+  patch-boot-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/build-5-version-10
+          fetch-depth: 0
+
+      - name: Apply bounded boot and access gate correction
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('app/version10.js')
+          source = path.read_text()
+
+          old_runtime = "  error: '',\n  voiceStatus: '',\n  layer: {"
+          new_runtime = "  error: '',\n  voiceStatus: '',\n  accessDeferred: false,\n  accessRefreshQueued: false,\n  layer: {"
+
+          old_boot = "export async function bootVersion10Layer10() {\n  if (typeof document === 'undefined' || document.getElementById(LAYER_ID)) return null;\n  runtime.state = await readState10();\n  runtime.root = document.createElement('div');\n  runtime.root.id = LAYER_ID;\n  runtime.root.className = 'v10-layer-root';\n  document.body.appendChild(runtime.root);\n  bindVersion10Events();\n  renderRuntime10();\n  enhanceExistingCharacters10();\n  runtime.observer = new MutationObserver(() => enhanceExistingCharacters10());\n  const appRoot = document.querySelector('#app');\n  if (appRoot) runtime.observer.observe(appRoot, { childList: true, subtree: true });\n  return runtime.root;\n}"
+          new_boot = "export function shouldDeferVersion10ForAccess10(appRoot = typeof document !== 'undefined' ? document.querySelector('#app') : null) {\n  return Boolean(appRoot?.querySelector?.('.v8-gate'));\n}\n\nexport async function awaitStableAppShell10({ appRoot = typeof document !== 'undefined' ? document.querySelector('#app') : null, timeoutMs = 15000 } = {}) {\n  if (!appRoot?.querySelector?.('.boot-v7')) return;\n  if (typeof MutationObserver === 'undefined') return;\n  await new Promise((resolve) => {\n    let complete = false;\n    const finish = () => {\n      if (complete) return;\n      complete = true;\n      clearTimeout(timer);\n      observer.disconnect();\n      resolve();\n    };\n    const observer = new MutationObserver(() => {\n      if (!appRoot.querySelector('.boot-v7')) finish();\n    });\n    const timer = setTimeout(finish, Math.max(500, Number(timeoutMs) || 15000));\n    observer.observe(appRoot, { childList: true, subtree: true });\n    if (!appRoot.querySelector('.boot-v7')) finish();\n  });\n}\n\nexport async function bootVersion10Layer10() {\n  if (typeof document === 'undefined' || document.getElementById(LAYER_ID)) return null;\n  const appRoot = document.querySelector('#app');\n  await awaitStableAppShell10({ appRoot });\n  runtime.state = await readState10();\n  runtime.accessDeferred = shouldDeferVersion10ForAccess10(appRoot);\n  runtime.root = document.createElement('div');\n  runtime.root.id = LAYER_ID;\n  runtime.root.className = 'v10-layer-root';\n  document.body.appendChild(runtime.root);\n  bindVersion10Events();\n  renderRuntime10();\n  enhanceExistingCharacters10();\n  runtime.observer = new MutationObserver(() => {\n    const deferred = shouldDeferVersion10ForAccess10(appRoot);\n    if (deferred !== runtime.accessDeferred) {\n      runtime.accessDeferred = deferred;\n      refreshAfterAccessTransition10();\n      return;\n    }\n    enhanceExistingCharacters10();\n  });\n  if (appRoot) runtime.observer.observe(appRoot, { childList: true, subtree: true });\n  return runtime.root;\n}"
+
+          old_render = "function renderRuntime10() {\n  if (!runtime.root) return;\n  const model = createVersion10LayerModel(runtime.state || {}, {"
+          new_render = "function renderRuntime10() {\n  if (!runtime.root) return;\n  if (runtime.accessDeferred || shouldDeferVersion10ForAccess10()) {\n    runtime.root.innerHTML = '';\n    document.body.classList.remove('v10-modal-open');\n    return;\n  }\n  const model = createVersion10LayerModel(runtime.state || {}, {"
+
+          old_enhance = "function enhanceExistingCharacters10() {\n  if (typeof document === 'undefined' || !runtime.state?.ai) return;"
+          new_enhance = "async function refreshAfterAccessTransition10() {\n  if (runtime.accessRefreshQueued) return;\n  runtime.accessRefreshQueued = true;\n  try {\n    if (!runtime.accessDeferred) runtime.state = await readState10();\n    renderRuntime10();\n    enhanceExistingCharacters10();\n  } finally {\n    runtime.accessRefreshQueued = false;\n  }\n}\n\nfunction enhanceExistingCharacters10() {\n  if (typeof document === 'undefined' || runtime.accessDeferred || !runtime.state?.ai) return;"
+
+          replacements = [
+            (old_runtime, new_runtime),
+            (old_boot, new_boot),
+            (old_render, new_render),
+            (old_enhance, new_enhance),
+          ]
+          for old, new in replacements:
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one bounded match, found {count}: {old[:80]!r}')
+              source = source.replace(old, new, 1)
+          path.write_text(source)
+
+      - name: Verify boot regression and full Node suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          ! git diff --name-only | grep -Ev '^app/version10.js$'
+          node --test tests/build5_boot10.test.mjs tests/build5_integration10.test.mjs
+          node --test tests/*.test.mjs
+
+      - name: Commit correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human Build 5 Guard'
+          git config user.email 'actions@users.noreply.github.com'
+          git add app/version10.js
+          git commit -m 'fix: resolve access and restore before Version 10 creator'
+          git push origin HEAD:feature/build-5-version-10
