@@ -1,0 +1,9 @@
+{
+  "status": "READY",
+  "deploymentId": "dpl_JCVTgEzyXbar4SnFegsBxTcfX3Gp",
+  "target": "production",
+  "url": "https://almost-human-swart.vercel.app",
+  "version": "9.0.0",
+  "contentHash": "07db3f766057641e56682919f4b05bb1c16b080e766e05c79fab09a31928a87e",
+  "sourceCommit": "19f53e6581db2b3afc65b5d91d53e05e46418c15"
+}
