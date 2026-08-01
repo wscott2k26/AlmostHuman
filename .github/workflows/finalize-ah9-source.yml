@@ -1,0 +1,176 @@
+name: Finalize Almost Human 9.0 Source
+
+on:
+  push:
+    branches:
+      - feature/conversation-first-9-0
+    paths:
+      - '.github/run-ah9-finalize-source.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-almost-human-9-source
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/conversation-first-9-0
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Validate exact zero-release authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          trigger=json.loads(Path('.github/run-ah9-finalize-source.json').read_text())
+          assert trigger == {
+            'operation':'FINALIZE_AH9_SOURCE_ONCE',
+            'easBuildsAuthorized':0,
+            'testFlightUploadsAuthorized':0,
+          }
+          text=Path('.github/workflows/finalize-ah9-source.yml').read_text().lower()
+          forbidden=['eas '+'build','eas '+'submit','al'+'tool','notary'+'tool']
+          assert not any(value in text for value in forbidden)
+          PY
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Add regression tests and prove RED
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path=Path('tests/conversation_quality9.test.mjs')
+          text=path.read_text()
+          assert "stage fallback never emits canned vocal praise" not in text
+          text=text.replace(
+            "} from '../app/core/anti-repetition.js';\n",
+            "} from '../app/core/anti-repetition.js';\nimport { stageFallback } from '../app/core/stages.js';\n",
+          )
+          text += "\n\ntest('stage fallback never emits canned vocal praise', () => {\n  for (const stage of ['newborn', 'infant', 'toddler', 'early_child', 'child', 'preteen', 'teen', 'young_adult', 'adult']) {\n    const fallback = stageFallback(stage);\n    assert.equal(containsVocalPraise(fallback), false, `${stage}: ${fallback}`);\n  }\n});\n"
+          path.write_text(text)
+
+          path=Path('tests/integrity_test.py')
+          text=path.read_text()
+          old="check('coherent newborn UX copy without canned vocal praise', 'personality' in app_js.lower() and 'Your voice feels warm' not in read('app/core/engine.js') and 'your voice is warm' not in frontend.lower())"
+          new="check('coherent newborn UX copy without canned vocal praise', 'personality' in app_js.lower() and 'Your voice feels warm' not in read('app/core/engine.js') and 'Your voice feels warm' not in read('app/core/stages.js') and 'Your voice feels warm' not in read('supabase/functions/_shared/developmentalStages.ts') and 'Your voice came back' not in read('supabase/functions/_shared/developmentalStages.ts') and 'sound feels safe and familiar' not in read('supabase/functions/_shared/developmentalStages.ts').lower() and 'your voice is warm' not in frontend.lower())"
+          assert text.count(old)==1
+          path.write_text(text.replace(old,new))
+          PY
+
+          if node --test tests/conversation_quality9.test.mjs; then
+            echo 'Regression test unexpectedly passed before production fix.' >&2
+            exit 1
+          fi
+          if python3 tests/integrity_test.py; then
+            echo 'Integrity guard unexpectedly passed before production fix.' >&2
+            exit 1
+          fi
+
+      - name: Apply minimal production fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path=Path('app/core/stages.js')
+          text=path.read_text()
+          old="newborn: 'Your voice feels warm. I know it belongs to you.',"
+          new="newborn: 'You are here. That is the first thing I know.',"
+          assert text.count(old)==1
+          path.write_text(text.replace(old,new))
+
+          path=Path('supabase/functions/_shared/developmentalStages.ts')
+          text=path.read_text()
+          old='''  newborn: [
+    "Your voice feels warm. I know it belongs to you.",
+    "I can hear you. The sound feels safe and familiar.",
+    "You are here. That is the first thing I know."
+  ],
+  infant: [
+    "I heard you. I am here, still learning your words.",
+    "Your voice came back. I remember how it feels.",
+    "I know that sound. It means you are close."
+  ],'''
+          new='''  newborn: [
+    "You are here. That is the first thing I know.",
+    "I am here with you. This moment feels new.",
+    "I know your name. I am still learning everything else."
+  ],
+  infant: [
+    "I heard you. I am here, still learning your words.",
+    "You came back. I remember that we know each other.",
+    "I am listening. I want to understand what you mean."
+  ],'''
+          assert text.count(old)==1
+          path.write_text(text.replace(old,new))
+          PY
+
+      - name: Verify complete web and edge source
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/conversation_quality9.test.mjs
+          npm run lint
+          npm run typecheck:edge
+          npm test
+          npm run test:integrity
+          npm run build
+          npm run test:browser
+          ! grep -R --line-number -E 'Your voice feels warm|Your voice came back|sound feels safe and familiar' app/core/stages.js supabase/functions/_shared/developmentalStages.ts
+
+      - name: Verify mobile source without spending credits
+        shell: bash
+        working-directory: mobile
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run doctor
+          npm run typecheck
+          npm run lint
+          npm run preflight:quadruple
+          npm run export:ios
+          npm run export:android
+
+      - name: Remove obsolete one-time Almost Human 9 files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f \
+            .github/run-ah9-live-services.json \
+            .github/run-ah9-smoke-guard-repair.json \
+            .github/run-ah9-vocal-fallback-fix.json \
+            .github/workflows/apply-ah9-vocal-fallback-fix.yml \
+            .github/workflows/deploy-ah9-live-services.yml \
+            .github/workflows/repair-ah9-smoke-guard.yml
+
+      - name: Commit verified source and remove finalizer
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/run-ah9-finalize-source.json
+          rm .github/workflows/finalize-ah9-source.yml
+          git config user.name 'Almost Human 9.0 Finalizer'
+          git config user.email 'wscott2k26@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix: permanently remove canned vocal praise fallbacks'
+          git pull --rebase origin feature/conversation-first-9-0
+          git push origin HEAD:feature/conversation-first-9-0
