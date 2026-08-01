@@ -6,6 +6,11 @@ on:
       - feature/build-5-version-10
     paths:
       - .build5v10/READY
+  pull_request:
+    branches:
+      - main
+    types:
+      - synchronize
 
 permissions:
   contents: write
@@ -16,6 +21,7 @@ concurrency:
 
 jobs:
   validate-candidate:
+    if: github.head_ref == 'feature/build-5-version-10' || github.ref_name == 'feature/build-5-version-10'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
