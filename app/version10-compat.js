@@ -6,6 +6,9 @@ const ACTION_ALIASES = Object.freeze({
   'select-identity-appearance': 'identity-appearance',
   'select-identity-voice': 'identity-voice',
 });
+const FOCUSABLE_10 = 'button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])';
+let activeDialog10 = null;
+let previousFocus10 = null;
 
 export function normalizeNativeBridgeMessage10(payload) {
   let message = payload;
@@ -26,6 +29,36 @@ export function normalizeNativeBridgeMessage10(payload) {
   return serialized ? JSON.stringify(normalized) : normalized;
 }
 
+export function focusableVersion10Elements10(dialog) {
+  return [...(dialog?.querySelectorAll?.(FOCUSABLE_10) || [])].filter((node) => !node.hidden && node.getAttribute?.('aria-hidden') !== 'true');
+}
+
+export function syncVersion10DialogAccessibility10({
+  root = typeof document !== 'undefined' ? document : null,
+  appRoot = root?.querySelector?.('#app') || null,
+} = {}) {
+  const dialog = root?.querySelector?.('#almost-human-v10-layer .v10-overlay[role="dialog"]') || null;
+  if (dialog === activeDialog10) return dialog;
+
+  if (dialog) {
+    previousFocus10 = root?.activeElement || null;
+    activeDialog10 = dialog;
+    if (appRoot) appRoot.inert = true;
+    if (!dialog.hasAttribute?.('tabindex')) dialog.setAttribute?.('tabindex', '-1');
+    queueMicrotask(() => {
+      const first = focusableVersion10Elements10(dialog)[0] || dialog;
+      first.focus?.({ preventScroll: true });
+    });
+    return dialog;
+  }
+
+  activeDialog10 = null;
+  if (appRoot) appRoot.inert = false;
+  if (previousFocus10?.isConnected) previousFocus10.focus?.({ preventScroll: true });
+  previousFocus10 = null;
+  return null;
+}
+
 if (typeof document !== 'undefined') {
   installNativeBridgeCompatibility10();
 
@@ -35,6 +68,28 @@ if (typeof document !== 'undefined') {
     if (alias) target.dataset.v10Action = alias;
   }, true);
 
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Tab' || !activeDialog10) return;
+    const elements = focusableVersion10Elements10(activeDialog10);
+    if (!elements.length) {
+      event.preventDefault();
+      activeDialog10.focus?.();
+      return;
+    }
+    const first = elements[0];
+    const last = elements.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus?.();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus?.();
+    }
+  }, true);
+
+  const dialogObserver10 = new MutationObserver(() => syncVersion10DialogAccessibility10());
+  dialogObserver10.observe(document.body, { childList: true, subtree: true });
+  syncVersion10DialogAccessibility10();
   applyAccessibilityPreferences10().catch(() => {});
   registerVersion10ServiceWorker10().catch(() => {});
 }
