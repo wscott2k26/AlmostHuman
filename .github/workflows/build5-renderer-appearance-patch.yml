@@ -1,0 +1,70 @@
+name: Build 5 Renderer Appearance Patch
+
+on:
+  push:
+    branches:
+      - feature/build-5-version-10
+    paths:
+      - .build5v10/patch-renderer-appearance
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build5-renderer-appearance-patch
+  cancel-in-progress: false
+
+jobs:
+  patch-renderer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/build-5-version-10
+          fetch-depth: 0
+
+      - name: Wire appearance tokens into renderer
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('app/character/renderer10.js')
+          source = path.read_text()
+          replacements = [
+            (
+              "import { materialTokens10 } from './materials10.js';\nimport { motionModel10 } from './motion10.js';",
+              "import { materialTokens10 } from './materials10.js';\nimport { appearanceVisualTokens10 } from './appearanceVisual10.js';\nimport { motionModel10 } from './motion10.js';",
+            ),
+            (
+              "  const material = materialTokens10(origin, { mood: model.mood, reducedTransparency: model.reducedTransparency });\n  const name = String(model.name || 'Companion');",
+              "  const material = materialTokens10(origin, { mood: model.mood, reducedTransparency: model.reducedTransparency });\n  const appearanceTokens = appearanceVisualTokens10(appearance);\n  const name = String(model.name || 'Companion');",
+            ),
+            (
+              "  const style = styleVariables({\n    ...material.cssVars,",
+              "  const style = styleVariables({\n    ...material.cssVars,\n    ...appearanceTokens,",
+            ),
+          ]
+          for old, new in replacements:
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected one renderer match, found {count}: {old[:90]!r}')
+              source = source.replace(old, new, 1)
+          path.write_text(source)
+
+      - name: Verify appearance coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          ! git diff --name-only | grep -Ev '^app/character/renderer10.js$'
+          node --test tests/build5_appearance_visual10.test.mjs tests/build5_integration10.test.mjs
+
+      - name: Commit renderer wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Almost Human Build 5 Guard'
+          git config user.email 'actions@users.noreply.github.com'
+          git add app/character/renderer10.js
+          git commit -m 'fix: make every appearance category visible'
+          git push origin HEAD:feature/build-5-version-10
