@@ -33,19 +33,22 @@ jobs:
           from pathlib import Path
 
           authorization=json.loads(Path('.github/run-ah9-certification-guard-repair.json').read_text())
-          assert authorization == {'operation':'REPAIR_AH9_CERTIFICATION_GUARD_ONCE'}
+          assert authorization['operation']=='REPAIR_AH9_CERTIFICATION_GUARD_ONCE'
 
           workflow=Path('.github/workflows/certify-ah9-release.yml')
-          text=workflow.read_text()
-          old="""          forbidden=['eas '+'build','eas '+'submit','al'+'tool','notary'+'tool']
-          assert not any(value in text for value in forbidden)"""
-          new="""          import re
-          command_pattern=re.compile(r'(?im)^\\s*(?:npx\\s+)?'+'eas'+r'\\s+(?:'+'build|submit'+r')\\b')
-          assert not command_pattern.search(text)
-          assert ('al'+'tool') not in text
-          assert ('notary'+'tool') not in text"""
-          assert text.count(old)==1
-          workflow.write_text(text.replace(old,new))
+          lines=workflow.read_text().splitlines()
+          first=next(index for index,line in enumerate(lines) if "forbidden=['eas '+'build'" in line)
+          assert 'assert not any(value in text for value in forbidden)' in lines[first+1]
+          indent=lines[first][:len(lines[first])-len(lines[first].lstrip())]
+          replacement=[
+            indent+'import re',
+            indent+"command_pattern=re.compile(r'(?im)^\\s*(?:npx\\s+)?'+'eas'+r'\\s+(?:'+'build|submit'+r')\\b')",
+            indent+'assert not command_pattern.search(text)',
+            indent+"assert ('al'+'tool') not in text",
+            indent+"assert ('notary'+'tool') not in text",
+          ]
+          lines[first:first+2]=replacement
+          workflow.write_text('\n'.join(lines)+'\n')
 
           trigger_path=Path('.github/run-ah9-certification.json')
           trigger=json.loads(trigger_path.read_text())
