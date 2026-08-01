@@ -1,0 +1,20 @@
+{
+  "status": "FINISHED",
+  "product": "Almost Human",
+  "release": "9.0",
+  "platform": "IOS",
+  "buildId": "9af3b9e9-eec0-473a-a59e-12fdeff56e42",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "4",
+  "artifactUrl": "https://expo.dev/artifacts/eas/MHhhm4W6evvTJqtooxIgtrSulbyerWyxUvd3dE2o-OI.ipa",
+  "easProjectId": "cd0be7bb-e65a-454e-b255-3b261de060ee",
+  "bundleIdentifier": "com.stormandme.almosthuman",
+  "sourceCommit": "3bb35ee02b8cb6e15349cf56551596f2ddd885a8",
+  "authorization": {
+    "easBuildCredits": 1,
+    "testFlightUploads": 0
+  },
+  "githubRunId": "30679158788",
+  "createdAt": "2026-08-01T02:03:28.793Z",
+  "note": "Canonical duplicate-build guard copied from STEP9_IOS_BUILD_RECORD.json."
+}
