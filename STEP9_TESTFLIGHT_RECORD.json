@@ -1,0 +1,32 @@
+{
+  "status": "READY_FOR_INTERNAL_TESTING",
+  "product": "Almost Human",
+  "releaseVersion": "9.0.0",
+  "ascAppId": "6796814542",
+  "bundleId": "com.stormandme.almosthuman",
+  "appVersion": "1.0.0",
+  "buildNumber": "4",
+  "easBuildId": "9af3b9e9-eec0-473a-a59e-12fdeff56e42",
+  "appleBuildResourceId": "c48f5329-fdff-4150-a6f9-3616e726344b",
+  "processingState": "VALID",
+  "internalBuildState": "IN_BETA_TESTING",
+  "externalBuildState": "READY_FOR_BETA_SUBMISSION",
+  "internalGroup": {
+    "id": "7ceafcdb-7c5d-4a72-befa-40a309015945",
+    "name": "Almost Human Internal Testers",
+    "isInternalGroup": true,
+    "buildAttached": true
+  },
+  "tester": {
+    "id": "0ec01933-8004-4bc5-a904-9a4e3f655779",
+    "email": "wscott2k8@gmail.com",
+    "alreadyAttached": true
+  },
+  "newBuildsRun": 0,
+  "testFlightUploadsRun": 1,
+  "publicReleasesRun": 0,
+  "testerAssignmentsRun": 0,
+  "sourceReceiptRepository": "wscott2k26/seat-savvy",
+  "sourceWorkflowRunId": "30683789695",
+  "note": "Almost Human 1.0.0 (4) is Apple-valid and available to the existing private internal tester."
+}
