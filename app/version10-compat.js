@@ -9,7 +9,7 @@ const ACTION_ALIASES = Object.freeze({
 
 export function normalizeNativeBridgeMessage10(payload) {
   let message = payload;
-  let serialized = typeof payload === 'string';
+  const serialized = typeof payload === 'string';
   if (serialized) {
     try { message = JSON.parse(payload); }
     catch { return payload; }
@@ -36,6 +36,7 @@ if (typeof document !== 'undefined') {
   }, true);
 
   applyAccessibilityPreferences10().catch(() => {});
+  registerVersion10ServiceWorker10().catch(() => {});
 }
 
 const originalVoicePreview10 = SupabaseCloud.prototype.voicePreview;
@@ -49,6 +50,15 @@ SupabaseCloud.prototype.voicePreview = function version10VoicePreview(options = 
     rate: options.rate ?? profile.rate ?? 0.96,
   });
 };
+
+export async function registerVersion10ServiceWorker10({
+  navigatorObject = typeof navigator !== 'undefined' ? navigator : null,
+  locationObject = typeof location !== 'undefined' ? location : null,
+  nativeBundle = Boolean(globalThis.__AH_NATIVE_BUNDLE__),
+} = {}) {
+  if (nativeBundle || !navigatorObject?.serviceWorker || locationObject?.protocol === 'file:') return null;
+  return navigatorObject.serviceWorker.register('./sw.js?v=10.0');
+}
 
 function installNativeBridgeCompatibility10() {
   const bridge = globalThis.ReactNativeWebView;
