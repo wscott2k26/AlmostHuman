@@ -1,0 +1,3 @@
+checkpoint=release-guard-red
+expected=fail
+reason=web-version-and-transfer-cleanup-not-yet-applied
