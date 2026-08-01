@@ -162,7 +162,7 @@ function renderCreator10(model) {
     presentation: creator.presentation,
     appearance: creator.appearanceProfile,
     origin: creator.originProfile,
-    evolution: { phase: step === 'origin' ? 'origin_orb' : 'forming_energy' },
+    evolution: { phase: step === 'origin' ? 'origin_orb' : 'emerging_figure' },
     mood: 'wonder',
     activityState: 'awakening',
     reducedMotion: false,
@@ -526,7 +526,7 @@ function updatePreviewOnly10() {
   preview.innerHTML = renderEvolutionFrame10({
     name: creator.name || 'Your companion', presentation: creator.presentation,
     appearance: creator.appearanceProfile, origin: creator.originProfile,
-    evolution: { phase: creator.stepIndex === 0 ? 'origin_orb' : 'forming_energy' },
+    evolution: { phase: creator.stepIndex === 0 ? 'origin_orb' : 'emerging_figure' },
     mood: 'wonder', activityState: 'awakening',
   });
   const name = runtime.root.querySelector('.v10-preview-caption strong');
