@@ -1,4 +1,4 @@
-name: Almost Human Build 5 Source Recovery
+name: Almost Human Build 5 Source Export
 
 on:
   pull_request:
@@ -8,136 +8,36 @@ on:
       - synchronize
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: almost-human-build5-source-recovery
+  group: almost-human-build5-source-export
   cancel-in-progress: false
 
 jobs:
-  recover-source:
+  export-source:
     if: github.head_ref == 'feature/build-5-version-10'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - name: Checkout isolated branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: feature/build-5-version-10
 
-      - name: Recover intact files and preserve evidence
+      - name: Package recovered source
         shell: bash
         run: |
           set -euo pipefail
-          if [ -f recovery/BUILD5_ARCHIVE_RECOVERY.json ]; then
-            echo "Recovery already committed."
-            exit 0
-          fi
+          zip -qr /tmp/almost-human-build5-recovered-source.zip . -x '.git/*'
+          sha256sum /tmp/almost-human-build5-recovered-source.zip | tee BUILD5_RECOVERED_SOURCE.sha256
 
-          mkdir -p /tmp/build5-recovery recovery
-
-          cat \
-            .build5/patch.part-00 \
-            .build5/patch.part-01 \
-            .build5/patch.part-02 \
-            .build5/patch.part-03 \
-            .build5/patch.part-04 \
-            .build5/patch.part-05 \
-            .build5/patch.part-06 \
-            .build5/patch.part-07 > /tmp/build5-recovery/truncated.b64
-          base64 --decode /tmp/build5-recovery/truncated.b64 > /tmp/build5-recovery/truncated.zip
-
-          yes | zip -FF /tmp/build5-recovery/truncated.zip --out /tmp/build5-recovery/recovered.zip || true
-          test -s /tmp/build5-recovery/recovered.zip
-          unzip -o /tmp/build5-recovery/recovered.zip -d /tmp/build5-recovery/files || true
-
-          python3 - <<'PY'
-          from pathlib import Path
-          import base64, json, struct, zlib, hashlib
-
-          repo = Path('.')
-          staged = Path('/tmp/build5-recovery/files')
-          recovered_zip = Path('/tmp/build5-recovery/recovered.zip')
-          truncated_zip = Path('/tmp/build5-recovery/truncated.zip')
-
-          valid = []
-          damaged = []
-          expected_crc = {}
-
-          raw = recovered_zip.read_bytes()
-          pos = 0
-          while True:
-              pos = raw.find(b'PK\x03\x04', pos)
-              if pos < 0 or pos + 30 > len(raw):
-                  break
-              try:
-                  _, _, _, _, _, _, crc, csize, _, nlen, xlen = struct.unpack_from('<IHHHHHIIIHH', raw, pos)
-              except struct.error:
-                  break
-              name_start = pos + 30
-              name_end = name_start + nlen
-              name = raw[name_start:name_end].decode('utf-8', 'replace')
-              expected_crc[name] = f'{crc:08x}'
-              pos = name_end + xlen + max(csize, 1)
-
-          for path in sorted(staged.rglob('*')):
-              if not path.is_file():
-                  continue
-              rel = path.relative_to(staged).as_posix()
-              data = path.read_bytes()
-              actual = f'{zlib.crc32(data) & 0xffffffff:08x}'
-              expected = expected_crc.get(rel)
-              if expected and actual == expected and not rel.startswith('.github/workflows/'):
-                  dest = repo / rel
-                  dest.parent.mkdir(parents=True, exist_ok=True)
-                  dest.write_bytes(data)
-                  valid.append({'path': rel, 'bytes': len(data), 'crc32': actual})
-              else:
-                  dest = repo / 'recovery' / rel.replace('/', '__')
-                  dest.parent.mkdir(parents=True, exist_ok=True)
-                  dest.write_bytes(data)
-                  damaged.append({'path': rel, 'bytes': len(data), 'actual_crc32': actual, 'expected_crc32': expected})
-
-          tail_text = (repo / '.build5/patch.part-08').read_text().strip()
-          aligned = base64.b64decode('AA' + tail_text + '=' * ((-(len(tail_text) + 2)) % 4), validate=True)
-          central = aligned[1:]
-          manifest = []
-          p = 0
-          while p + 46 <= len(central) and central[p:p+4] == b'PK\x01\x02':
-              vals = struct.unpack_from('<IHHHHHHIIIHHHHHII', central, p)
-              (_, made, need, flags, method, mt, md, crc, csize, usize,
-               nlen, xlen, clen, disk, iattr, eattr, offset) = vals
-              name_start = p + 46
-              name_end = name_start + nlen
-              name = central[name_start:name_end].decode('utf-8', 'replace')
-              manifest.append({
-                  'path': name,
-                  'crc32': f'{crc:08x}',
-                  'compressed_bytes': csize,
-                  'uncompressed_bytes': usize,
-                  'local_header_offset': offset,
-                  'method': method,
-                  'flags': flags,
-              })
-              p = name_end + xlen + clen
-
-          evidence = {
-              'truncated_zip_sha256': hashlib.sha256(truncated_zip.read_bytes()).hexdigest(),
-              'recovered_zip_sha256': hashlib.sha256(recovered_zip.read_bytes()).hexdigest(),
-              'valid_files': valid,
-              'damaged_or_quarantined_files': damaged,
-              'central_directory_entries': manifest,
-              'central_directory_entry_count': len(manifest),
-          }
-          (repo / 'recovery/BUILD5_ARCHIVE_RECOVERY.json').write_text(json.dumps(evidence, indent=2) + '\n')
-          (repo / 'recovery/BUILD5_CENTRAL_DIRECTORY_TAIL.bin').write_bytes(central)
-          PY
-
-          rm -rf .build5
-
-          git config user.name "Almost Human Build Recovery"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git commit -m "chore: recover intact Build 5 source modules"
-          git push origin HEAD:feature/build-5-version-10
+      - name: Upload recovered source once
+        uses: actions/upload-artifact@v4
+        with:
+          name: almost-human-build5-recovered-source
+          path: |
+            /tmp/almost-human-build5-recovered-source.zip
+            BUILD5_RECOVERED_SOURCE.sha256
+          retention-days: 7
+          if-no-files-found: error
