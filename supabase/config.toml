@@ -24,6 +24,8 @@ enable_signup = true
 
 [functions.chat-service]
 verify_jwt = true
+[functions.chat-stream]
+verify_jwt = true
 [functions.activity-service]
 verify_jwt = true
 [functions.memory-extract]

@@ -82,7 +82,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "releaseChannel": "haven-8.4-native",
+      "releaseChannel": "haven-9.0-conversation-first",
       "router": {},
       "eas": {
         "projectId": "cd0be7bb-e65a-454e-b255-3b261de060ee"

@@ -1,0 +1,64 @@
+{
+  "status": "WEB_BACKEND_RELEASE_CANDIDATE_CERTIFIED",
+  "product": "Almost Human",
+  "version": "9.0.0",
+  "verifiedSourceCommit": "19f53e6581db2b3afc65b5d91d53e05e46418c15",
+  "web": {
+    "status": "READY",
+    "deploymentId": "dpl_JCVTgEzyXbar4SnFegsBxTcfX3Gp",
+    "url": "https://almost-human-swart.vercel.app",
+    "version": "9.0.0",
+    "contentHash": "07db3f766057641e56682919f4b05bb1c16b080e766e05c79fab09a31928a87e"
+  },
+  "backend": {
+    "projectRef": "onvoaskzzxozmhkzyycy",
+    "functions": {
+      "health": 6,
+      "voice-service": 9,
+      "chat-stream": 1,
+      "transcription-service": 1
+    },
+    "neuralVoiceProvider": "openai",
+    "transcriptionMode": "secure-transcription"
+  },
+  "tests": {
+    "webBackendSecurityPasses": 4,
+    "mobilePreflightPasses": 4,
+    "mobileDoctor": true,
+    "mobileTypecheck": true,
+    "mobileLint": true,
+    "iosNoCreditExport": true,
+    "androidNoCreditExport": true,
+    "liveSmoke": "PASSED",
+    "performanceHarness": "PASSED",
+    "finalLiveVerification": "PASSED"
+  },
+  "performance": {
+    "textTurns": 20,
+    "voiceTurns": 10,
+    "medianFirstDeltaMs": 1104,
+    "p95FirstDeltaMs": 2159,
+    "medianFinalTextMs": 1278,
+    "p95FinalTextMs": 2337,
+    "medianFirstAudioMs": 1608,
+    "p95FirstAudioMs": 2032,
+    "finalVoiceVerificationMs": 1923,
+    "finalTranscriptionMs": 1441,
+    "interruption": "Source and behavior tests passed; real-device interruption timing awaits a signed iOS build."
+  },
+  "cors": {
+    "productionOrigin": "https://almost-human-swart.vercel.app",
+    "exactProductionOrigin": true
+  },
+  "knownLimitations": [
+    "ElevenLabs is not configured; OpenAI is the active secure neural voice provider.",
+    "Neural speech is returned as a complete MP3, so measured first-audio timing equals completed-audio timing.",
+    "Real-device validation of the 9.0 native shell requires a future signed iOS build; existing TestFlight build 3 remains untouched.",
+    "Supabase leaked-password protection remains a dashboard configuration item.",
+    "The authenticated SECURITY DEFINER is_admin helper remains executable because ownership RLS policies call it.",
+    "Anonymous Supabase sessions intentionally use ownership-scoped authenticated-role RLS and therefore appear in the advisor anonymous-access warning group."
+  ],
+  "readyForOnePaidIosBuildAuthorization": true,
+  "easBuildsRun": 0,
+  "testFlightUploadsRun": 0
+}

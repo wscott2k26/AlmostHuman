@@ -1,3 +1,5 @@
+import { parseEventStream } from './chatStream.js';
+
 const ENTITY_TABLES = Object.freeze({
   User: 'profiles', AppSettings: 'app_settings', AIEntity: 'ai_entities', Conversation: 'conversations',
   Message: 'messages', Memory: 'memories', UserFact: 'user_facts', FactConflict: 'fact_conflicts',
@@ -218,12 +220,15 @@ export class SupabaseCloud {
     return { ...payload, user_id: payload.user_id || user.id };
   }
 
-  async invoke(functionName, data, { raw = false, timeoutMs = 30000 } = {}) {
+  async invoke(functionName, data, { raw = false, timeoutMs = 30000, signal = null } = {}) {
     if (!this.authenticated && functionName !== 'health') throw new CloudError('Sign in to use secure cloud features.', 401, 'AUTH_REQUIRED');
     await this.ensureFreshSession();
     const deployedName = this.config.functionNames?.[functionName] || camelToKebab(functionName);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const abortFromCaller = () => controller.abort(signal?.reason || 'cancelled');
+    if (signal?.aborted) abortFromCaller();
+    else signal?.addEventListener('abort', abortFromCaller, { once: true });
+    const timeout = setTimeout(() => controller.abort('timeout'), timeoutMs);
     try {
       const response = await fetch(`${this.config.url}/functions/v1/${encodeURIComponent(deployedName)}`, {
         method: 'POST', headers: this.baseHeaders({ authenticated: functionName !== 'health' }),
@@ -237,7 +242,7 @@ export class SupabaseCloud {
     } catch (error) {
       if (error?.name === 'AbortError') throw new CloudError('The secure function timed out. Your local data is still safe.', 408, 'TIMEOUT');
       throw error;
-    } finally { clearTimeout(timeout); }
+    } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abortFromCaller); }
   }
 
   async rpc(name, args = {}) {
@@ -530,6 +535,49 @@ export class SupabaseCloud {
     return this.invoke('memoryControl', payload);
   }
 
+  async chatStreamProvider({ state, conversation, text, requestId, opening = false, localUserMessageId = null, localAiMessageId = null }, onEvent, signal) {
+    if (!this.authenticated) throw new CloudError('Sign in to use secure cloud intelligence.', 401, 'AUTH_REQUIRED');
+    await this.ensureCloudIdentity(state);
+    const cloudConversation = await this.ensureCloudConversation(state, conversation);
+    await this.ensureFreshSession();
+    const deployedName = this.config.functionNames?.chatStream || 'chat-stream';
+    const controller = new AbortController();
+    const abort = () => controller.abort(signal?.reason || 'cancelled');
+    if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, { once: true });
+    const timeout = setTimeout(() => controller.abort('timeout'), 20_000);
+    let final = null;
+    try {
+      const response = await fetch(`${this.config.url}/functions/v1/${encodeURIComponent(deployedName)}`, {
+        method: 'POST',
+        headers: { ...this.baseHeaders({ authenticated: true }), Accept: 'text/event-stream', 'x-request-id': requestId },
+        body: JSON.stringify({
+          ai_entity_id: state.ai.cloudId, conversation_id: cloudConversation.id, user_message: text,
+          request_id: requestId, opening: Boolean(opening), local_user_message_id: localUserMessageId,
+          local_ai_message_id: localAiMessageId,
+        }),
+        signal: controller.signal,
+      });
+      if (!response.ok || !response.body) {
+        const raw = await response.text();
+        let detail = null; try { detail = raw ? JSON.parse(raw) : null; } catch { detail = raw; }
+        throw new CloudError(detail?.error || `Streaming reply failed (${response.status}).`, response.status, detail?.code, detail);
+      }
+      await parseEventStream(response.body, async (event) => {
+        if (event.type === 'done') final = event.data;
+        if (event.type === 'error' && !event.data?.cancelled) throw new CloudError(event.data?.message || 'Streaming reply failed.', 502, event.data?.code || 'STREAM_ERROR', event.data);
+        await onEvent?.(event);
+      }, controller.signal);
+      return final;
+    } catch (error) {
+      if (controller.signal.aborted && signal?.aborted) throw new CloudError('Reply cancelled.', 499, 'CANCELLED');
+      if (controller.signal.aborted) throw new CloudError('The live reply timed out.', 408, 'STREAM_TIMEOUT');
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+      signal?.removeEventListener('abort', abort);
+    }
+  }
+
   async chatProvider({ state, conversation, text, requestId, localUserMessageId = null, localAiMessageId = null }) {
     if (!this.authenticated) throw new CloudError('Sign in to use secure cloud intelligence.', 401, 'AUTH_REQUIRED');
     await this.ensureCloudIdentity(state);
@@ -564,12 +612,13 @@ export class SupabaseCloud {
     throw new CloudError('The secure activity is still processing. Retry it; the request will not duplicate.', 408, 'REQUEST_PENDING');
   }
 
-  async voiceProvider({ state, text }) {
+  async voiceProvider({ state, text, voiceId = null, requestId = null, signal = null }) {
     if (!this.authenticated) throw new CloudError('Sign in to use secure cloud voice.', 401, 'AUTH_REQUIRED');
     await this.ensureCloudIdentity(state);
     const response = await this.invoke('voiceService', {
-      ai_entity_id: state.ai.cloudId, text: String(text || '').slice(0, 4096)
-    }, { raw: true, timeoutMs: 45000 });
+      ai_entity_id: state.ai.cloudId, text: String(text || '').slice(0, 4096),
+      voice_id: String(voiceId || state.ai.voiceId || 'female-adult'), request_id: String(requestId || '')
+    }, { raw: true, timeoutMs: 30000, signal });
     return response.blob();
   }
 

@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-07-31T20:29:41.930Z",
-  "passed": 91,
+  "generatedAt": "2026-08-01T00:48:01.719Z",
+  "passed": 106,
   "failed": 0,
-  "mobileBundleSha256": "55696df6634d1948d788ed095082cc85565b39ce3b12130800db8bdc59c2c0a3",
+  "mobileBundleSha256": "f8be80807568eb7953de3686a125b92d0b2717d2010e7bb4e1f17cadd194211c",
   "checks": [
     {
       "name": "required:app/_layout.tsx",
@@ -265,7 +265,37 @@
       "detail": ""
     },
     {
+      "name": "native-shell:useAudioPlayer",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:neuralAudioSource",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:message.type === 'audio-play'",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:message.type === 'audio-stop'",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:message.type === 'device-speak-once'",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "native-shell:Speech.speak",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:RecordingPresets.HIGH_QUALITY",
       "ok": true,
       "detail": ""
     },
@@ -330,6 +360,16 @@
       "detail": ""
     },
     {
+      "name": "web-bundle:v9-voice-mode",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-bundle:v9-listening-line",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "web-source:nativePost",
       "ok": true,
       "detail": ""
@@ -345,7 +385,12 @@
       "detail": ""
     },
     {
-      "name": "web-source:nativePost('speak'",
+      "name": "web-source:nativePost('audio-play'",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-source:nativePost('device-speak-once'",
       "ok": true,
       "detail": ""
     },
@@ -355,7 +400,27 @@
       "detail": ""
     },
     {
-      "name": "web-source:navigator.serviceWorker.register('./sw.js?v=8.4')",
+      "name": "web-source:navigator.serviceWorker.register('./sw.js?v=9.0')",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "web-source:no-silent-native-device-speech",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:no-old-speak-message",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:device-speech-explicit-only",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "native-shell:neural-audio-first",
       "ok": true,
       "detail": ""
     },
@@ -366,6 +431,11 @@
     },
     {
       "name": "visual-system:V8.4 — SIMPLE NATIVE CONVERSATION",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "visual-system:ALMOST HUMAN 9.0 — CONVERSATION-FIRST",
       "ok": true,
       "detail": ""
     },
@@ -385,6 +455,11 @@
       "detail": ""
     },
     {
+      "name": "visual-system:v9-voice-mode",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "bundle:typescript-embedding-readable",
       "ok": true,
       "detail": ""
@@ -392,12 +467,12 @@
     {
       "name": "bundle:typescript-matches-html",
       "ok": true,
-      "detail": "55696df6634d1948d788ed095082cc85565b39ce3b12130800db8bdc59c2c0a3 / 55696df6634d1948d788ed095082cc85565b39ce3b12130800db8bdc59c2c0a3"
+      "detail": "f8be80807568eb7953de3686a125b92d0b2717d2010e7bb4e1f17cadd194211c / f8be80807568eb7953de3686a125b92d0b2717d2010e7bb4e1f17cadd194211c"
     },
     {
       "name": "bundle:min-size",
       "ok": true,
-      "detail": "347308 bytes"
+      "detail": "386771 bytes"
     },
     {
       "name": "bundle:no-remote-app-script",

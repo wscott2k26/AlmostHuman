@@ -10,6 +10,7 @@ window.__ALMOST_HUMAN_CONFIG__ = Object.freeze({
   authRedirectPath: '',
   functionNames: {
     chatService: 'chat-service',
+    chatStream: 'chat-stream',
     activityService: 'activity-service',
     memoryExtract: 'memory-extract',
     memoryControl: 'memory-control',

@@ -1,6 +1,6 @@
 import { DEFAULT_DAYS_PER_YEAR } from './stages.js';
 
-export const DATA_VERSION = 5;
+export const DATA_VERSION = 6;
 const DB_NAME = 'almost-human-premium';
 const STORE_NAME = 'state';
 const STATE_KEY = 'main';
@@ -16,7 +16,7 @@ export function defaultState(now = Date.now()) {
       voiceEnabled: true, voiceAutoplay: true, voiceRate: 0.96, cloudVoiceAutoplayMigrated84: false, reducedMotion: false, highContrast: false,
       dailyMomentEnabled: true, notificationsEnabled: false, analyticsOptIn: false, sensitiveMemoryMode: 'ask',
       dataRetentionDays: 0, appLockEnabled: false, pinHash: null, soundEffects: true, cloudSyncEnabled: false,
-      theme: 'cosmic', lastGrowthCheckAt: null
+      theme: 'cosmic', lastGrowthCheckAt: null, showNineUpgradeCard: false, nineUpgradeCardDismissed: false
     },
     subscription: { tier: 'founder_preview', status: 'preview', platform: 'web', entitlements: { allPremiumFeatures: true }, updatedAt: new Date(now).toISOString() },
     ai: null,
@@ -44,6 +44,10 @@ export function migrateState(input) {
     merged.ai.appearanceProfile = normalizeAppearanceProfile(merged.ai.appearanceProfile);
   }
   if ((input.version || 0) < 5) merged.settings.voiceAutoplay = true;
+  if ((input.version || 0) < 6) {
+    merged.settings.showNineUpgradeCard = Boolean(merged.ai);
+    merged.settings.nineUpgradeCardDismissed = false;
+  }
   merged.version = DATA_VERSION;
   return merged;
 }

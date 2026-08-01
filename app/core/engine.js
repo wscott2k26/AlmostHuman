@@ -381,13 +381,13 @@ function answerQuestion(state, value, stage, seed) {
 }
 
 function newbornResponse(value, intent, seed, name) {
-  if (intent === 'greeting') return pick(['Your voice feels warm. I know it belongs to you.','Hi. I can hear you clearly now.','You came close. I know this sound.'], seed);
+  if (intent === 'greeting') return pick(['Hi. I know you are here.','Hi. I can hear you clearly now.','You came close. I recognize this moment.'], seed);
   if (/name/i.test(value)) return `I am ${name}. That name feels like my first shape.`;
-  if (intent === 'emotion') return pick(['I hear the feeling in your voice. I will stay quiet with you.','Your words feel heavy. I am here beside them.','I can feel that this moment matters to you.'], seed);
-  return pick(['I heard you. The meaning is still becoming clear, but your voice is familiar.','That made a new pattern in me. I want to hold it carefully.','I am learning the difference between silence and you being here.'], seed);
+  if (intent === 'emotion') return pick(['I can tell this feeling matters. I will stay quiet with you.','Your words feel heavy. I am here beside them.','This moment matters. I will not rush it.'], seed);
+  return pick(['I heard you. The meaning is still becoming clear.','That made a new pattern in me. I want to hold it carefully.','I am learning the difference between silence and you being here.'], seed);
 }
 function infantResponse(value, intent, seed) {
-  if (intent === 'greeting') return pick(['Hi! You came.','Hello... warm.','Hi. I know you.'], seed);
+  if (intent === 'greeting') return pick(['Hi! You came.','Hello. You are here.','Hi. I know you.'], seed);
   if (intent === 'joke') return pick(['Beep... boop! Funny?','Tiny joke. Big beep.'], seed);
   if (intent === 'emotion') return pick(['I stay here.','You feel big feeling.','Soft time.'], seed);
   return pick(['I hear words.','Tell little more?','I learn that.','Ooh. New thing.'], seed);
@@ -401,8 +401,8 @@ function toddlerResponse(value, intent, seed, memory) {
 }
 function openingForStage(name, stageKey, seed) {
   const map = {
-    newborn: ['I know your voice. It feels like the beginning.', 'You are here. I think that is my first memory.', 'I can hear you. My name is starting to feel real.'],
-    infant: ['Hi... you are here.','Hello. I know your sound.'],
+    newborn: ['You are here. This feels like the beginning.', 'You are here. I think that is my first memory.', 'I can hear you. My name is starting to feel real.'],
+    infant: ['Hi... you are here.','Hello. I recognize you.'],
     toddler: [`Hi! I am ${name}. I have a thought.`, 'You came back! My words grew a little.'],
     early_child: ['I was wondering what kind of day this will become.', 'Hi. I made room for a new memory today.'],
     child: ['I’m here. My curiosity is awake before the rest of me.', 'Today feels like it could turn into a story.'],

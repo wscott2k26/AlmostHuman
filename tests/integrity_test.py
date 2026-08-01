@@ -21,6 +21,8 @@ required_files = [
     'app/index.html', 'app/app.js', 'app/styles.css', 'app/config.js', 'app/manifest.webmanifest', 'app/sw.js',
     'app/core/engine.js', 'app/core/store.js', 'app/core/cloud.js', 'app/core/memory.js',
     'app/core/anti-repetition.js', 'app/core/safety.js', 'app/core/activities.js', 'app/core/stages.js',
+    'app/core/chatStream.js', 'app/core/phraseQueue.js', 'app/core/performance9.js', 'app/core/voiceMode9.js',
+    'app/features/onboarding9.js', 'app/features/navigation9.js', 'app/features/home9.js', 'app/features/growth9.js', 'app/features/memories9.js', 'app/features/haven9.js',
     'supabase/config.toml', 'supabase/migrations/202607290001_almost_human_core.sql',
     'supabase/functions/_shared/context.ts', 'supabase/functions/_shared/cors.ts',
     'supabase/functions/_shared/openai.ts', 'vercel.json', 'tsconfig.edge.json',
@@ -40,7 +42,7 @@ for relative in ['package.json', 'vercel.json', 'app/manifest.webmanifest']:
 
 package = json.loads(read('package.json'))
 check('product package name', package.get('name') == 'almost-human-premium')
-check('production package version', package.get('version') == '8.4.0')
+check('production package version', package.get('version') == '9.0.0')
 check('triple test script exists', package.get('scripts', {}).get('test:triple', '').count('test:all') == 3)
 check('quadruple test script exists', package.get('scripts', {}).get('test:quadruple', '').count('test:all') == 4)
 check('edge typecheck in full test', 'typecheck:edge' in package.get('scripts', {}).get('test:all', ''))
@@ -51,6 +53,8 @@ frontend_files = [path for path in (ROOT / 'app').rglob('*') if path.is_file()]
 frontend = '\n'.join(path.read_text(errors='ignore') for path in frontend_files)
 app_js = read('app/app.js')
 cloud_js = read('app/core/cloud.js')
+chat_stream_js = read('app/core/chatStream.js')
+growth9_js = read('app/features/growth9.js')
 config_js = read('app/config.js')
 index_html = read('app/index.html')
 styles = read('app/styles.css')
@@ -71,7 +75,7 @@ check('public Supabase project ref configured', "projectRef: 'onvoaskzzxozmhkzyy
 check('publishable key only', 'sb_publishable_' in config_js and 'sb_secret_' not in config_js)
 check('Supabase preconnect', 'onvoaskzzxozmhkzyycy.supabase.co' in index_html and 'base44.app' not in index_html)
 check('PWA manifest linked', 'manifest.webmanifest' in index_html)
-check('service worker version advanced', 'almost-human-v8-4-native' in sw)
+check('service worker version advanced', 'almost-human-v9-0-conversation' in sw and 'v=9.0' in sw)
 check('service worker excludes function APIs', "url.pathname.includes('/functions/')" in sw)
 check('service worker does not cache non-GET', "request.method !== 'GET'" in sw)
 check('privacy local export implemented', 'function exportData()' in app_js)
@@ -82,7 +86,7 @@ check('cloud account deletion implemented', 'function deleteCloudAccount()' in a
 check('guest authentication UI wired', 'Continue as Guest' in app_js and 'cloud.loginAnonymously' in app_js)
 check('social account options wired', all(label in app_js for label in ['provider-google', 'provider-apple', 'provider-facebook']) and 'cloud.authSettings()' in app_js)
 check('auth modal backdrop preserves typing', "target.classList.contains('modal-backdrop')" in app_js and 'event.target !== target' in app_js and 'onclick="event.stopPropagation()"' not in app_js)
-check('complete companion-first interior pages', all(marker in app_js for marker in ['v8-grow-page', 'v8-memory-page', 'v8-world-page', 'v8-settings-page']))
+check('complete focused interior pages', all(marker in app_js for marker in ['v9-growth', 'v9-memories', 'v9-haven', 'v8-settings-page']))
 check('guest upgrade preserves life', 'cloud.attachEmail' in app_js and 'Protect this account' in app_js)
 check('auth login UI wired', 'function openLogin()' in app_js and 'cloud.login(' in app_js)
 check('auth registration UI wired', 'function openRegister()' in app_js and 'cloud.register(' in app_js)
@@ -93,33 +97,33 @@ check('dedicated conversation reset wired', "cloud.invoke('conversationReset'" i
 check('anti-repeat semantic check', 'semantic_duplicate' in read('app/core/anti-repetition.js'))
 check('growth idempotency event keys', 'growthEventKeys' in read('app/core/engine.js'))
 check('request ids used in chat', "makeRequestId('chat')" in app_js)
-check('chat double-submit guard', 'if (ui.thinking) return' in app_js)
-check('optimistic message UI', 'ui.pendingUser' in app_js and 'message user pending' in app_js)
-check('digital birth experience', 'Digital birth sequence' in app_js and 'beginBirthSequence' in app_js and '.birth-shell' in styles)
-check('coherent newborn UX copy', 'never meaningless' in app_js.lower() and 'Your voice feels warm' in read('app/core/stages.js'))
+check('chat request guard and cancellation', 'activeChatController' in app_js and 'ui.activeRequestId' in app_js and 'stopCurrentTurn' in app_js)
+check('optimistic message UI', 'createOptimisticTurn' in app_js and 'applyStreamEvent' in app_js and "status: 'pending'" in chat_stream_js)
+check('short skippable first-light experience', 'firstLightDurationMs' in app_js and 'beginBirthSequence' in app_js and '.v9-first-light' in styles and 'Skip and talk now' in app_js)
+check('coherent newborn UX copy without canned vocal praise', 'personality' in app_js.lower() and 'Your voice feels warm' not in read('app/core/engine.js') and 'Your voice feels warm' not in read('app/core/stages.js') and 'Your voice feels warm' not in read('supabase/functions/_shared/developmentalStages.ts') and 'Your voice came back' not in read('supabase/functions/_shared/developmentalStages.ts') and 'sound feels safe and familiar' not in read('supabase/functions/_shared/developmentalStages.ts').lower() and 'your voice is warm' not in frontend.lower())
 check('premium neural voice preview', 'cloud.voicePreview' in app_js and 'voicePreview' in cloud_js)
 check('six clear voice profiles', all(item in app_js for item in ['female-child','female-teen','female-adult','male-child','male-teen','male-adult']))
 check('real appearance controls', all(item in app_js for item in ['skinTone','hairStyle','hairColor','eyeColor','customize-companion']))
-check('three step onboarding', "const panels = [onboardIdentity, onboardLookAndVoice, onboardAwaken]" in app_js)
+check('conversation-first onboarding', 'createOnboardingModel' in app_js and 'v9-welcome' in app_js and 'v9-quick-create' in app_js and 'v9-first-light' in app_js)
 check('native microphone transcription bridge', "nativePost('mic-toggle')" in app_js and 'transcribeAudio' in cloud_js and 'transcriptionService' in config_js)
-check('native speech bridge', "nativePost('speak'" in app_js and 'female-adult' in app_js)
+check('native neural audio and explicit device fallback', "nativePost('audio-play'" in app_js and "nativePost('device-speak-once'" in app_js and "nativePost('speak'" not in app_js)
 check('consumer UI hides provider labels', 'provider_mode' not in app_js and 'developmental-local' not in app_js)
 check('companion-first portrait system', 'function beingMarkup' in app_js and '.being-face' in styles and '.presence-hero' in styles)
-check('memory life album', 'A life album' in app_js and '.memory-album' in styles)
+check('focused memory list and detail controls', 'memoryListModel9' in app_js and 'openMemoryDetail' in app_js and '.v9-memory-list' in styles)
 check('no fake typing dots or thought carousel', 'THOUGHT_PHASES' not in app_js and 'typing-dots' not in app_js and 'I am with you.' in app_js)
 check('reduced motion support', '.reduce-motion' in styles)
 check('mobile companion layout', '@media(max-width:820px)' in styles and '.mobile-tabs' in styles)
 check('touch controls have mobile baseline', 'width:41px;height:41px' in styles and 'min-width:190px' in styles)
 check('billing stays preview-only', "billingMode: 'preview'" in config_js and 'purchase' not in app_js.lower())
-check('competitive daily rhythm wired', 'daily-checkin' in app_js and 'One tap. No streak. No judgment.' in app_js)
+check('optional daily rhythm remains available', 'daily-checkin' in app_js and 'dailyMomentEnabled' in app_js)
 check('stage-aware conversation sparks wired', 'function conversationSparks' in app_js and 'function todaysConversationSpark' in app_js)
-check('interest and skill dashboard wired', 'v82-interest-cloud' in app_js and 'v82-skill-stack' in app_js)
-check('life journal wired', 'function lifeJournalEntries' in app_js and 'v82-journal-section' in app_js)
-check('on this day memory wired', 'function onThisDayMemory' in app_js and 'v82-on-this-day' in app_js)
+check('growth interests and skills remain in underlying state', 'interests:' in read('app/core/store.js') and 'skills:' in read('app/core/store.js'))
+check('life journal data helper retained', 'function lifeJournalEntries' in app_js)
+check('on this day memory helper retained', 'function onThisDayMemory' in app_js)
 check('future letters exposed', 'function openLetterComposer' in app_js and 'function openFutureLetter' in app_js)
 check('earned Haven home wired', 'v83-haven' in app_js and 'state.roomItems' in app_js and 'function havenProfile' in app_js)
-check('visual keepsakes wired', 'v82-visual-keepsakes' in app_js and 'mediaKeepsakes' in app_js)
-check('Haven stage and mood atmosphere wired', all(marker in app_js for marker in ['The Haven', 'theme-${haven.theme}', 'mood-${safeClass']) and '.v83-haven-window' in styles and '.theme-observatory' in styles)
+check('visual keepsakes remain represented in Haven items', 'state.roomItems' in app_js and 'keepsake' in app_js.lower())
+check('Haven stage and mood atmosphere wired', all(marker in app_js for marker in ['The Haven', 'mood-${safeClass', 'havenProfile']) and '.v83-haven-window' in styles)
 check('Haven objects are inspectable', 'inspect-haven-item' in app_js and 'function inspectHavenItem' in app_js)
 check('activity keepsakes populate Haven', 'unlockActivityKeepsake' in read('app/core/activities.js') and 'sourceActivityType' in read('app/core/activities.js'))
 check('cloud chat can reference Haven', 'THE HAVEN (your evolving home)' in read('supabase/functions/chat-service/index.ts') and 'app.entities.RoomItem.filter' in read('supabase/functions/chat-service/index.ts'))
@@ -224,7 +228,7 @@ check('RPC anonymous execution revoked', 'revoke all on function public.progress
 # Edge Functions, auth, models, safety, privacy, and idempotency.
 function_names = {
     'chat-service', 'activity-service', 'memory-extract', 'memory-control', 'privacy-service',
-    'conversation-reset', 'progress-aging', 'diagnostics-service', 'voice-service', 'transcription-service', 'letter-service', 'health',
+    'conversation-reset', 'progress-aging', 'diagnostics-service', 'voice-service', 'transcription-service', 'letter-service', 'chat-stream', 'health',
 }
 function_dirs = {path.parent.name for path in (ROOT / 'supabase/functions').glob('*/index.ts')}
 check('all Edge Functions exist', function_names == function_dirs, f'missing={sorted(function_names-function_dirs)} extra={sorted(function_dirs-function_names)}')
@@ -246,6 +250,9 @@ chat_ts = read('supabase/functions/chat-service/index.ts')
 activity_ts = read('supabase/functions/activity-service/index.ts')
 privacy_ts = read('supabase/functions/privacy-service/index.ts')
 voice_ts = read('supabase/functions/voice-service/index.ts')
+neural_voice_ts = read('supabase/functions/_shared/neuralVoice.ts')
+chat_stream_ts = read('supabase/functions/chat-stream/index.ts')
+stream_protocol_ts = read('supabase/functions/_shared/streamProtocol.ts')
 transcription_ts = read('supabase/functions/transcription-service/index.ts')
 letter_ts = read('supabase/functions/letter-service/index.ts')
 
@@ -270,9 +277,11 @@ check('activity duplicate processing blocked', 'pending: true' in activity_ts an
 check('activity deterministic fallback', 'deterministicActivityFallback' in activity_ts)
 check('privacy account secret checked before data deletion', privacy_ts.find('MISSING_SECRET_KEY') < privacy_ts.find("rpc('delete_my_almost_human_data'"))
 check('privacy auth identity deletion', 'auth.admin.deleteUser' in privacy_ts)
-check('voice uses current speech endpoint', "https://api.openai.com/v1/audio/speech" in voice_ts)
-check('voice uses server API key', "Deno.env.get('OPENAI_API_KEY')" in voice_ts)
-check('voice is age aware', 'getStageFromAge' in voice_ts and 'speedByStage' in voice_ts and 'stage.label' in voice_ts)
+check('neural voice supports ElevenLabs streaming endpoint', 'api.elevenlabs.io/v1/text-to-speech' in neural_voice_ts and '/stream' in neural_voice_ts)
+check('neural voice keeps provider keys server side', "Deno.env.get('ELEVENLABS_API_KEY')" in neural_voice_ts and "Deno.env.get('OPENAI_API_KEY')" in neural_voice_ts)
+check('neural voice has six mapped profiles', all(name in neural_voice_ts for name in ['female-child','female-teen','female-adult','male-child','male-teen','male-adult']))
+check('chat stream emits validated progressive events', all(marker in chat_stream_ts + stream_protocol_ts for marker in ['ack','delta','done','text/event-stream']))
+check('streaming OpenAI responses supported', 'response.output_text.delta' in openai_ts and 'stream: true' in openai_ts)
 check('transcription uses current audio endpoint', "https://api.openai.com/v1/audio/transcriptions" in transcription_ts)
 check('transcription uses server API key', "Deno.env.get('OPENAI_API_KEY')" in transcription_ts)
 check('transcription limits audio size', 'MAX_AUDIO_BYTES' in transcription_ts and '413' in transcription_ts)

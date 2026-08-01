@@ -1,0 +1,303 @@
+{
+  "status": "PASSED",
+  "measuredAt": "2026-08-01T00:56:08Z",
+  "sourceCommit": "b7b9deec9418558f32551e4d56118610d0b58771",
+  "counts": {
+    "textTurns": 20,
+    "voiceTurns": 10
+  },
+  "health": {
+    "database": true,
+    "chatStreamConfigured": true,
+    "neuralVoiceConfigured": true,
+    "neuralVoiceProvider": "openai",
+    "transcriptionConfigured": true
+  },
+  "cors": {
+    "requestedOrigin": "https://almost-human-swart.vercel.app",
+    "healthAllowOrigin": "https://almost-human-swart.vercel.app",
+    "chatAllowOrigins": [
+      "https://almost-human-swart.vercel.app"
+    ],
+    "voiceAllowOrigins": [
+      "https://almost-human-swart.vercel.app"
+    ],
+    "exactProductionOrigin": true
+  },
+  "text": {
+    "coldFirstDeltaMs": 2159,
+    "coldDoneMs": 2337,
+    "medianFirstDeltaMs": 1104,
+    "p95FirstDeltaMs": 2159,
+    "medianDoneMs": 1278,
+    "p95DoneMs": 2337,
+    "warmMedianFirstDeltaMs": 1101,
+    "warmP95FirstDeltaMs": 3224,
+    "warmMedianDoneMs": 1278,
+    "warmP95DoneMs": 3536,
+    "providerModes": [
+      "openai-stream"
+    ],
+    "samples": [
+      {
+        "turn": 1,
+        "startClass": "cold",
+        "firstDeltaMs": 2159,
+        "doneMs": 2337,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 2,
+        "startClass": "warm",
+        "firstDeltaMs": 1563,
+        "doneMs": 1763,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 3,
+        "startClass": "warm",
+        "firstDeltaMs": 1224,
+        "doneMs": 1394,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 4,
+        "startClass": "warm",
+        "firstDeltaMs": 1173,
+        "doneMs": 1366,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 5,
+        "startClass": "warm",
+        "firstDeltaMs": 1092,
+        "doneMs": 1230,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 6,
+        "startClass": "warm",
+        "firstDeltaMs": 1132,
+        "doneMs": 1275,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 7,
+        "startClass": "warm",
+        "firstDeltaMs": 961,
+        "doneMs": 1143,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 8,
+        "startClass": "warm",
+        "firstDeltaMs": 1974,
+        "doneMs": 2308,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 9,
+        "startClass": "warm",
+        "firstDeltaMs": 3224,
+        "doneMs": 3536,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 10,
+        "startClass": "warm",
+        "firstDeltaMs": 1202,
+        "doneMs": 1383,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 11,
+        "startClass": "warm",
+        "firstDeltaMs": 890,
+        "doneMs": 1061,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 12,
+        "startClass": "warm",
+        "firstDeltaMs": 1170,
+        "doneMs": 1392,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 13,
+        "startClass": "warm",
+        "firstDeltaMs": 1000,
+        "doneMs": 1161,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 14,
+        "startClass": "warm",
+        "firstDeltaMs": 1101,
+        "doneMs": 1278,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 15,
+        "startClass": "warm",
+        "firstDeltaMs": 1106,
+        "doneMs": 1262,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 16,
+        "startClass": "warm",
+        "firstDeltaMs": 1063,
+        "doneMs": 1279,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 17,
+        "startClass": "warm",
+        "firstDeltaMs": 944,
+        "doneMs": 1145,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 18,
+        "startClass": "warm",
+        "firstDeltaMs": 1081,
+        "doneMs": 1279,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 19,
+        "startClass": "warm",
+        "firstDeltaMs": 951,
+        "doneMs": 1176,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 20,
+        "startClass": "warm",
+        "firstDeltaMs": 978,
+        "doneMs": 1132,
+        "providerMode": "openai-stream",
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      }
+    ]
+  },
+  "voice": {
+    "coldCompleteMs": 2032,
+    "medianCompleteMs": 1608,
+    "p95CompleteMs": 2032,
+    "warmMedianCompleteMs": 1584,
+    "warmP95CompleteMs": 2027,
+    "providers": [
+      "openai"
+    ],
+    "samples": [
+      {
+        "turn": 1,
+        "startClass": "cold",
+        "completeMs": 2032,
+        "provider": "openai",
+        "audioBytes": 69504,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 2,
+        "startClass": "warm",
+        "completeMs": 1321,
+        "provider": "openai",
+        "audioBytes": 68736,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 3,
+        "startClass": "warm",
+        "completeMs": 2027,
+        "provider": "openai",
+        "audioBytes": 81792,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 4,
+        "startClass": "warm",
+        "completeMs": 1631,
+        "provider": "openai",
+        "audioBytes": 73728,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 5,
+        "startClass": "warm",
+        "completeMs": 1397,
+        "provider": "openai",
+        "audioBytes": 78336,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 6,
+        "startClass": "warm",
+        "completeMs": 1715,
+        "provider": "openai",
+        "audioBytes": 70272,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 7,
+        "startClass": "warm",
+        "completeMs": 1584,
+        "provider": "openai",
+        "audioBytes": 81024,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 8,
+        "startClass": "warm",
+        "completeMs": 1355,
+        "provider": "openai",
+        "audioBytes": 71040,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 9,
+        "startClass": "warm",
+        "completeMs": 1634,
+        "provider": "openai",
+        "audioBytes": 79488,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      },
+      {
+        "turn": 10,
+        "startClass": "warm",
+        "completeMs": 1528,
+        "provider": "openai",
+        "audioBytes": 74496,
+        "corsOrigin": "https://almost-human-swart.vercel.app"
+      }
+    ]
+  },
+  "privacy": {
+    "storedConversationText": false,
+    "storedAudio": false,
+    "ephemeralAccountDeleted": true
+  },
+  "easBuildsRun": 0,
+  "testFlightUploadsRun": 0
+}
