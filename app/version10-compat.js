@@ -7,7 +7,28 @@ const ACTION_ALIASES = Object.freeze({
   'select-identity-voice': 'identity-voice',
 });
 
+export function normalizeNativeBridgeMessage10(payload) {
+  let message = payload;
+  let serialized = typeof payload === 'string';
+  if (serialized) {
+    try { message = JSON.parse(payload); }
+    catch { return payload; }
+  }
+  if (!message || typeof message !== 'object' || message.type !== 'v10-haptic') return payload;
+  const strength = ({
+    selection: 'light',
+    'first-light': 'success',
+    success: 'success',
+    rollback: 'medium',
+    warning: 'warning',
+  })[message.kind] || 'light';
+  const normalized = { type: 'tap', strength };
+  return serialized ? JSON.stringify(normalized) : normalized;
+}
+
 if (typeof document !== 'undefined') {
+  installNativeBridgeCompatibility10();
+
   document.addEventListener('click', (event) => {
     const target = event.target?.closest?.('[data-v10-action]');
     const alias = target ? ACTION_ALIASES[target.dataset.v10Action] : null;
@@ -28,6 +49,19 @@ SupabaseCloud.prototype.voicePreview = function version10VoicePreview(options = 
     rate: options.rate ?? profile.rate ?? 0.96,
   });
 };
+
+function installNativeBridgeCompatibility10() {
+  const bridge = globalThis.ReactNativeWebView;
+  if (!bridge?.postMessage || bridge.__almostHumanVersion10Compatible) return;
+  const originalPostMessage = bridge.postMessage.bind(bridge);
+  bridge.postMessage = (payload) => originalPostMessage(normalizeNativeBridgeMessage10(payload));
+  Object.defineProperty(bridge, '__almostHumanVersion10Compatible', {
+    configurable: false,
+    enumerable: false,
+    value: true,
+    writable: false,
+  });
+}
 
 async function applyAccessibilityPreferences10() {
   if (typeof indexedDB === 'undefined') return;
