@@ -1,3 +1,0 @@
-expected_cache=almost-human-v10-0-evolution-shell
-expected_query=v=10.0
-allowed_file=tests/integrity_test.py
