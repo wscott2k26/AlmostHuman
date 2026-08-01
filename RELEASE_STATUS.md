@@ -2,28 +2,17 @@
 
 ## Complete
 
-- Conversation-first 9.0 interface with true streamed text, anti-repetition protection, and canned vocal-praise guards.
-- Secure OpenAI neural voice and transcription. The six-profile ElevenLabs abstraction remains optional.
-- Production Supabase chat, voice, transcription, health, privacy, and database security updates.
-- Production web deployment `dpl_JCVTgEzyXbar4SnFegsBxTcfX3Gp` at `https://almost-human-swart.vercel.app`.
-- Four complete web, backend, and security certification passes.
-- Expo Doctor, TypeScript, lint, four native preflight passes, iOS no-credit export, and Android no-credit export.
-- Live smoke, 20-turn text performance measurement, 10-turn neural voice measurement, final transcription verification, and temporary-account deletion.
-- Existing user data and TestFlight build 3 preserved.
-
-## Measured production performance
-
-- Median first streamed text: **1,104 ms**
-- P95 first streamed text: **2,159 ms**
-- Median complete text: **1,278 ms**
-- Median neural audio completion and first audio: **1,608 ms**
-- P95 neural audio completion and first audio: **2,032 ms**
+- Conversation-first 9.0 interface, secure neural voice, secure transcription, and synchronized offline native bundle.
+- Production web and backend are live and certified.
+- Four complete web/backend/security passes and four mobile preflight passes succeeded.
+- Signed Almost Human 9.0 iOS build 4: `9af3b9e9-eec0-473a-a59e-12fdeff56e42`.
+- Existing user data and prior signed builds 2 and 3 are preserved.
 
 ## Next controlled step
 
-Source, web, and backend are ready. One new signed iOS build requires fresh explicit authorization. TestFlight submission remains a separate later authorization.
+TestFlight submission requires separate explicit authorization and has not been run.
 
 ## Credit boundary
 
-- EAS builds run for 9.0: **0**
+- EAS builds run for 9.0: **1**
 - TestFlight uploads run for 9.0: **0**

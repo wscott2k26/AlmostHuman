@@ -31,7 +31,8 @@
     "androidNoCreditExport": true,
     "liveSmoke": "PASSED",
     "performanceHarness": "PASSED",
-    "finalLiveVerification": "PASSED"
+    "finalLiveVerification": "PASSED",
+    "signedIosBuild": true
   },
   "performance": {
     "textTurns": 20,
@@ -53,12 +54,20 @@
   "knownLimitations": [
     "ElevenLabs is not configured; OpenAI is the active secure neural voice provider.",
     "Neural speech is returned as a complete MP3, so measured first-audio timing equals completed-audio timing.",
-    "Real-device validation of the 9.0 native shell requires a future signed iOS build; existing TestFlight build 3 remains untouched.",
     "Supabase leaked-password protection remains a dashboard configuration item.",
     "The authenticated SECURITY DEFINER is_admin helper remains executable because ownership RLS policies call it.",
     "Anonymous Supabase sessions intentionally use ownership-scoped authenticated-role RLS and therefore appear in the advisor anonymous-access warning group."
   ],
-  "readyForOnePaidIosBuildAuthorization": true,
-  "easBuildsRun": 0,
-  "testFlightUploadsRun": 0
+  "readyForOnePaidIosBuildAuthorization": false,
+  "easBuildsRun": 1,
+  "testFlightUploadsRun": 0,
+  "signedIosBuild": {
+    "status": "FINISHED",
+    "buildId": "9af3b9e9-eec0-473a-a59e-12fdeff56e42",
+    "appBuildVersion": "4",
+    "createdAt": "2026-08-01T02:03:28.793Z",
+    "sourceCommit": "3bb35ee02b8cb6e15349cf56551596f2ddd885a8",
+    "certifiedSourceCommit": "f569adfc33e6a48b8aef28501c0124c2a356e237",
+    "testFlightSubmissionsRun": 0
+  }
 }

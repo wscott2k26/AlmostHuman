@@ -1,0 +1,23 @@
+{
+  "status": "FINISHED",
+  "product": "Almost Human",
+  "releaseVersion": "9.0.0",
+  "buildId": "9af3b9e9-eec0-473a-a59e-12fdeff56e42",
+  "platform": "IOS",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "4",
+  "artifacts": {
+    "buildUrl": "https://expo.dev/artifacts/eas/MHhhm4W6evvTJqtooxIgtrSulbyerWyxUvd3dE2o-OI.ipa",
+    "xcodeBuildLogsUrl": "https://storage.googleapis.com/eas-workflows-production/logs/cd0be7bb-e65a-454e-b255-3b261de060ee/9af3b9e9-eec0-473a-a59e-12fdeff56e42/2026-08-01T02%3A03%3A32Z-9af3b9e9-eec0-473a-a59e-12fdeff56e42-xcode.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260801%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260801T020753Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=2f7fdba338422e8bb0202251a5dba5c7220f18d3f40f0a31f6feb44bd59c57ed2bd4a3c78fc56441143717efcc7a268c858018848f6b179a6808d593d02e775bef8008c967120e0ba948bf1ecb3419144c5df46b40ef29637755ec6e56229aff84c18542d11ce891df658979bc8635dee06d6c6f711ab09f456a519bb3f2502c292a42cd2f73c9132ef7780fea61ee30621ca00f9c04d87e32dd82a0007fe58cf699d8addbabd1e8c4fa10380ba59011760af569542a84c18eff825b834a34ee5601273b801db7b8df64aa9923d7dbfc96e76524e9e142310f7d9be0d229aae08ada2e9ba1116a2f3ebc28ebf75fbb58819d90a7e163a2fcfe78ca129e2367a3",
+    "applicationArchiveUrl": "https://expo.dev/artifacts/eas/MHhhm4W6evvTJqtooxIgtrSulbyerWyxUvd3dE2o-OI.ipa"
+  },
+  "buildDetailsPageUrl": null,
+  "createdAt": "2026-08-01T02:03:28.793Z",
+  "githubRunId": "30679158788",
+  "sourceCommit": "3bb35ee02b8cb6e15349cf56551596f2ddd885a8",
+  "certifiedSourceCommit": "f569adfc33e6a48b8aef28501c0124c2a356e237",
+  "priorBuildId": "61c38061-c2e0-43f5-b8a2-43b0af8cd187",
+  "priorBuildNumber": "3",
+  "easBuildCreditsUsedForThisRelease": 1,
+  "testFlightSubmissionsRun": 0
+}
