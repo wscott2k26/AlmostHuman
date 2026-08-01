@@ -36,119 +36,29 @@ jobs:
             package-lock.json
             mobile/package-lock.json
 
-      - name: Reassemble and verify Build 5 source
+      - name: Diagnose staged archive tails
         shell: bash
         run: |
-          set -euo pipefail
-          cat \
-            .build5/patch.part-00 \
-            .build5/patch.part-01 \
-            .build5/patch.part-02 \
-            .build5/patch.part-03 \
-            .build5/patch.part-04 \
-            .build5/patch.part-05 \
-            .build5/patch.part-06 \
-            .build5/patch.part-07 > /tmp/almost-human-build5.b64
-          base64 --decode /tmp/almost-human-build5.b64 > /tmp/almost-human-build5.zip
-          echo "BUILD5_COMPUTED_SHA256=$(sha256sum /tmp/almost-human-build5.zip | awk '{print $1}')"
-          unzip -t /tmp/almost-human-build5.zip
-          echo "a5f6599b731e07d8c5a3393b7685d82865fc455c514bf9a085feb2f2b95da264  /tmp/almost-human-build5.zip" | sha256sum --check
-          unzip -oq /tmp/almost-human-build5.zip -d .
-          rm -rf .build5
-          rm -f .github/workflows/build5-one-shot-validator.yml
-
-      - name: Install web dependencies
-        run: npm ci
-
-      - name: Synchronize offline bundle
-        run: |
-          npm run build
-          node scripts/build-inline.mjs
-
-      - name: Commit frozen Build 5 source
-        id: source
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "Almost Human Build Validator"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git commit -m "feat: implement Almost Human Build 5 Version 10"
-          SOURCE_SHA="$(git rev-parse HEAD)"
-          echo "sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
-          echo "BUILD5_SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
-
-      - name: Run four complete web backend security passes
-        run: npm run test:quadruple
-
-      - name: Install native dependencies
-        working-directory: mobile
-        run: npm ci
-
-      - name: Validate native project
-        working-directory: mobile
-        run: |
-          npm run doctor
-          npm run typecheck
-          npm run lint
-          npm run preflight:quadruple
-
-      - name: Export iOS locally without cloud build
-        working-directory: mobile
-        run: npm run export:ios
-
-      - name: Export Android locally without cloud build
-        working-directory: mobile
-        run: npm run export:android
-
-      - name: Record export hashes and release counters
-        shell: bash
-        run: |
-          set -euo pipefail
-          hash_dir() {
-            find "$1" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}'
-          }
-          IOS_HASH="$(hash_dir mobile/dist-ios)"
-          ANDROID_HASH="$(hash_dir mobile/dist-android)"
-          export IOS_HASH ANDROID_HASH
-          node <<'NODE'
-          const fs = require('node:fs');
-          const receipt = {
-            product: 'Almost Human',
-            release: 'Build 5 / Version 10.0',
-            source_sha: process.env.BUILD5_SOURCE_SHA,
-            generated_at: new Date().toISOString(),
-            exports: {
-              ios_directory_sha256: process.env.IOS_HASH,
-              android_directory_sha256: process.env.ANDROID_HASH,
-            },
-            release_counters: {
-              eas_builds: 0,
-              testflight_uploads: 0,
-              app_store_releases: 0,
-            },
-          };
-          fs.writeFileSync('mobile/BUILD5_EXPORTS.json', `${JSON.stringify(receipt, null, 2)}\n`);
-          NODE
-
-      - name: Upload zero-credit export evidence once
-        uses: actions/upload-artifact@v4
-        with:
-          name: almost-human-build5-zero-credit-exports
-          path: |
-            mobile/dist-ios
-            mobile/dist-android
-            mobile/BUILD5_EXPORTS.json
-            mobile/BUILD5_QUADRUPLE_PREFLIGHT.md
-          retention-days: 7
-          if-no-files-found: error
-
-      - name: Commit receipts and push isolated branch
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add mobile/src/almostHumanHtml.ts mobile/BUILD5_QUADRUPLE_PREFLIGHT.md mobile/BUILD5_EXPORTS.json
-          if ! git diff --cached --quiet; then
-            git commit -m "test: record Build 5 zero-credit exports"
-          fi
-          git push origin HEAD:feature/build-5-version-10
+          set -u
+          for tail in 07 08; do
+            cat \
+              .build5/patch.part-00 \
+              .build5/patch.part-01 \
+              .build5/patch.part-02 \
+              .build5/patch.part-03 \
+              .build5/patch.part-04 \
+              .build5/patch.part-05 \
+              .build5/patch.part-06 \
+              ".build5/patch.part-${tail}" > "/tmp/build5-${tail}.b64"
+            if base64 --decode "/tmp/build5-${tail}.b64" > "/tmp/build5-${tail}.zip"; then
+              echo "TAIL_${tail}_SHA256=$(sha256sum "/tmp/build5-${tail}.zip" | awk '{print $1}')"
+              if unzip -t "/tmp/build5-${tail}.zip"; then
+                echo "TAIL_${tail}_VALID_ZIP=yes"
+              else
+                echo "TAIL_${tail}_VALID_ZIP=no"
+              fi
+            else
+              echo "TAIL_${tail}_BASE64_VALID=no"
+            fi
+          done
+          exit 1
