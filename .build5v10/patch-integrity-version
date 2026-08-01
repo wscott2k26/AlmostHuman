@@ -1,0 +1,3 @@
+expected_old=9.0.0
+expected_new=10.0.0
+allowed_file=tests/integrity_test.py
