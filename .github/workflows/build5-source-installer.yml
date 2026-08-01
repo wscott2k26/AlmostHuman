@@ -32,31 +32,43 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Verify and apply certified source patch
+      - name: Apply source and publish success or failure receipt
         shell: bash
         run: |
-          set -euo pipefail
-          test -f .release/build5-source.patch.gz
-          gzip -t .release/build5-source.patch.gz
-          sha256sum .release/build5-source.patch.gz | tee BUILD5_SOURCE_PACKAGE_SHA256.txt
-          gzip -dc .release/build5-source.patch.gz > /tmp/build5-source.patch
-          git apply --check /tmp/build5-source.patch
-          git apply --index /tmp/build5-source.patch
+          set -uo pipefail
+          git config user.name "Almost Human Build Validator"
+          git config user.email "actions@users.noreply.github.com"
+          : > /tmp/build5-install.log
+          {
+            test -f .release/build5-source.patch.gz &&
+            gzip -t .release/build5-source.patch.gz &&
+            sha256sum .release/build5-source.patch.gz | tee BUILD5_SOURCE_PACKAGE_SHA256.txt &&
+            gzip -dc .release/build5-source.patch.gz > /tmp/build5-source.patch &&
+            git apply --check /tmp/build5-source.patch &&
+            git apply --index /tmp/build5-source.patch &&
+            npm ci &&
+            npm test
+          } > /tmp/build5-install.log 2>&1
+          code=$?
+          if [ "$code" -ne 0 ]; then
+            git reset --hard HEAD
+            {
+              echo "Build 5 source install failed"
+              echo "exit_code=$code"
+              echo "head=$(git rev-parse HEAD)"
+              echo
+              tail -n 200 /tmp/build5-install.log
+            } > BUILD5_INSTALL_FAILURE.txt
+            rm -f .release/READY
+            git add -A
+            git commit -m "test: record Build 5 source install failure"
+            git push origin HEAD:feature/build-5-version-10
+            exit "$code"
+          fi
           rm -rf .build5 .build5v10
           rm -f .release/build5-source.patch.gz .release/READY
           rm -f .github/workflows/build5-one-shot-validator.yml
-
-      - name: Quick source sanity
-        run: |
-          npm ci
-          npm test
-
-      - name: Commit visible Version 10 source
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "Almost Human Build Validator"
-          git config user.email "actions@users.noreply.github.com"
+          rm -f BUILD5_INSTALL_FAILURE.txt
           git add -A
           git commit -m "feat: install verified Almost Human Build 5 Version 10 source"
           git push origin HEAD:feature/build-5-version-10
