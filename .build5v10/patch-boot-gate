@@ -1,3 +1,4 @@
 wait_for=stable-app-shell
 preserve=access-gate-and-cloud-restore
 allowed_file=app/version10.js
+attempt=2
