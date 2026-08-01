@@ -1,5 +1,5 @@
 wait_for=stable-app-shell
-preserve=access-gate-and-cloud-restore
+preserve=access-gate-cloud-restore-and-local-life
 allowed_file=app/version10.js
-attempt=3
-quiet_run=true
+attempt=4
+atomic=true
