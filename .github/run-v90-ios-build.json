@@ -1,0 +1,16 @@
+{
+  "operation": "BUILD_V90_ONCE",
+  "confirm": "BUILD_V90_ONCE",
+  "requestedBy": "Willy Will via ChatGPT",
+  "requestedAt": "2026-08-01T01:46:00Z",
+  "attempt": 1,
+  "expectedOwner": "wscott2k8",
+  "expectedBundleId": "com.stormandme.almosthuman",
+  "expectedEasProjectId": "cd0be7bb-e65a-454e-b255-3b261de060ee",
+  "expectedReleaseChannel": "haven-9.0-conversation-first",
+  "expectedPriorBuildId": "61c38061-c2e0-43f5-b8a2-43b0af8cd187",
+  "expectedPriorBuildNumber": "3",
+  "certifiedMergeCommit": "3015a1572e2708646ac87ca4fc16655b2941097f",
+  "easBuildCreditsAuthorized": 1,
+  "easSubmissionsAuthorized": 0
+}
