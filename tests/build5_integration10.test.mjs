@@ -7,6 +7,7 @@ import {
   createVersion10LayerModel,
   renderVersion10Layer10,
 } from '../app/version10.js';
+import { normalizeNativeBridgeMessage10 } from '../app/version10-compat.js';
 
 const index = await readFile(new URL('../app/index.html', import.meta.url), 'utf8');
 const stylesheet = await readFile(new URL('../app/version10.css', import.meta.url), 'utf8');
@@ -64,6 +65,17 @@ test('layer markup is semantic and contains no forced dependency or fake progres
   assert.match(html, /Origin Chamber/);
   assert.match(html, /data-v10-action="creator-next"/);
   assert.doesNotMatch(html, /loading your AI|please wait|avatar sdk|ready player me/i);
+});
+
+test('Version 10 semantic haptics use the already-certified native tap protocol', () => {
+  assert.deepEqual(normalizeNativeBridgeMessage10({ type: 'v10-haptic', kind: 'selection' }), { type: 'tap', strength: 'light' });
+  assert.deepEqual(normalizeNativeBridgeMessage10({ type: 'v10-haptic', kind: 'first-light' }), { type: 'tap', strength: 'success' });
+  assert.deepEqual(normalizeNativeBridgeMessage10({ type: 'v10-haptic', kind: 'rollback' }), { type: 'tap', strength: 'medium' });
+  assert.equal(
+    normalizeNativeBridgeMessage10(JSON.stringify({ type: 'v10-haptic', kind: 'warning' })),
+    JSON.stringify({ type: 'tap', strength: 'warning' }),
+  );
+  assert.equal(normalizeNativeBridgeMessage10('not-json'), 'not-json');
 });
 
 test('Version 10 stylesheet includes accessibility fallbacks and tactile controls', () => {
