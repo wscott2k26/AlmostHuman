@@ -1,5 +1,5 @@
 {
-  "status": "WEB_BACKEND_RELEASE_CANDIDATE_CERTIFIED",
+  "status": "INTERNAL_TESTFLIGHT_READY",
   "product": "Almost Human",
   "version": "9.0.0",
   "verifiedSourceCommit": "19f53e6581db2b3afc65b5d91d53e05e46418c15",
@@ -32,7 +32,8 @@
     "liveSmoke": "PASSED",
     "performanceHarness": "PASSED",
     "finalLiveVerification": "PASSED",
-    "signedIosBuild": true
+    "signedIosBuild": true,
+    "internalTestFlight": true
   },
   "performance": {
     "textTurns": 20,
@@ -45,7 +46,7 @@
     "p95FirstAudioMs": 2032,
     "finalVoiceVerificationMs": 1923,
     "finalTranscriptionMs": 1441,
-    "interruption": "Source and behavior tests passed; real-device interruption timing awaits a signed iOS build."
+    "interruption": "Source and behavior tests passed; real-device interruption timing is now testable in internal TestFlight build 4."
   },
   "cors": {
     "productionOrigin": "https://almost-human-swart.vercel.app",
@@ -60,7 +61,8 @@
   ],
   "readyForOnePaidIosBuildAuthorization": false,
   "easBuildsRun": 1,
-  "testFlightUploadsRun": 0,
+  "testFlightUploadsRun": 1,
+  "publicAppStoreReleasesRun": 0,
   "signedIosBuild": {
     "status": "FINISHED",
     "buildId": "9af3b9e9-eec0-473a-a59e-12fdeff56e42",
@@ -68,6 +70,17 @@
     "createdAt": "2026-08-01T02:03:28.793Z",
     "sourceCommit": "3bb35ee02b8cb6e15349cf56551596f2ddd885a8",
     "certifiedSourceCommit": "f569adfc33e6a48b8aef28501c0124c2a356e237",
-    "testFlightSubmissionsRun": 0
+    "testFlightSubmissionsRun": 1
+  },
+  "testFlight": {
+    "status": "READY_FOR_INTERNAL_TESTING",
+    "ascAppId": "6796814542",
+    "appleBuildResourceId": "c48f5329-fdff-4150-a6f9-3616e726344b",
+    "processingState": "VALID",
+    "internalBuildState": "IN_BETA_TESTING",
+    "buildNumber": "4",
+    "groupName": "Almost Human Internal Testers",
+    "testerEmail": "wscott2k8@gmail.com",
+    "publicRelease": false
   }
 }
