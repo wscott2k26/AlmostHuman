@@ -1,0 +1,6 @@
+Build 5 source install failed
+exit_code=1
+head=3893da3e5c8fdeb0da53c7f30f6162f7573322a5
+
+
+gzip: .release/build5-source.patch.gz: unexpected end of file
