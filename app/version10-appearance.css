@@ -1,0 +1,84 @@
+/* Version 10 procedural appearance differentiation. Loaded after version10.css. */
+.v10-character .v10-brows{stroke-width:var(--v10-brow-width,4px)}
+.v10-character .v10-hair-back,.v10-character .v10-hair-front{stroke:var(--v10-hair-accent,var(--v10-hair));stroke-width:1.5;paint-order:stroke fill}
+.v10-character .v10-outfit-panel{stroke:var(--v10-outfit-accent,#a99bc0);stroke-width:2;paint-order:stroke fill}
+
+/* Face shape */
+.v10-character[data-face-shape="oval"] .v10-face-shape{transform:none}
+.v10-character[data-face-shape="round"] .v10-face-shape{transform:scaleX(1.07) scaleY(.97);transform-origin:center}
+.v10-character[data-face-shape="square"] .v10-face-shape{transform:scaleX(1.09) scaleY(.94);transform-origin:center;rx:18px}
+.v10-character[data-face-shape="heart"] .v10-face-shape{transform:scaleX(.96) scaleY(1.02);transform-origin:50% 38%}
+.v10-character[data-face-shape="diamond"] .v10-face-shape{transform:scaleX(.91) scaleY(1.04);transform-origin:center}
+.v10-character[data-face-shape="long"] .v10-face-shape{transform:scaleX(.95) scaleY(1.08);transform-origin:center}
+
+/* Eye shape */
+.v10-character[data-eye-shape="almond"] .v10-eye{transform:none;transform-box:fill-box;transform-origin:center}
+.v10-character[data-eye-shape="round"] .v10-eye{transform:scaleY(1.2);transform-box:fill-box;transform-origin:center}
+.v10-character[data-eye-shape="hooded"] .v10-eye{transform:scaleY(.68) translateY(2px);transform-box:fill-box;transform-origin:center}
+.v10-character[data-eye-shape="upturned"] .v10-eye-left{transform:rotate(-5deg);transform-box:fill-box;transform-origin:center}
+.v10-character[data-eye-shape="upturned"] .v10-eye-right{transform:rotate(5deg);transform-box:fill-box;transform-origin:center}
+.v10-character[data-eye-shape="downturned"] .v10-eye-left{transform:rotate(5deg);transform-box:fill-box;transform-origin:center}
+.v10-character[data-eye-shape="downturned"] .v10-eye-right{transform:rotate(-5deg);transform-box:fill-box;transform-origin:center}
+.v10-character[data-eye-shape="wide"] .v10-eyes{transform:scaleX(1.12);transform-origin:center}
+
+/* Brow shape */
+.v10-character[data-brow-shape="soft"] .v10-brows{transform:none;transform-origin:center}
+.v10-character[data-brow-shape="straight"] .v10-brows{transform:scaleY(.45);transform-origin:center}
+.v10-character[data-brow-shape="arched"] .v10-brows{transform:translateY(-3px) scaleY(1.25);transform-origin:center}
+.v10-character[data-brow-shape="angled"] .v10-brows path:first-child{transform:rotate(-7deg);transform-box:fill-box;transform-origin:center}
+.v10-character[data-brow-shape="angled"] .v10-brows path:last-child{transform:rotate(7deg);transform-box:fill-box;transform-origin:center}
+.v10-character[data-brow-shape="rounded"] .v10-brows{transform:translateY(1px) scaleY(1.12);transform-origin:center}
+
+/* Hair style */
+.v10-character[data-hair-style="none"] .v10-hair-back,.v10-character[data-hair-style="none"] .v10-hair-front{display:none}
+.v10-character[data-hair-style="short"] .v10-hair-back{transform:scaleY(.72);transform-origin:center top}
+.v10-character[data-hair-style="waves"] .v10-hair-front{transform:skewX(-4deg) scaleY(1.04);transform-origin:center top}
+.v10-character[data-hair-style="curls"] .v10-hair-back{transform:scale(1.08,1.04);transform-origin:center top;stroke-width:5;stroke-dasharray:4 7}
+.v10-character[data-hair-style="locs"] .v10-hair-back{transform:scaleY(1.18);transform-origin:center top;stroke-width:7;stroke-dasharray:28 5}
+.v10-character[data-hair-style="braids"] .v10-hair-back{transform:scaleY(1.16);transform-origin:center top;stroke-width:4;stroke-dasharray:10 4}
+.v10-character[data-hair-style="coils"] .v10-hair-back{transform:scale(1.1,1.02);transform-origin:center top;stroke-width:7;stroke-dasharray:2 6}
+.v10-character[data-hair-style="long"] .v10-hair-back{transform:scaleY(1.22);transform-origin:center top}
+.v10-character[data-hair-style="updo"] .v10-hair-back{transform:translateY(-18px) scale(.88,1.18);transform-origin:center top}
+
+/* Hair texture */
+.v10-character[data-hair-texture="none"] .v10-hair-back,.v10-character[data-hair-texture="none"] .v10-hair-front{stroke-width:0}
+.v10-character[data-hair-texture="straight"] .v10-hair-back,.v10-character[data-hair-texture="straight"] .v10-hair-front{stroke-width:1;stroke-dasharray:none}
+.v10-character[data-hair-texture="wavy"] .v10-hair-back,.v10-character[data-hair-texture="wavy"] .v10-hair-front{stroke-width:3;stroke-dasharray:18 8}
+.v10-character[data-hair-texture="curly"] .v10-hair-back,.v10-character[data-hair-texture="curly"] .v10-hair-front{stroke-width:5;stroke-dasharray:4 7}
+.v10-character[data-hair-texture="coily"] .v10-hair-back,.v10-character[data-hair-texture="coily"] .v10-hair-front{stroke-width:7;stroke-dasharray:2 6}
+.v10-character[data-hair-texture="locs"] .v10-hair-back{stroke-width:7;stroke-dasharray:26 5}
+.v10-character[data-hair-texture="braids"] .v10-hair-back{stroke-width:4;stroke-dasharray:9 4}
+
+/* Facial hair */
+.v10-character[data-facial-hair="none"] .v10-facial-hair{display:none}
+.v10-character[data-facial-hair="shadow"] .v10-facial-hair{display:block;opacity:.18;transform:scaleY(.82);transform-origin:center bottom}
+.v10-character[data-facial-hair="mustache"] .v10-facial-hair{display:block;opacity:.74;transform:translateY(-35px) scale(.8,.22);transform-origin:center}
+.v10-character[data-facial-hair="goatee"] .v10-facial-hair{display:block;opacity:.68;transform:translateY(8px) scaleX(.44);transform-origin:center}
+.v10-character[data-facial-hair="short-beard"] .v10-facial-hair{display:block;opacity:.48;transform:scale(.92,.86);transform-origin:center bottom}
+.v10-character[data-facial-hair="full-beard"] .v10-facial-hair{display:block;opacity:.78;transform:scale(1.02,1.1);transform-origin:center bottom}
+
+/* Body silhouette */
+.v10-character[data-body-silhouette="slender"] .v10-torso{transform:scaleX(.86);transform-origin:center}
+.v10-character[data-body-silhouette="balanced"] .v10-torso{transform:none}
+.v10-character[data-body-silhouette="soft"] .v10-torso{transform:scale(1.04,1.02);transform-origin:center bottom}
+.v10-character[data-body-silhouette="athletic"] .v10-torso{transform:scaleX(1.06);transform-origin:center top;filter:brightness(1.08)}
+.v10-character[data-body-silhouette="broad"] .v10-torso{transform:scaleX(1.14);transform-origin:center}
+
+/* Presentation is a reversible visual starting point and never changes pronouns or voice. */
+.v10-character[data-presentation="masculine"] .v10-neck{transform:scaleX(1.08);transform-origin:center}
+.v10-character[data-presentation="feminine"] .v10-neck{transform:scaleX(.94);transform-origin:center}
+.v10-character[data-presentation="neutral"] .v10-neck{transform:none}
+
+/* Style direction */
+.v10-character[data-style-direction="comfort"] .v10-outfit-panel{stroke-width:5;stroke-linejoin:round;opacity:.9}
+.v10-character[data-style-direction="street"] .v10-outfit-panel{stroke-width:4;stroke-dasharray:18 5}
+.v10-character[data-style-direction="classic"] .v10-outfit-panel{stroke-width:2;stroke-dasharray:none;filter:saturate(.72)}
+.v10-character[data-style-direction="creative"] .v10-outfit-panel{stroke-width:5;stroke-dasharray:4 5;filter:saturate(1.25)}
+.v10-character[data-style-direction="futuristic"] .v10-outfit-panel{stroke-width:3;filter:drop-shadow(0 0 8px var(--v10-outfit-accent))}
+.v10-character[data-style-direction="nature"] .v10-outfit-panel{stroke-width:4;stroke-dasharray:2 8;stroke-linecap:round}
+.v10-character[data-style-direction="minimal"] .v10-outfit-panel{stroke-width:1;stroke-dasharray:none;opacity:.78}
+.v10-character[data-style-direction="mystical"] .v10-outfit-panel{stroke-width:3;stroke-dasharray:12 6;filter:drop-shadow(0 0 10px var(--v10-outfit-accent))}
+
+@media (prefers-reduced-motion:reduce){
+  .v10-character .v10-face-shape,.v10-character .v10-eyes,.v10-character .v10-brows,.v10-character .v10-hair-back,.v10-character .v10-hair-front,.v10-character .v10-torso,.v10-character .v10-neck{transition:none!important}
+}
