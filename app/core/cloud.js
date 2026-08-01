@@ -1,4 +1,5 @@
 import { parseEventStream } from './chatStream.js';
+import { normalizeVisualIdentity10 } from './store.js';
 
 const ENTITY_TABLES = Object.freeze({
   User: 'profiles', AppSettings: 'app_settings', AIEntity: 'ai_entities', Conversation: 'conversations',
@@ -10,7 +11,9 @@ const ENTITY_TABLES = Object.freeze({
 });
 
 const FIELD_ALIASES = Object.freeze({
-  created_date: 'created_at', updated_date: 'updated_at', created_by_id: 'user_id'
+  created_date: 'created_at', updated_date: 'updated_at', created_by_id: 'user_id',
+  originProfile: 'origin_profile', appearanceProfile: 'appearance_profile', voiceProfile: 'voice_profile',
+  rendererVersion: 'renderer_version', developmentState: 'development_state'
 });
 
 const READ_ONLY_TABLES = new Set(['subscriptions']);
@@ -432,10 +435,13 @@ export class SupabaseCloud {
       local_id: state.ai.id, name: state.ai.name, pronouns: state.ai.pronouns,
       birthday: state.ai.birthTimestamp || state.ai.birthday, simulated_age: state.ai.age,
       developmental_stage: state.ai.stageKey, appearance_seed: state.ai.appearanceSeed,
-      voice_id: state.ai.voiceId, relationship_style: state.ai.relationshipStyle,
+      presentation: state.ai.presentation, origin_profile: state.ai.originProfile || {},
+      appearance_profile: state.ai.appearanceProfile || {}, voice_profile: state.ai.voiceProfile || {},
+      renderer_version: Number(state.ai.rendererVersion || 9),
+      voice_id: state.ai.voiceProfile?.voiceId || state.ai.voiceId, relationship_style: state.ai.relationshipStyle,
       current_mood: state.ai.currentMood, mood_intensity: state.ai.moodIntensity,
       personality_state: state.ai.personality, personality_history: state.ai.personalityHistory || [],
-      development_state: { growthEventKeys: state.ai.growthEventKeys || [] },
+      development_state: { ...(state.ai.developmentState || {}), growthEventKeys: state.ai.growthEventKeys || state.ai.developmentState?.growthEventKeys || [] },
       trust_score: state.ai.trust, attachment_score: state.ai.attachment, bond_score: state.ai.bond,
       room_state: { ...(state.ai.roomState || {}), appearanceProfile: state.ai.appearanceProfile || null }, favorite_things: state.ai.favoriteThings || {},
       last_interaction_at: state.ai.lastInteractionAt, last_growth_bucket: String(state.ai.lastGrowthBucket || ''),
@@ -612,19 +618,29 @@ export class SupabaseCloud {
     throw new CloudError('The secure activity is still processing. Retry it; the request will not duplicate.', 408, 'REQUEST_PENDING');
   }
 
-  async voiceProvider({ state, text, voiceId = null, requestId = null, signal = null }) {
+  async voiceProvider({ state, text, voiceId = null, tone = null, providerPreference = null, rate = null, requestId = null, signal = null }) {
     if (!this.authenticated) throw new CloudError('Sign in to use secure cloud voice.', 401, 'AUTH_REQUIRED');
     await this.ensureCloudIdentity(state);
+    const profile = state.ai?.voiceProfile || {};
     const response = await this.invoke('voiceService', {
       ai_entity_id: state.ai.cloudId, text: String(text || '').slice(0, 4096),
-      voice_id: String(voiceId || state.ai.voiceId || 'female-adult'), request_id: String(requestId || '')
+      voice_id: String(voiceId || profile.voiceId || state.ai.voiceId || 'female-adult'),
+      tone: String(tone || profile.tone || 'calm'),
+      provider_preference: String(providerPreference || profile.providerPreference || 'auto'),
+      rate: Number(rate ?? profile.rate ?? state.settings?.voiceRate ?? .96),
+      request_id: String(requestId || '')
     }, { raw: true, timeoutMs: 30000, signal });
+    this.lastVoiceMeta = voiceMetadata(response);
     return response.blob();
   }
 
-  async voicePreview({ voiceId }) {
+  async voicePreview({ voiceId, tone = 'calm', providerPreference = 'auto', rate = .96 }) {
     if (!this.authenticated) throw new CloudError('Continue as guest or sign in to preview cloud voices.', 401, 'AUTH_REQUIRED');
-    const response = await this.invoke('voiceService', { preview: true, voice_id: String(voiceId || 'female-adult') }, { raw: true, timeoutMs: 30000 });
+    const response = await this.invoke('voiceService', {
+      preview: true, voice_id: String(voiceId || 'female-adult'), tone: String(tone || 'calm'),
+      provider_preference: String(providerPreference || 'auto'), rate: Number(rate || .96)
+    }, { raw: true, timeoutMs: 30000 });
+    this.lastVoiceMeta = voiceMetadata(response);
     return response.blob();
   }
 
@@ -661,6 +677,15 @@ export class SupabaseCloud {
   }
 }
 
+
+function voiceMetadata(response) {
+  return {
+    providerClass: String(response.headers.get('X-AH-Voice-Provider') || 'secure-neural'),
+    tone: String(response.headers.get('X-AH-Voice-Tone') || 'calm'),
+    profile: String(response.headers.get('X-AH-Voice-Profile') || ''),
+    requestId: String(response.headers.get('X-AH-Voice-Request') || ''),
+  };
+}
 
 export class CloudError extends Error {
   constructor(message, status = 500, code = null, detail = null) {
@@ -730,16 +755,34 @@ function fromCloudSubscription(row) {
   if (!row) return null;
   return { tier: row.tier || 'free', status: row.status || 'inactive', platform: row.platform || row.provider || 'cloud', entitlements: row.entitlements || {}, updatedAt: row.updated_at };
 }
+export function visualIdentityFromCloud10(row = {}) {
+  const additiveAppearance = nonEmptyObject10(row.appearance_profile) ? row.appearance_profile : row.room_state?.appearanceProfile;
+  return normalizeVisualIdentity10({
+    id: row.local_id || `cloud-ai-${row.id}`,
+    cloudId: row.id,
+    pronouns: row.pronouns,
+    presentation: row.presentation,
+    appearanceSeed: row.appearance_seed,
+    originProfile: row.origin_profile,
+    appearanceProfile: additiveAppearance,
+    voiceId: row.voice_id,
+    voiceProfile: row.voice_profile,
+    rendererVersion: row.renderer_version,
+    developmentState: row.development_state || {},
+  }, { createSnapshot: false });
+}
 function fromCloudAI(row) {
-  const development = row.development_state || {};
-  return { id: row.local_id || `cloud-ai-${row.id}`, cloudId: row.id, name: row.name, nickname: row.nickname, pronouns: row.pronouns,
+  const visual = visualIdentityFromCloud10(row);
+  const development = visual.developmentState || {};
+  return { ...visual, name: row.name, nickname: row.nickname,
     birthday: row.birthday, birthTimestamp: row.birthday, age: Number(row.simulated_age || 0), stageKey: row.developmental_stage,
-    appearanceSeed: row.appearance_seed, appearanceProfile: row.room_state?.appearanceProfile || null, voiceId: row.voice_id, relationshipStyle: row.relationship_style, currentMood: row.current_mood,
+    relationshipStyle: row.relationship_style, currentMood: row.current_mood,
     moodIntensity: Number(row.mood_intensity || 50), personality: row.personality_state || {}, personalityHistory: row.personality_history || [],
     favoriteThings: row.favorite_things || {}, roomState: row.room_state || {}, trust: Number(row.trust_score || 0), attachment: Number(row.attachment_score || 0),
     bond: Number(row.bond_score || 0), lastInteractionAt: row.last_interaction_at, lastGrowthBucket: Number(row.last_growth_bucket || 0),
     growthEventKeys: development.growthEventKeys || [], archived: Boolean(row.archived), createdAt: row.created_at, updatedAt: row.updated_at };
 }
+function nonEmptyObject10(value) { return Boolean(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length); }
 function withGrowthKeys(ai, milestoneRows = []) { ai.growthEventKeys = [...new Set([...(ai.growthEventKeys || []), ...milestoneRows.map((row) => row.event_key).filter((key) => /^birthday:|^stage:/.test(String(key || '')))])]; return ai; }
 function fromCloudConversation(row) { return { id: row.local_id || `cloud-conversation-${row.id}`, cloudId: row.id, title: row.title, status: row.status, currentTopic: row.current_topic, summary: row.summary || '', messageCount: row.message_count || 0, questionCount: row.question_count || 0, createdAt: row.created_at, updatedAt: row.updated_at, lastMessageAt: row.last_message_at }; }
 function fromCloudMessage(row, conversationIds) { return { id: row.local_id || `cloud-message-${row.id}`, cloudId: row.id, requestId: row.request_id, conversationId: conversationIds.get(row.conversation_id) || `cloud-conversation-${row.conversation_id}`, sender: row.sender, content: row.content, ageAtMessage: Number(row.age_at_message || 0), stageKey: row.developmental_stage, emotion: row.emotion, intent: row.intent, repetitionScore: Number(row.repetition_score || 0), repetitionReason: row.repetition_reason, providerMode: row.metadata?.provider_mode || row.model_used || 'cloud', safetyFlags: row.safety_flags || [], status: row.status || 'complete', createdAt: row.client_created_at || row.created_at, updatedAt: row.updated_at }; }

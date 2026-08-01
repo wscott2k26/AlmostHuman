@@ -1,6 +1,9 @@
 import { DEFAULT_DAYS_PER_YEAR } from './stages.js';
+import { createVisualSnapshot10, normalizeAppearance10 } from './appearance10.js';
+import { normalizeOrigin10 } from './origin10.js';
+import { normalizePublicVoiceId10, normalizeVoiceProfile10 } from './voiceProfile10.js';
 
-export const DATA_VERSION = 6;
+export const DATA_VERSION = 7;
 const DB_NAME = 'almost-human-premium';
 const STORE_NAME = 'state';
 const STATE_KEY = 'main';
@@ -16,7 +19,8 @@ export function defaultState(now = Date.now()) {
       voiceEnabled: true, voiceAutoplay: true, voiceRate: 0.96, cloudVoiceAutoplayMigrated84: false, reducedMotion: false, highContrast: false,
       dailyMomentEnabled: true, notificationsEnabled: false, analyticsOptIn: false, sensitiveMemoryMode: 'ask',
       dataRetentionDays: 0, appLockEnabled: false, pinHash: null, soundEffects: true, cloudSyncEnabled: false,
-      theme: 'cosmic', lastGrowthCheckAt: null, showNineUpgradeCard: false, nineUpgradeCardDismissed: false
+      theme: 'cosmic', lastGrowthCheckAt: null, showNineUpgradeCard: false, nineUpgradeCardDismissed: false,
+      reducedTransparency: false, tenUpgradeMomentDismissed: false, tenUpgradeMomentSeen: false
     },
     subscription: { tier: 'founder_preview', status: 'preview', platform: 'web', entitlements: { allPremiumFeatures: true }, updatedAt: new Date(now).toISOString() },
     ai: null,
@@ -39,14 +43,15 @@ export function migrateState(input) {
   if ((input.version || 0) < DATA_VERSION) {
     merged.diagnostics.migrations = [...(merged.diagnostics.migrations || []), { from: input.version || 0, to: DATA_VERSION, at: new Date().toISOString() }].slice(-20);
   }
-  if (merged.ai) {
-    merged.ai.voiceId = normalizeVoiceId(merged.ai.voiceId);
-    merged.ai.appearanceProfile = normalizeAppearanceProfile(merged.ai.appearanceProfile);
-  }
+  if (merged.ai) merged.ai = normalizeVisualIdentity10(merged.ai, { createSnapshot: (input.version || 0) < 7 });
   if ((input.version || 0) < 5) merged.settings.voiceAutoplay = true;
   if ((input.version || 0) < 6) {
     merged.settings.showNineUpgradeCard = Boolean(merged.ai);
     merged.settings.nineUpgradeCardDismissed = false;
+  }
+  if ((input.version || 0) < 7) {
+    merged.settings.tenUpgradeMomentDismissed = false;
+    merged.settings.tenUpgradeMomentSeen = false;
   }
   merged.version = DATA_VERSION;
   return merged;
@@ -142,15 +147,52 @@ function idbGet(db, key) { return new Promise((resolve, reject) => { const tx = 
 function idbSet(db, key, value) { return new Promise((resolve, reject) => { const tx = db.transaction(STORE_NAME, 'readwrite'); tx.objectStore(STORE_NAME).put(value, key); tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); }); }
 
 
-function normalizeVoiceId(value) {
-  return ({ 'soft-neutral': 'female-adult', 'bright-curious': 'female-teen', 'calm-grounded': 'male-adult' })[String(value || '')] || String(value || 'female-adult');
-}
-function normalizeAppearanceProfile(value) {
-  const input = value && typeof value === 'object' ? value : {};
+const PRESENTATIONS_10 = Object.freeze(['masculine', 'feminine', 'neutral']);
+
+export function normalizeVisualIdentity10(value, { createSnapshot = true } = {}) {
+  const ai = value && typeof value === 'object' ? { ...value } : {};
+  const voiceId = normalizePublicVoiceId10(ai.voiceProfile?.voiceId || ai.voiceId);
+  const developmentState = ai.developmentState && typeof ai.developmentState === 'object'
+    ? { ...ai.developmentState }
+    : { growthEventKeys: Array.isArray(ai.growthEventKeys) ? [...ai.growthEventKeys] : [] };
+  const existingSnapshots = Array.isArray(developmentState.visualRollbackSnapshots)
+    ? [...developmentState.visualRollbackSnapshots]
+    : [];
+  const presentation = PRESENTATIONS_10.includes(ai.presentation) ? ai.presentation : presentationFromPronouns10(ai.pronouns);
+  const originProfile = normalizeOrigin10(ai.originProfile);
+  const appearanceProfile = normalizeAppearance10(ai.appearanceProfile);
+  const voiceProfile = normalizeVoiceProfile10(ai.voiceProfile, voiceId);
+  const rendererVersion = validRendererVersion10(ai.rendererVersion);
+
+  if (createSnapshot && ai.id && !existingSnapshots.some((item) => item?.id === `visual-v9-${ai.id}`)) {
+    existingSnapshots.push(createVisualSnapshot10({
+      ...ai, presentation, originProfile, appearanceProfile, voiceId, voiceProfile, rendererVersion,
+    }, {
+      id: `visual-v9-${ai.id}`,
+      reason: 'version-10-migration',
+      capturedAt: ai.updatedAt || ai.createdAt || null,
+    }));
+  }
+  developmentState.visualRollbackSnapshots = existingSnapshots.slice(-12);
+
   return {
-    skinTone: ['warm','golden','deep','light'].includes(input.skinTone) ? input.skinTone : 'warm',
-    hairStyle: ['waves','short','curls','locs'].includes(input.hairStyle) ? input.hairStyle : 'waves',
-    hairColor: ['midnight','brown','auburn','silver'].includes(input.hairColor) ? input.hairColor : 'midnight',
-    eyeColor: ['brown','blue','green','violet'].includes(input.eyeColor) ? input.eyeColor : 'brown',
+    ...ai,
+    presentation,
+    originProfile,
+    appearanceProfile,
+    voiceId,
+    voiceProfile,
+    rendererVersion,
+    developmentState,
   };
+}
+
+function presentationFromPronouns10(value) {
+  if (value === 'she/her') return 'feminine';
+  if (value === 'he/him') return 'masculine';
+  return 'neutral';
+}
+function validRendererVersion10(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 9 ? number : 9;
 }

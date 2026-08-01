@@ -55,6 +55,18 @@ export const STAGES = Object.freeze([
   },
 ]);
 
+export const EVOLUTION_PHASE_BY_STAGE_10 = Object.freeze({
+  newborn: 'forming_energy',
+  infant: 'emerging_figure',
+  toddler: 'emerging_figure',
+  early_child: 'young_persona',
+  child: 'young_persona',
+  preteen: 'refined_persona',
+  teen: 'refined_persona',
+  young_adult: 'mature_being',
+  adult: 'mature_being',
+});
+
 export const DEFAULT_DAYS_PER_YEAR = 14;
 export const MIN_DAYS_PER_YEAR = 1;
 export const MAX_DAYS_PER_YEAR = 365;
