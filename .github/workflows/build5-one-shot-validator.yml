@@ -30,6 +30,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ -f recovery/BUILD5_ARCHIVE_RECOVERY.json ]; then
+            echo "Recovery already committed."
+            exit 0
+          fi
+
           mkdir -p /tmp/build5-recovery recovery
 
           cat \
@@ -67,7 +72,7 @@ jobs:
               if pos < 0 or pos + 30 > len(raw):
                   break
               try:
-                  sig, ver, flags, method, mt, md, crc, csize, usize, nlen, xlen = struct.unpack_from('<IHHHHHIIIHH', raw, pos)
+                  _, _, _, _, _, _, crc, csize, _, nlen, xlen = struct.unpack_from('<IHHHHHIIIHH', raw, pos)
               except struct.error:
                   break
               name_start = pos + 30
@@ -83,7 +88,7 @@ jobs:
               data = path.read_bytes()
               actual = f'{zlib.crc32(data) & 0xffffffff:08x}'
               expected = expected_crc.get(rel)
-              if expected and actual == expected:
+              if expected and actual == expected and not rel.startswith('.github/workflows/'):
                   dest = repo / rel
                   dest.parent.mkdir(parents=True, exist_ok=True)
                   dest.write_bytes(data)
@@ -121,7 +126,7 @@ jobs:
               'truncated_zip_sha256': hashlib.sha256(truncated_zip.read_bytes()).hexdigest(),
               'recovered_zip_sha256': hashlib.sha256(recovered_zip.read_bytes()).hexdigest(),
               'valid_files': valid,
-              'damaged_files': damaged,
+              'damaged_or_quarantined_files': damaged,
               'central_directory_entries': manifest,
               'central_directory_entry_count': len(manifest),
           }
@@ -130,7 +135,6 @@ jobs:
           PY
 
           rm -rf .build5
-          rm -f .github/workflows/build5-one-shot-validator.yml
 
           git config user.name "Almost Human Build Recovery"
           git config user.email "actions@users.noreply.github.com"
