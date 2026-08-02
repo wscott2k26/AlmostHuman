@@ -1,6 +1,6 @@
 import { createAppContext, safeError, statusOf } from '../_shared/context.ts';
 import { serve } from '../_shared/cors.ts';
-import { computeSimulatedAge, getStageFromAge, clampDaysPerYear } from '../_shared/developmentalStages.ts';
+import { computeVoiceAge10, voiceStageLabel10, clampVoiceDaysPerYear10 } from '../_shared/voiceStage10.ts';
 import { generateNeuralSpeech, normalizePublicVoiceId } from '../_shared/neuralVoice.ts';
 import {
   normalizeServerVoiceProfile10,
@@ -46,8 +46,8 @@ serve(async (req) => {
         return Response.json({ error: 'Not found', code: 'NOT_FOUND' }, { status: 404 });
       }
       const settings = settingsRows?.[0] || {};
-      const age = computeSimulatedAge(ai.birthday, clampDaysPerYear(settings.days_per_year));
-      stageLabel = getStageFromAge(age).label;
+      const age = computeVoiceAge10(ai.birthday, clampVoiceDaysPerYear10(settings.days_per_year));
+      stageLabel = voiceStageLabel10(age);
       const storedProfile = normalizeServerVoiceProfile10(ai.voice_profile);
       voiceId = normalizePublicVoiceId(
         ai.voice_profile?.voiceId || ai.voice_profile?.voice_id || ai.voice_id || voiceId,
