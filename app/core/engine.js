@@ -3,20 +3,11 @@ import { inspectInput, sanitizeOutput, containsManipulation } from './safety.js'
 import { inspectCandidate, isConfusionSignal, isBoundarySignal, isRepetitionComplaint, normalizeText, chooseNonRepeating, hash } from './anti-repetition.js';
 import { makeId, nowIso, applyLearnings, addOrMergeMemory, relevantMemories } from './memory.js';
 import { unlockRoomItems, completeActivity } from './activities.js';
+import { normalizeAppearance10 } from './appearance10.js';
+import { normalizeOrigin10 } from './origin10.js';
+import { normalizePublicVoiceId10, normalizeVoiceProfile10 } from './voiceProfile10.js';
+import { applyEvolutionTransition10, computeEvolution10, evolutionEventKey10 } from './evolution10.js';
 
-
-function normalizeVoiceId(value) {
-  return ({ 'soft-neutral': 'female-adult', 'bright-curious': 'female-teen', 'calm-grounded': 'male-adult' })[String(value || '')] || String(value || 'female-adult');
-}
-function normalizeAppearanceProfile(value) {
-  const input = value && typeof value === 'object' ? value : {};
-  return {
-    skinTone: ['warm','golden','deep','light'].includes(input.skinTone) ? input.skinTone : 'warm',
-    hairStyle: ['waves','short','curls','locs'].includes(input.hairStyle) ? input.hairStyle : 'waves',
-    hairColor: ['midnight','brown','auburn','silver'].includes(input.hairColor) ? input.hairColor : 'midnight',
-    eyeColor: ['brown','blue','green','violet'].includes(input.eyeColor) ? input.eyeColor : 'brown',
-  };
-}
 
 const PERSONALITY_KEYS = ['warmth','humor','curiosity','confidence','patience','creativity','independence','sensitivity','optimism','caution','playfulness','sociability','reflectiveness','assertiveness'];
 
@@ -32,9 +23,15 @@ export class AlmostHumanEngine {
     this.state.profile.displayName = String(input.caregiverName || this.state.profile.displayName || 'You').trim();
     this.state.ai = {
       id: makeId('ai'), cloudId: null, name, pronouns: input.pronouns || 'they/them', birthday: nowIso(now), birthTimestamp: nowIso(now),
-      age: 0, stageKey: 'newborn', appearanceSeed: input.appearanceSeed || 'ember', appearanceProfile: normalizeAppearanceProfile(input.appearance), voiceId: normalizeVoiceId(input.voiceId),
+      age: 0, stageKey: 'newborn', presentation: normalizePresentation10(input.presentation, input.pronouns),
+      appearanceSeed: input.appearanceSeed || 'ember', originProfile: normalizeOrigin10({ ...(input.originProfile || {}), createdAt: nowIso(now) }),
+      appearanceProfile: normalizeAppearance10(input.appearance || input.appearanceProfile),
+      voiceId: normalizePublicVoiceId10(input.voiceProfile?.voiceId || input.voiceId),
+      voiceProfile: normalizeVoiceProfile10(input.voiceProfile, input.voiceId),
+      rendererVersion: Number(input.rendererVersion || 10),
       relationshipStyle: input.relationshipStyle || 'lifelong_friend', currentMood: 'wonder', moodIntensity: 62,
       trust: 18, attachment: 12, bond: 14, personality, personalityHistory: [], favoriteThings: {}, roomState: { theme: 'cosmic_nursery' },
+      developmentState: { visualPhase: 'origin_orb', evolutionReceipts: [], visualHistory: [], visualRollbackSnapshots: [] },
       lastInteractionAt: null, lastGrowthBucket: 0, growthEventKeys: [], archived: false, createdAt: nowIso(now), updatedAt: nowIso(now)
     };
     const conversation = this.createConversation('The first hello', now);
@@ -42,6 +39,7 @@ export class AlmostHumanEngine {
     addOrMergeMemory(this.state, { type: 'core', title: 'The moment I awakened', content: `${name} awakened and met ${this.state.profile.displayName || 'their person'} for the first time.`, importance: 100, confidence: 1, isCore: true, ageCreated: 0, tags: ['awakening'] }, now);
     unlockRoomItems(this.state, 0, now);
     this.recordMood('wonder', 62, 'awakening', now);
+    applyEvolutionTransition10(this.state, computeEvolution10(this.state), now);
     this.state.settings.lastGrowthCheckAt = nowIso(now);
     return { ai: this.state.ai, conversation };
   }
@@ -90,9 +88,16 @@ export class AlmostHumanEngine {
     for (const item of unlockedItems) events.push({ type: 'room_unlock', ...item });
     const unlockedLetters = this.unlockLetters(age, now);
     for (const letter of unlockedLetters) events.push({ type: 'letter_unlock', ...letter });
+    const evolution = computeEvolution10(this.state);
+    const evolutionChanged = applyEvolutionTransition10(this.state, evolution, now);
+    if (evolutionChanged) {
+      const eventKey = evolutionEventKey10(ai.id, evolution.phase);
+      const milestone = this.state.milestones.find((item) => item.eventKey === eventKey);
+      if (milestone) events.push({ type: 'visual_evolution', ...milestone });
+    }
     ai.lastGrowthBucket = Math.floor(age * 1000);
     this.state.settings.lastGrowthCheckAt = nowIso(now);
-    return { changed: age !== oldAge || events.length > 0, age, oldStage, newStage, events };
+    return { changed: age !== oldAge || events.length > 0 || evolutionChanged, age, oldStage, newStage, evolution, events };
   }
 
   async sendMessage(text, options = {}) {
@@ -280,6 +285,14 @@ export class AlmostHumanEngine {
     const milestone = { id: makeId('milestone'), type: eventKey, title, description, age: this.state.ai?.age || 0, eventKey, isKeepsake: true, createdAt: nowIso(now) };
     this.state.milestones.unshift(milestone); return milestone;
   }
+}
+
+
+function normalizePresentation10(value, pronouns) {
+  if (['masculine','feminine','neutral'].includes(value)) return value;
+  if (pronouns === 'she/her') return 'feminine';
+  if (pronouns === 'he/him') return 'masculine';
+  return 'neutral';
 }
 
 export function detectIntent(value) {

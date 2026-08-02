@@ -273,7 +273,13 @@ test('voice preview uses the authenticated secure Edge Function', async () => {
   const cloud = authenticatedCloud();
   cloud.invoke = async (name, payload, options) => {
     assert.equal(name, 'voiceService');
-    assert.deepEqual(payload, { preview: true, voice_id: 'bright-curious' });
+    assert.deepEqual(payload, {
+      preview: true,
+      voice_id: 'bright-curious',
+      tone: 'calm',
+      provider_preference: 'auto',
+      rate: 0.96,
+    });
     assert.equal(options.raw, true);
     return new Response(new Blob(['preview-audio'], { type: 'audio/mpeg' }), { status: 200 });
   };
